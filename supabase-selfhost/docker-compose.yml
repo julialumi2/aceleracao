@@ -35,7 +35,11 @@ services:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      # A 1ª inicialização roda dezenas de migrations internas da imagem
+      # supabase/postgres + nossos scripts — pode passar de 1 minuto.
+      # Reinicializações seguintes (volume já existe) ficam prontas em segundos.
+      retries: 60
+      start_period: 30s
 
   auth:
     image: supabase/gotrue:v2.151.0
@@ -106,7 +110,9 @@ services:
       - rest
     environment:
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      # /tmp em vez de /var/lib/kong: o processo do Kong roda sem
+      # privilégio de root e não tem permissão de criar diretórios ali.
+      KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
       KONG_DNS_ORDER: LAST,A,CNAME
       KONG_PLUGINS: request-transformer,cors,key-auth,acl
       ANON_KEY: ${ANON_KEY}
@@ -118,8 +124,7 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       - |
-        mkdir -p /var/lib/kong
-        sed -e "s|ANON_KEY_PLACEHOLDER|$$ANON_KEY|g" -e "s|SERVICE_ROLE_KEY_PLACEHOLDER|$$SERVICE_ROLE_KEY|g" /tmp/kong.yml.template > /var/lib/kong/kong.yml
+        sed -e "s|ANON_KEY_PLACEHOLDER|$$ANON_KEY|g" -e "s|SERVICE_ROLE_KEY_PLACEHOLDER|$$SERVICE_ROLE_KEY|g" /tmp/kong.yml.template > /tmp/kong.yml
         exec /docker-entrypoint.sh kong docker-start
     ports:
       - "8000:8000" # API pública (Auth + REST) — aponte VITE_SUPABASE_URL pra cá
