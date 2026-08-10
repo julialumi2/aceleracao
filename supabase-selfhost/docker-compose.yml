@@ -17,12 +17,20 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: postgres
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: 3600
     ports:
       # Só na loopback da própria VPS — nunca fica exposto pra internet.
       # Existe pra permitir túnel SSH (ex: administração via Prisma/psql).
       - "127.0.0.1:5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+      # Scripts oficiais da Supabase (rodam só na 1ª inicialização do
+      # volume — se o banco já existe, não são reaplicados automaticamente).
+      # roles.sql é o que faltava: sem ele, supabase_auth_admin/authenticator
+      # ficam sem senha e o Auth/REST nunca conseguem conectar.
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:ro
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
