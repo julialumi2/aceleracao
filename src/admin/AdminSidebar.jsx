@@ -1,10 +1,11 @@
-import { ShieldCheck, LayoutDashboard, Users, Contact, Wallet, Settings, LogOut } from "lucide-react";
+import { ShieldCheck, LayoutDashboard, Users, Contact, Wallet, Activity, Settings, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "clientes", label: "Clientes (CRM)", icon: Users },
   { key: "leads", label: "Leads", icon: Contact },
   { key: "cobrancas", label: "Cobranças", icon: Wallet },
+  { key: "intensidade", label: "Intensidade", icon: Activity },
   { key: "configuracoes", label: "Configurações", icon: Settings },
 ];
 

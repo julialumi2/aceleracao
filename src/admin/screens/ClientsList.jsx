@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Search, ChevronRight } from "lucide-react";
 import StatusBadge from "../components/StatusBadge.jsx";
+import { currentInvoice } from "../lib/invoices.js";
 
 const FILTERS = {
   contrato: ["todos", "pendente", "assinado"],
@@ -13,9 +14,10 @@ export default function ClientsList({ clients, onOpenClient }) {
   const [filters, setFilters] = useState({ contrato: "todos", boleto: "todos", intensidade: "todos" });
 
   const filtered = clients.filter((c) => {
+    const boleto = currentInvoice(c.boletos);
     const matchesQuery = c.nome.toLowerCase().includes(query.toLowerCase());
     const matchesContrato = filters.contrato === "todos" || c.contrato.status === filters.contrato;
-    const matchesBoleto = filters.boleto === "todos" || c.boleto.status === filters.boleto;
+    const matchesBoleto = filters.boleto === "todos" || boleto?.status === filters.boleto;
     const matchesIntensidade = filters.intensidade === "todos" || c.intensidade.status === filters.intensidade;
     return matchesQuery && matchesContrato && matchesBoleto && matchesIntensidade;
   });
@@ -46,30 +48,35 @@ export default function ClientsList({ clients, onOpenClient }) {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-line bg-surface">
-        <div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-4 border-b border-line/60 px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-dim sm:grid">
+        <div className="hidden grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto] gap-4 border-b border-line/60 px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-dim sm:grid">
           <span>Cliente</span>
           <span>Contrato</span>
           <span>Boleto</span>
           <span>Intensidade</span>
+          <span>Saúde</span>
           <span />
         </div>
 
-        {filtered.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => onOpenClient(c.id)}
-            className="grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left transition-colors last:border-b-0 hover:bg-surface-raised sm:grid-cols-[1.5fr_1fr_1fr_1fr_auto]"
-          >
-            <div className="col-span-2 sm:col-span-1">
-              <p className="text-sm font-medium text-ink">{c.nome}</p>
-              <p className="text-xs text-ink-dim">{c.cnpj || "CNPJ não informado"}</p>
-            </div>
-            <StatusBadge status={c.contrato.status} />
-            <StatusBadge status={c.boleto.status} />
-            <StatusBadge status={c.intensidade.status} />
-            <ChevronRight size={16} className="hidden text-ink-dim sm:block" />
-          </button>
-        ))}
+        {filtered.map((c) => {
+          const boleto = currentInvoice(c.boletos);
+          return (
+            <button
+              key={c.id}
+              onClick={() => onOpenClient(c.id)}
+              className="grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left transition-colors last:border-b-0 hover:bg-surface-raised sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto]"
+            >
+              <div className="col-span-2 sm:col-span-1">
+                <p className="text-sm font-medium text-ink">{c.nome}</p>
+                <p className="text-xs text-ink-dim">{c.cnpj || "CNPJ não informado"}</p>
+              </div>
+              <StatusBadge status={c.contrato.status} />
+              {boleto ? <StatusBadge status={boleto.status} /> : <span className="text-xs text-ink-dim">—</span>}
+              <StatusBadge status={c.intensidade.status} />
+              <StatusBadge status={`saude_${c.saude}`} />
+              <ChevronRight size={16} className="hidden text-ink-dim sm:block" />
+            </button>
+          );
+        })}
 
         {filtered.length === 0 && (
           <p className="px-5 py-8 text-center text-sm text-ink-dim">Nenhum cliente encontrado com esses filtros.</p>

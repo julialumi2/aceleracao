@@ -13,3 +13,7 @@ export function billingAlertMessage(client, invoice) {
 export function intensityAlertMessage(client) {
   return `Olá, ${client.nome}! Passando para saber como está o movimento da loja essa semana. Nosso time notou uma queda no engajamento das redes sociais — vamos marcar uma call rápida para ajustar a estratégia juntos?`;
 }
+
+export function leadFirstContactMessage(lead) {
+  return `Olá, ${lead.nome}! Vi que você preencheu nosso formulário de aceleração de delivery. Podemos conversar rapidinho sobre o seu restaurante?`;
+}

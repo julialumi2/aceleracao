@@ -5,6 +5,7 @@ import ClientsList from "./screens/ClientsList.jsx";
 import ClientDetail from "./screens/ClientDetail.jsx";
 import LeadsList from "./screens/LeadsList.jsx";
 import Billing from "./screens/Billing.jsx";
+import Intensity from "./screens/Intensity.jsx";
 import Settings from "./screens/Settings.jsx";
 import { INITIAL_CLIENTS, INITIAL_LEADS } from "./lib/mockData.js";
 import { LayoutDashboard, Users, Contact, Wallet, Settings as SettingsIcon } from "lucide-react";
@@ -46,9 +47,16 @@ export default function AdminLayout({ session, onLogout }) {
         endereco: "",
         telefone: lead.telefone,
         email: lead.email,
-        contrato: { status: "pendente", documentoUrl: "", assinadoEm: null },
-        boleto: { status: "pendente", valor: 997, vencimento: "" },
-        intensidade: { status: "ativo", observacao: "Cliente recém-convertido.", atualizadoEm: new Date().toISOString().slice(0, 10) },
+        cardapioUrl: "",
+        saude: "laranja",
+        contrato: { status: "pendente", documentoUrl: "", assinadoEm: null, historico: [] },
+        boletos: [],
+        intensidade: {
+          status: "ativo",
+          observacao: "Cliente recém-convertido.",
+          atualizadoEm: new Date().toISOString().slice(0, 10),
+          historico: [],
+        },
       },
     ]);
     setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status: "convertido" } : l)));
@@ -78,7 +86,13 @@ export default function AdminLayout({ session, onLogout }) {
 
           {active === "leads" && <LeadsList leads={leads} setLeads={setLeads} onConvert={convertLead} />}
 
-          {active === "cobrancas" && <Billing clients={clients} onOpenClient={(id) => { setActive("clientes"); openClient(id); }} />}
+          {active === "cobrancas" && (
+            <Billing clients={clients} onUpdate={updateClient} onOpenClient={(id) => { setActive("clientes"); openClient(id); }} />
+          )}
+
+          {active === "intensidade" && (
+            <Intensity clients={clients} onUpdate={updateClient} onOpenClient={(id) => { setActive("clientes"); openClient(id); }} />
+          )}
 
           {active === "configuracoes" && <Settings />}
         </main>

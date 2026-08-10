@@ -1,6 +1,7 @@
 // Dados de demonstração para o painel funcionar de ponta a ponta sem
 // depender do Supabase local estar de pé. Estrutura já espelha as tabelas
-// criadas em supabase/migrations/20260810010000_create_admin_tables.sql.
+// criadas em supabase/migrations/20260810010000_create_admin_tables.sql
+// (boletos/histórico entram como novas tabelas quando isso for pra produção).
 
 export const INITIAL_CLIENTS = [
   {
@@ -10,9 +11,32 @@ export const INITIAL_CLIENTS = [
     endereco: "Rua das Palmeiras, 210 — São Paulo/SP",
     telefone: "5511999990001",
     email: "contato@cantinadoze.com.br",
-    contrato: { status: "assinado", documentoUrl: "", assinadoEm: "2026-06-02" },
-    boleto: { status: "pago", valor: 997, vencimento: "2026-08-05" },
-    intensidade: { status: "ativo", observacao: "Postagens regulares, bom engajamento.", atualizadoEm: "2026-08-01" },
+    cardapioUrl: "https://cardapio.salacheia.com.br/cantina-do-ze",
+    // verde = rodando e dando resultado | amarelo = rodando, sem resultado ainda | laranja = ainda não começou
+    saude: "verde",
+    contrato: {
+      status: "assinado",
+      documentoUrl: "",
+      assinadoEm: "2026-06-02",
+      historico: [
+        { id: "h1", data: "2026-05-28", evento: "Contrato enviado via Clicksign" },
+        { id: "h2", data: "2026-06-02", evento: "Contrato assinado pelo cliente" },
+      ],
+    },
+    boletos: [
+      { id: "b1", valor: 997, vencimento: "2026-07-05", status: "pago", alertaEnviadoEm: null },
+      { id: "b2", valor: 997, vencimento: "2026-08-05", status: "pago", alertaEnviadoEm: null },
+      { id: "b3", valor: 997, vencimento: "2026-09-05", status: "pendente", alertaEnviadoEm: null },
+    ],
+    intensidade: {
+      status: "ativo",
+      observacao: "Postagens regulares, bom engajamento.",
+      atualizadoEm: "2026-08-01",
+      historico: [
+        { id: "i1", data: "2026-07-15", status: "ativo", observacao: "Engajamento estável.", mensagemEnviada: false },
+        { id: "i2", data: "2026-08-01", status: "ativo", observacao: "Postagens regulares, bom engajamento.", mensagemEnviada: false },
+      ],
+    },
   },
   {
     id: "c2",
@@ -21,9 +45,27 @@ export const INITIAL_CLIENTS = [
     endereco: "Av. Beira Mar, 780 — Recife/PE",
     telefone: "5581999990002",
     email: "financeiro@saborecia.com.br",
-    contrato: { status: "pendente", documentoUrl: "", assinadoEm: null },
-    boleto: { status: "atrasado", valor: 997, vencimento: "2026-07-28" },
-    intensidade: { status: "em_queda", observacao: "Sem posts há 12 dias.", atualizadoEm: "2026-08-04" },
+    cardapioUrl: "",
+    saude: "amarelo",
+    contrato: {
+      status: "pendente",
+      documentoUrl: "",
+      assinadoEm: null,
+      historico: [{ id: "h1", data: "2026-08-01", evento: "Contrato enviado via Clicksign" }],
+    },
+    boletos: [
+      { id: "b1", valor: 997, vencimento: "2026-06-28", status: "pago", alertaEnviadoEm: null },
+      { id: "b2", valor: 997, vencimento: "2026-07-28", status: "atrasado", alertaEnviadoEm: null },
+    ],
+    intensidade: {
+      status: "em_queda",
+      observacao: "Sem posts há 12 dias.",
+      atualizadoEm: "2026-08-04",
+      historico: [
+        { id: "i1", data: "2026-07-20", status: "ativo", observacao: "Ritmo normal de postagens.", mensagemEnviada: false },
+        { id: "i2", data: "2026-08-04", status: "em_queda", observacao: "Sem posts há 12 dias.", mensagemEnviada: false },
+      ],
+    },
   },
   {
     id: "c3",
@@ -32,9 +74,27 @@ export const INITIAL_CLIENTS = [
     endereco: "Rua dos Grelhados, 88 — Belo Horizonte/MG",
     telefone: "5531999990003",
     email: "gerencia@brasaalta.com.br",
-    contrato: { status: "assinado", documentoUrl: "", assinadoEm: "2026-05-14" },
-    boleto: { status: "pendente", valor: 1497, vencimento: "2026-08-15" },
-    intensidade: { status: "ativo", observacao: "Boa recorrência de stories.", atualizadoEm: "2026-08-03" },
+    cardapioUrl: "https://cardapio.salacheia.com.br/brasa-alta",
+    saude: "verde",
+    contrato: {
+      status: "assinado",
+      documentoUrl: "",
+      assinadoEm: "2026-05-14",
+      historico: [
+        { id: "h1", data: "2026-05-10", evento: "Contrato enviado via Clicksign" },
+        { id: "h2", data: "2026-05-14", evento: "Contrato assinado pelo cliente" },
+      ],
+    },
+    boletos: [
+      { id: "b1", valor: 1497, vencimento: "2026-07-15", status: "pago", alertaEnviadoEm: null },
+      { id: "b2", valor: 1497, vencimento: "2026-08-15", status: "pendente", alertaEnviadoEm: null },
+    ],
+    intensidade: {
+      status: "ativo",
+      observacao: "Boa recorrência de stories.",
+      atualizadoEm: "2026-08-03",
+      historico: [{ id: "i1", data: "2026-08-03", status: "ativo", observacao: "Boa recorrência de stories.", mensagemEnviada: false }],
+    },
   },
   {
     id: "c4",
@@ -43,9 +103,21 @@ export const INITIAL_CLIENTS = [
     endereco: "Rua das Acácias, 45 — Curitiba/PR",
     telefone: "5541999990004",
     email: "oi@emporioverdevida.com.br",
-    contrato: { status: "pendente", documentoUrl: "", assinadoEm: null },
-    boleto: { status: "atrasado", valor: 497, vencimento: "2026-07-20" },
-    intensidade: { status: "inativo", observacao: "Sem atividade há 30 dias.", atualizadoEm: "2026-08-02" },
+    cardapioUrl: "",
+    saude: "laranja",
+    contrato: {
+      status: "pendente",
+      documentoUrl: "",
+      assinadoEm: null,
+      historico: [{ id: "h1", data: "2026-07-30", evento: "Contrato enviado via Clicksign" }],
+    },
+    boletos: [{ id: "b1", valor: 497, vencimento: "2026-07-20", status: "atrasado", alertaEnviadoEm: null }],
+    intensidade: {
+      status: "inativo",
+      observacao: "Sem atividade há 30 dias.",
+      atualizadoEm: "2026-08-02",
+      historico: [{ id: "i1", data: "2026-08-02", status: "inativo", observacao: "Sem atividade há 30 dias.", mensagemEnviada: false }],
+    },
   },
   {
     id: "c5",
@@ -54,9 +126,27 @@ export const INITIAL_CLIENTS = [
     endereco: "Rua Itália, 120 — Porto Alegre/RS",
     telefone: "5551999990005",
     email: "contato@napolitana.com.br",
-    contrato: { status: "assinado", documentoUrl: "", assinadoEm: "2026-04-22" },
-    boleto: { status: "pago", valor: 997, vencimento: "2026-08-10" },
-    intensidade: { status: "ativo", observacao: "Campanha de reels performando bem.", atualizadoEm: "2026-08-05" },
+    cardapioUrl: "https://cardapio.salacheia.com.br/napolitana",
+    saude: "amarelo",
+    contrato: {
+      status: "assinado",
+      documentoUrl: "",
+      assinadoEm: "2026-04-22",
+      historico: [
+        { id: "h1", data: "2026-04-18", evento: "Contrato enviado via Clicksign" },
+        { id: "h2", data: "2026-04-22", evento: "Contrato assinado pelo cliente" },
+      ],
+    },
+    boletos: [
+      { id: "b1", valor: 997, vencimento: "2026-07-10", status: "pago", alertaEnviadoEm: null },
+      { id: "b2", valor: 997, vencimento: "2026-08-10", status: "pago", alertaEnviadoEm: null },
+    ],
+    intensidade: {
+      status: "ativo",
+      observacao: "Campanha de reels performando bem.",
+      atualizadoEm: "2026-08-05",
+      historico: [{ id: "i1", data: "2026-08-05", status: "ativo", observacao: "Campanha de reels performando bem.", mensagemEnviada: false }],
+    },
   },
 ];
 
