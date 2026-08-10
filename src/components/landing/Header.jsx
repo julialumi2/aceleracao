@@ -1,7 +1,7 @@
 import { Flame, Menu, X } from "lucide-react";
 import { useState } from "react";
 
-export default function Header({ onEnter }) {
+export default function Header() {
   const [open, setOpen] = useState(false);
 
   const links = [
@@ -34,15 +34,6 @@ export default function Header({ onEnter }) {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <button
-            onClick={onEnter}
-            className="rounded-full border border-line px-5 py-2 text-sm font-medium text-ink transition-colors hover:border-emerald-brand/60 hover:text-emerald-bright"
-          >
-            Entrar
-          </button>
-        </div>
-
         <button
           className="text-ink md:hidden"
           onClick={() => setOpen((o) => !o)}
@@ -60,12 +51,6 @@ export default function Header({ onEnter }) {
                 {l.label}
               </a>
             ))}
-            <button
-              onClick={onEnter}
-              className="mt-2 rounded-full border border-line px-5 py-2 text-left text-sm font-medium text-ink"
-            >
-              Entrar
-            </button>
           </nav>
         </div>
       )}

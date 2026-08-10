@@ -1,7 +1,12 @@
 import { ArrowUpRight, TrendingUp } from "lucide-react";
 import Sparks from "../shared/Sparks.jsx";
 
-export default function Hero({ onStartMentoring, onEnterApp }) {
+// Formulário de captação (Microsoft Forms — ver observação sobre a
+// automação de sincronização de leads antes construída para Google Forms).
+const FORM_URL =
+  "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAN__7bnQKZUN1QyTE1WUVVPQkw2REtFTFdENVhVTDlGWC4u";
+
+export default function Hero() {
   return (
     <section id="topo" className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
@@ -26,19 +31,15 @@ export default function Hero({ onStartMentoring, onEnterApp }) {
         </p>
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-          <button
-            onClick={onStartMentoring}
+          <a
+            href={FORM_URL}
+            target="_blank"
+            rel="noreferrer"
             className="group inline-flex items-center justify-center gap-2 rounded-full bg-emerald-brand px-7 py-3.5 text-sm font-semibold text-base shadow-lg shadow-emerald-brand/20 transition-transform hover:-translate-y-0.5 hover:bg-emerald-bright"
           >
             Quero Escalar meu Restaurante
             <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </button>
-          <button
-            onClick={onEnterApp}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-line px-7 py-3.5 text-sm font-semibold text-ink transition-colors hover:border-emerald-brand/60 hover:text-emerald-bright"
-          >
-            Área do Cliente
-          </button>
+          </a>
         </div>
 
         <div className="mt-16 grid w-full max-w-xl grid-cols-3 gap-4 border-t border-line/60 pt-8">

@@ -11,6 +11,9 @@ export default function App() {
   const [authMode, setAuthMode] = useState("login"); // login | signup
   const [session, setSession] = useState(null);
 
+  // Cadastro de cliente agora é feito pelo Google Forms (link no Hero), e
+  // login só existe pra equipe (AdminApp). goToAuth/"auth"/"dashboard" ficam
+  // aqui só desconectados da UI pública — religue se voltar a ter login de cliente.
   function goToAuth(mode = "login") {
     setAuthMode(mode);
     setScreen("auth");
@@ -44,11 +47,5 @@ export default function App() {
     return <AdminApp onExit={() => setScreen("landing")} />;
   }
 
-  return (
-    <LandingPage
-      onEnterApp={() => goToAuth("login")}
-      onStartMentoring={() => goToAuth("signup")}
-      onAdminAccess={() => setScreen("admin")}
-    />
-  );
+  return <LandingPage onAdminAccess={() => setScreen("admin")} />;
 }

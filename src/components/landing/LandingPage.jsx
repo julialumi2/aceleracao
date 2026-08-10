@@ -4,12 +4,12 @@ import Features from "./Features.jsx";
 import Pricing from "./Pricing.jsx";
 import Footer from "./Footer.jsx";
 
-export default function LandingPage({ onEnterApp, onStartMentoring, onAdminAccess }) {
+export default function LandingPage({ onAdminAccess }) {
   return (
     <div className="min-h-screen bg-base text-ink">
-      <Header onEnter={onEnterApp} />
+      <Header />
       <main>
-        <Hero onStartMentoring={onStartMentoring} onEnterApp={onEnterApp} />
+        <Hero />
         <Features />
         <Pricing />
       </main>
