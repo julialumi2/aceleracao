@@ -1,10 +1,6 @@
 import { ArrowUpRight, TrendingUp } from "lucide-react";
 import Sparks from "../shared/Sparks.jsx";
-
-// Formulário de captação (Microsoft Forms — ver observação sobre a
-// automação de sincronização de leads antes construída para Google Forms).
-const FORM_URL =
-  "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAN__7bnQKZUN1QyTE1WUVVPQkw2REtFTFdENVhVTDlGWC4u";
+import { FORM_URL } from "../../lib/links.js";
 
 export default function Hero() {
   return (
