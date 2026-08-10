@@ -37,7 +37,7 @@ export default function Pricing() {
     <section id="planos" className="py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-xl text-center">
-          <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-4xl">
+          <h2 className="font-display text-3xl font-bold tracking-wide text-ink md:text-4xl">
             Planos de mentoria
           </h2>
           <p className="mt-4 text-ink-muted">Escolha o ritmo de acompanhamento que faz sentido para o seu momento.</p>

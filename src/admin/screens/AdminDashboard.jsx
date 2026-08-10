@@ -11,7 +11,7 @@ export default function AdminDashboard({ clients, leads, onNavigate }) {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-ink">Visão geral</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Visão geral</h1>
         <p className="mt-1 text-sm text-ink-muted">Resumo do que precisa de atenção hoje.</p>
       </div>
 

@@ -23,7 +23,7 @@ export default function ClientDetail({ client, onUpdate, onBack }) {
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-ink">{client.nome}</h1>
+          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">{client.nome}</h1>
           <p className="mt-1 text-sm text-ink-dim">{client.cnpj || "CNPJ não informado"}</p>
         </div>
         <div className="flex gap-2">

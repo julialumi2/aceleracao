@@ -26,7 +26,7 @@ export default function Features() {
     <section id="recursos" className="border-t border-line/60 bg-surface/30 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-xl text-center">
-          <h2 className="font-display text-3xl font-bold tracking-tight text-ink md:text-4xl">
+          <h2 className="font-display text-3xl font-bold tracking-wide text-ink md:text-4xl">
             Três frentes, um único acompanhamento
           </h2>
           <p className="mt-4 text-ink-muted">

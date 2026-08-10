@@ -26,7 +26,7 @@ export default function AdminLanding({ onEnter, onBackToSite }) {
           <ShieldCheck size={26} />
         </span>
 
-        <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-ink md:text-4xl">
+        <h1 className="mt-6 font-display text-3xl font-bold tracking-wide text-ink md:text-4xl">
           Painel Interno <span className="text-emerald-bright">Sala Cheia</span>
         </h1>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-muted">

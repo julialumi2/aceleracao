@@ -11,7 +11,7 @@ export default function Billing({ clients, onOpenClient }) {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-ink">Cobranças</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Cobranças</h1>
         <p className="mt-1 text-sm text-ink-muted">Visão consolidada dos boletos (Asaas) de todos os clientes.</p>
       </div>
 

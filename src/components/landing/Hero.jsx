@@ -19,7 +19,7 @@ export default function Hero() {
           Mentoria estruturada, do cardápio ao caixa
         </span>
 
-        <h1 className="text-balance font-display text-4xl font-bold leading-[1.08] tracking-tight text-ink md:text-6xl">
+        <h1 className="text-balance font-display text-4xl font-bold leading-[1.08] tracking-wide text-ink md:text-6xl">
           Sua casa lotada não é sorte.{" "}
           <span className="text-emerald-bright">É método.</span>
         </h1>

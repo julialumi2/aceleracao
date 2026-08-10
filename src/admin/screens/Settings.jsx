@@ -31,7 +31,7 @@ export default function Settings() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight text-ink">Configurações</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Configurações</h1>
         <p className="mt-1 text-sm text-ink-muted">Modelos de mensagem, equipe e integrações.</p>
       </div>
 
