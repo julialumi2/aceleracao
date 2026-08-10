@@ -3,3 +3,13 @@ dist
 .env
 .env.local
 supabase-selfhost/.env
+
+/src/generated/prisma
+.claude/settings.local.json
+
+# Docs de referência que o `prisma init` gera pra assistentes de IA —
+# não fazem parte do app, cada dev pode gerar de novo com `npx prisma init`.
+.agents/
+.claude/skills/
+.windsurf/
+skills-lock.json

@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Mapeia a tabela `restaurants` já existente (criada em
+// supabase/migrations/20260810010000_create_admin_tables.sql). A partir
+// de agora, mudanças de schema nessa tabela passam a ser feitas por aqui
+// + `prisma migrate`, em vez de SQL manual.
+model Cliente {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId   String? @map("user_id") @db.Uuid
+
+  nome     String
+  cnpj     String
+  cep      String?
+  endereco String?
+
+  // Dados bancários — "conta" virou "chavePix" porque cobranças/repasses
+  // no projeto são via PIX, não número de conta.
+  banco    String?
+  agencia  String?
+  chavePix String? @map("chave_pix")
+
+  // Contato — necessário pros alertas de WhatsApp já implementados no
+  // painel admin (cobrança atrasada / queda de intensidade).
+  telefone String?
+  email    String?
+
+  // Funcionamento — mantive como já estava (dias da semana + abertura/
+  // fechamento), que é o que o formulário de cadastro e o onboarding do
+  // dashboard já usam. Se "Data/horário de funcionamento" no seu pedido
+  // era pra ser outra coisa, me fala que eu ajusto.
+  diasFuncionamento    String[] @map("dias_funcionamento")
+  horarioAbertura      String?  @map("horario_abertura")
+  horarioFechamento    String?  @map("horario_fechamento")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("restaurants")
+}
