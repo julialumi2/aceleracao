@@ -44,7 +44,7 @@ export default function Features() {
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-brand/10 text-emerald-bright transition-colors group-hover:bg-emerald-brand/20">
                 <Icon size={20} strokeWidth={2} />
               </span>
-              <h3 className="mt-5 font-display text-lg font-semibold text-ink">{title}</h3>
+              <h3 className="mt-5 font-display text-lg font-semibold tracking-wide text-ink">{title}</h3>
               <p className="mt-2.5 text-sm leading-relaxed text-ink-muted">{description}</p>
             </div>
           ))}

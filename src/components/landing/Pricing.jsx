@@ -59,11 +59,11 @@ export default function Pricing() {
                 </span>
               )}
 
-              <h3 className="font-display text-lg font-semibold text-ink">{plan.name}</h3>
+              <h3 className="font-display text-lg font-semibold tracking-wide text-ink">{plan.name}</h3>
               <p className="mt-1 text-sm text-ink-muted">{plan.description}</p>
 
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="font-display text-3xl font-bold text-ink">{plan.price}</span>
+                <span className="font-display text-3xl font-bold tracking-wide text-ink">{plan.price}</span>
                 <span className="text-sm text-ink-dim">{plan.period}</span>
               </div>
 

@@ -49,7 +49,7 @@ export default function Hero() {
             ["4.9/5", "avaliação dos clientes"],
           ].map(([value, label]) => (
             <div key={label}>
-              <p className="font-display text-2xl font-bold text-ink md:text-3xl">{value}</p>
+              <p className="font-display text-2xl font-bold tracking-wide text-ink md:text-3xl">{value}</p>
               <p className="mt-1 text-xs text-ink-dim">{label}</p>
             </div>
           ))}

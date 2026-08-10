@@ -70,7 +70,7 @@ export default function AdminLayout({ session, onLogout }) {
 
       <div className="flex min-h-screen flex-1 flex-col">
         <div className="flex items-center justify-between border-b border-line/60 bg-surface/40 px-5 py-4 lg:hidden">
-          <span className="font-display text-base font-semibold text-ink">Painel interno</span>
+          <span className="font-display text-base font-semibold tracking-wide text-ink">Painel interno</span>
           <button onClick={onLogout} className="text-xs text-ink-muted">Sair</button>
         </div>
 

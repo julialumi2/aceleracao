@@ -17,7 +17,7 @@ export default function AdminSidebar({ active, onNavigate, session, onLogout }) 
           <ShieldCheck size={18} />
         </span>
         <div>
-          <span className="block font-display text-base font-semibold leading-tight text-ink">Sala Cheia</span>
+          <span className="block font-display text-base font-semibold leading-tight tracking-wide text-ink">Sala Cheia</span>
           <span className="block text-[11px] leading-tight text-ink-dim">Painel interno</span>
         </div>
       </div>
