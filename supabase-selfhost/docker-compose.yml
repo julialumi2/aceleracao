@@ -110,6 +110,7 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       - |
+        mkdir -p /var/lib/kong
         sed -e "s|ANON_KEY_PLACEHOLDER|$$ANON_KEY|g" -e "s|SERVICE_ROLE_KEY_PLACEHOLDER|$$SERVICE_ROLE_KEY|g" /tmp/kong.yml.template > /var/lib/kong/kong.yml
         exec /docker-entrypoint.sh kong docker-start
     ports:
