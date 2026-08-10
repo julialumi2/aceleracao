@@ -14,7 +14,7 @@ export default function Sidebar({ active, onNavigate, session, onLogout }) {
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
           <Flame size={18} />
         </span>
-        <span className="font-display text-base font-semibold tracking-wide text-ink">Sala Cheia</span>
+        <span className="font-display text-base font-semibold tracking-wide text-ink">Aceleração Delivery</span>
       </div>
 
       <nav className="flex-1 space-y-1 px-3">

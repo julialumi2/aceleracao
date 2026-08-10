@@ -104,7 +104,7 @@ export default function AuthPage({ initialMode = "login", onAuthenticated, onBac
           </p>
         </div>
 
-        <p className="relative z-10 text-xs text-ink-dim">Sala Cheia Mentoria © {new Date().getFullYear()}</p>
+        <p className="relative z-10 text-xs text-ink-dim">Aceleração Delivery © {new Date().getFullYear()}</p>
       </div>
 
       {/* Formulário */}

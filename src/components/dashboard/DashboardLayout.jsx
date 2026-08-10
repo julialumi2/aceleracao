@@ -21,7 +21,7 @@ export default function DashboardLayout({ session, onLogout }) {
       <div className="flex min-h-screen flex-1 flex-col">
         {/* Topbar mobile */}
         <div className="flex items-center justify-between border-b border-line/60 bg-surface/40 px-5 py-4 lg:hidden">
-          <span className="font-display text-base font-semibold tracking-wide text-ink">Sala Cheia</span>
+          <span className="font-display text-base font-semibold tracking-wide text-ink">Aceleração Delivery</span>
           <button onClick={onLogout} className="text-xs text-ink-muted">Sair</button>
         </div>
 
