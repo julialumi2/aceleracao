@@ -13,7 +13,7 @@
     @apply bg-emerald-brand/30 text-ink;
   }
   :focus-visible {
-    outline: 2px solid #ff9f00;
+    outline: 2px solid #f5a513;
     outline-offset: 2px;
   }
 }
@@ -21,13 +21,25 @@
 @layer utilities {
   .ring-motif {
     background-image:
-      radial-gradient(circle at center, transparent 0, transparent 58px, rgba(255, 159, 0, 0.18) 59px, rgba(255, 159, 0, 0.18) 60px, transparent 61px),
-      radial-gradient(circle at center, transparent 0, transparent 98px, rgba(255, 159, 0, 0.12) 99px, rgba(255, 159, 0, 0.12) 100px, transparent 101px),
-      radial-gradient(circle at center, transparent 0, transparent 148px, rgba(255, 159, 0, 0.07) 149px, rgba(255, 159, 0, 0.07) 150px, transparent 151px);
+      radial-gradient(circle at center, transparent 0, transparent 58px, rgba(245, 165, 19, 0.18) 59px, rgba(245, 165, 19, 0.18) 60px, transparent 61px),
+      radial-gradient(circle at center, transparent 0, transparent 98px, rgba(245, 165, 19, 0.12) 99px, rgba(245, 165, 19, 0.12) 100px, transparent 101px),
+      radial-gradient(circle at center, transparent 0, transparent 148px, rgba(245, 165, 19, 0.07) 149px, rgba(245, 165, 19, 0.07) 150px, transparent 151px);
   }
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Faísca individual — usada pelo componente <Sparks />. Posição/atraso
+     vêm inline por instância; aqui só o visual do ponto e o brilho. */
+  .spark-dot {
+    position: absolute;
+    bottom: 0;
+    width: 3px;
+    height: 3px;
+    border-radius: 9999px;
+    background: radial-gradient(circle, #ffd27a 0%, #f5a513 55%, transparent 100%);
+    box-shadow: 0 0 6px 1px rgba(245, 165, 19, 0.6);
   }
 }
 

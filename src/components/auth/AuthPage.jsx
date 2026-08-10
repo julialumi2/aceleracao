@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ChefHat, ArrowLeft, Mail, Lock, User, Loader2, Building2, Landmark, Clock3 } from "lucide-react";
+import { Flame, ArrowLeft, Mail, Lock, User, Loader2, Building2, Landmark, Clock3 } from "lucide-react";
 import { signInWithEmail, signUpWithEmail, saveRestaurantProfile } from "../../lib/supabase.js";
 import { maskCNPJ, maskCEP } from "../../lib/masks.js";
+import Sparks from "../shared/Sparks.jsx";
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -79,7 +80,9 @@ export default function AuthPage({ initialMode = "login", onAuthenticated, onBac
     <div className="grid min-h-screen bg-base text-ink lg:grid-cols-2">
       {/* Lado visual */}
       <div className="relative hidden overflow-hidden border-r border-line/60 bg-surface/40 lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 animate-ring-pulse ring-motif" />
+        <Sparks />
 
         <button
           onClick={onBackToLanding}
@@ -90,7 +93,7 @@ export default function AuthPage({ initialMode = "login", onAuthenticated, onBac
 
         <div className="relative z-10">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
-            <ChefHat size={22} />
+            <Flame size={22} />
           </span>
           <h2 className="mt-8 max-w-sm text-balance font-display text-3xl font-bold leading-tight tracking-tight text-ink">
             Cada mesa cheia começa com um plano no papel.
@@ -306,7 +309,7 @@ export default function AuthPage({ initialMode = "login", onAuthenticated, onBac
               </>
             )}
 
-            {error && <p className="text-sm text-rose-400">{error}</p>}
+            {error && <p className="text-sm text-flame">{error}</p>}
 
             <button
               type="submit"

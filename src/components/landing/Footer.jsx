@@ -1,4 +1,4 @@
-import { ChefHat } from "lucide-react";
+import { Flame } from "lucide-react";
 
 export default function Footer({ onAdminAccess }) {
   return (
@@ -6,7 +6,7 @@ export default function Footer({ onAdminAccess }) {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
         <a href="#topo" className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
-            <ChefHat size={15} />
+            <Flame size={15} />
           </span>
           <span className="font-display text-sm font-semibold text-ink">Sala Cheia</span>
         </a>

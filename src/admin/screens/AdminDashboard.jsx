@@ -49,7 +49,7 @@ export default function AdminDashboard({ clients, leads, onNavigate }) {
         <div className="rounded-2xl border border-line bg-surface p-6">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <ReceiptText size={15} className="text-rose-300" />
+              <ReceiptText size={15} className="text-flame" />
               Boletos em atraso
             </h2>
             <button onClick={() => onNavigate("cobrancas")} className="text-xs font-medium text-emerald-bright hover:underline">

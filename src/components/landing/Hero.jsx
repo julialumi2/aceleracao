@@ -1,9 +1,12 @@
 import { ArrowUpRight, TrendingUp } from "lucide-react";
+import Sparks from "../shared/Sparks.jsx";
 
 export default function Hero({ onStartMentoring, onEnterApp }) {
   return (
     <section id="topo" className="relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
       <div className="pointer-events-none absolute left-1/2 top-0 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/4 animate-ring-pulse ring-motif" />
+      <Sparks className="h-[500px]" />
 
       <div className="relative mx-auto flex max-w-4xl flex-col items-center px-6 pb-24 pt-20 text-center md:pt-28">
         <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-4 py-1.5 text-xs font-medium text-emerald-bright">

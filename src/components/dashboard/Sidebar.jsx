@@ -1,4 +1,4 @@
-import { ChefHat, LayoutDashboard, Store, UtensilsCrossed, FileSignature, LogOut } from "lucide-react";
+import { Flame, LayoutDashboard, Store, UtensilsCrossed, FileSignature, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -12,7 +12,7 @@ export default function Sidebar({ active, onNavigate, session, onLogout }) {
     <aside className="hidden w-64 shrink-0 flex-col border-r border-line/60 bg-surface/40 lg:flex">
       <div className="flex items-center gap-2 px-6 py-6">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
-          <ChefHat size={18} />
+          <Flame size={18} />
         </span>
         <span className="font-display text-base font-semibold text-ink">Sala Cheia</span>
       </div>

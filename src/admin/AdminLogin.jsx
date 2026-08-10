@@ -58,7 +58,7 @@ export default function AdminLogin({ onAuthenticated, onBack }) {
             onChange={(v) => setForm((f) => ({ ...f, password: v }))}
           />
 
-          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {error && <p className="text-sm text-flame">{error}</p>}
 
           <button
             type="submit"

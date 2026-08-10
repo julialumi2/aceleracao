@@ -1,4 +1,5 @@
-import { ChefHat, ArrowLeft, ShieldCheck, Users, FileSignature, Wallet } from "lucide-react";
+import { Flame, ArrowLeft, ShieldCheck, Users, FileSignature, Wallet } from "lucide-react";
+import Sparks from "../components/shared/Sparks.jsx";
 
 const HIGHLIGHTS = [
   { icon: Users, label: "CRM de clientes ativos" },
@@ -9,7 +10,9 @@ const HIGHLIGHTS = [
 export default function AdminLanding({ onEnter, onBackToSite }) {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-base px-6 text-ink">
+      <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 animate-ring-pulse ring-motif" />
+      <Sparks />
 
       <button
         onClick={onBackToSite}
@@ -35,7 +38,7 @@ export default function AdminLanding({ onEnter, onBackToSite }) {
           onClick={onEnter}
           className="mt-8 inline-flex items-center gap-2 rounded-full bg-emerald-brand px-7 py-3.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright"
         >
-          <ChefHat size={16} />
+          <Flame size={16} />
           Acessar painel da equipe
         </button>
 

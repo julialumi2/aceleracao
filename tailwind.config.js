@@ -6,12 +6,12 @@ export default {
     extend: {
       colors: {
         base: {
-          DEFAULT: "#0A0F0D",
-          soft: "#0F1512",
+          DEFAULT: "#070604",
+          soft: "#0C0906",
         },
         surface: {
-          DEFAULT: "#121A16",
-          raised: "#161F1A",
+          DEFAULT: "#120D08",
+          raised: "#1B140C",
           light: "#FFFFFF",
           "light-soft": "#F6F9F7",
         },
@@ -20,9 +20,13 @@ export default {
           light: "#444444",
         },
         emerald: {
-          brand: "#FF9F00",
-          bright: "#FFB74D",
-          deep: "#CC7F00",
+          brand: "#F5A513",
+          bright: "#FFC24D",
+          deep: "#C97F00",
+        },
+        flame: {
+          DEFAULT: "#FF3131",
+          dim: "#B92424",
         },
         ink: {
           DEFAULT: "#FFFFFF",
@@ -33,13 +37,15 @@ export default {
         },
       },
       fontFamily: {
-        display: ["Sora", "sans-serif"],
-        body: ["Inter", "sans-serif"],
+        display: ["Anton", "sans-serif"],
+        body: ["Baloo 2", "sans-serif"],
         mono: ["IBM Plex Mono", "monospace"],
       },
       backgroundImage: {
         "ring-glow":
-          "radial-gradient(circle at center, rgba(255,159,0,0.16) 0%, rgba(255,159,0,0.03) 40%, transparent 70%)",
+          "radial-gradient(circle at center, rgba(245,165,19,0.16) 0%, rgba(245,165,19,0.03) 40%, transparent 70%)",
+        "ember-glow":
+          "radial-gradient(circle at 80% 15%, rgba(255,49,49,0.20) 0%, rgba(245,165,19,0.12) 35%, transparent 65%)",
       },
       keyframes: {
         "ring-pulse": {
@@ -50,10 +56,17 @@ export default {
           "0%": { opacity: "0", transform: "translateY(12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        spark: {
+          "0%": { transform: "translateY(0) scale(1)", opacity: "0" },
+          "10%": { opacity: "1" },
+          "90%": { opacity: "0.6" },
+          "100%": { transform: "translateY(-140px) scale(0.4)", opacity: "0" },
+        },
       },
       animation: {
         "ring-pulse": "ring-pulse 6s ease-in-out infinite",
         "fade-up": "fade-up 0.6s ease-out both",
+        spark: "spark linear infinite",
       },
     },
   },

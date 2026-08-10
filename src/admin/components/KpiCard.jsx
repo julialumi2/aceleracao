@@ -2,7 +2,7 @@ export default function KpiCard({ icon: Icon, label, value, tone = "default" }) 
   const toneStyles = {
     default: "text-emerald-bright bg-emerald-brand/10",
     warning: "text-amber-300 bg-amber-400/10",
-    danger: "text-rose-300 bg-rose-400/10",
+    danger: "text-flame bg-flame/10",
   };
 
   return (

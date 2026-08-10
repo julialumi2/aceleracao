@@ -1,4 +1,4 @@
-import { ChefHat, Menu, X } from "lucide-react";
+import { Flame, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export default function Header({ onEnter }) {
@@ -15,7 +15,7 @@ export default function Header({ onEnter }) {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <a href="#topo" className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
-            <ChefHat size={18} strokeWidth={2} />
+            <Flame size={18} strokeWidth={2} />
           </span>
           <span className="font-display text-lg font-semibold tracking-tight text-ink">
             Sala Cheia
