@@ -1,23 +1,41 @@
-import { UtensilsCrossed, LineChart, Wallet } from "lucide-react";
+import { Megaphone, UtensilsCrossed, Filter, LineChart, MessageCircle, Camera } from "lucide-react";
 
 const FEATURES = [
   {
-    icon: UtensilsCrossed,
-    title: "Otimização de Cardápio",
+    icon: Megaphone,
+    title: "Gestão de Tráfego",
     description:
-      "Engenharia de cardápio baseada em margem e giro: identificamos pratos-estrela, ajustamos precificação e reposicionamos itens para aumentar o ticket médio.",
+      "Criamos e otimizamos os anúncios que trazem pedido pra sua casa — sem achismo, com dados reais de cada campanha.",
+  },
+  {
+    icon: UtensilsCrossed,
+    title: "Cardápio de Delivery",
+    description:
+      "Implementação de um cardápio pensado pra delivery: precificação, fotos e posicionamento dos pratos que mais vendem.",
+  },
+  {
+    icon: Filter,
+    title: "Funis Validados para Escala",
+    description:
+      "Estratégias já testadas nos nossos próprios negócios, prontas pra replicar no seu, sem reinventar a roda.",
   },
   {
     icon: LineChart,
-    title: "Monitoramento de Redes Sociais",
+    title: "Métricas e Otimizações Mensais",
     description:
-      "Acompanhamento de presença digital e reputação — alcance, engajamento e avaliações — com relatórios claros sobre o que está funcionando.",
+      "Acompanhamento constante dos números, com ajustes mês a mês pra manter o resultado subindo.",
   },
   {
-    icon: Wallet,
-    title: "Gestão Financeira",
+    icon: MessageCircle,
+    title: "Grupo no WhatsApp",
     description:
-      "Organização de fluxo de caixa, CMV e ponto de equilíbrio, com contratos e cobranças integrados para você acompanhar tudo em um só lugar.",
+      "Canal direto com o time de mentoria, pra tirar dúvidas e ajustar o que for preciso, sem burocracia.",
+  },
+  {
+    icon: Camera,
+    title: "Conteúdo Orgânico",
+    description:
+      "Direcionamentos do que postar nas redes, pra manter a presença ativa entre uma campanha e outra.",
   },
 ];
 
@@ -27,15 +45,14 @@ export default function Features() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-xl text-center">
           <h2 className="font-display text-3xl font-bold tracking-wide text-ink md:text-4xl">
-            Três frentes, um único acompanhamento
+            Uma parceria completa, da estratégia ao pedido
           </h2>
           <p className="mt-4 text-ink-muted">
-            Cada mentoria combina essas três frentes de forma integrada — sem planilhas soltas
-            ou ferramentas desconectadas.
+            Tudo que entra na Aceleração de Delivery — integrado, sem planilhas soltas ou ferramentas desconectadas.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
