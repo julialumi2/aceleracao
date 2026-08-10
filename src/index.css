@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    @apply antialiased;
+  }
+  ::selection {
+    @apply bg-emerald-brand/30 text-ink;
+  }
+  :focus-visible {
+    outline: 2px solid #ff9f00;
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .ring-motif {
+    background-image:
+      radial-gradient(circle at center, transparent 0, transparent 58px, rgba(255, 159, 0, 0.18) 59px, rgba(255, 159, 0, 0.18) 60px, transparent 61px),
+      radial-gradient(circle at center, transparent 0, transparent 98px, rgba(255, 159, 0, 0.12) 99px, rgba(255, 159, 0, 0.12) 100px, transparent 101px),
+      radial-gradient(circle at center, transparent 0, transparent 148px, rgba(255, 159, 0, 0.07) 149px, rgba(255, 159, 0, 0.07) 150px, transparent 151px);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

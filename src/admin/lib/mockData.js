@@ -1,0 +1,91 @@
+// Dados de demonstração para o painel funcionar de ponta a ponta sem
+// depender do Supabase local estar de pé. Estrutura já espelha as tabelas
+// criadas em supabase/migrations/20260810010000_create_admin_tables.sql.
+
+export const INITIAL_CLIENTS = [
+  {
+    id: "c1",
+    nome: "Cantina do Zé",
+    cnpj: "12.345.678/0001-99",
+    endereco: "Rua das Palmeiras, 210 — São Paulo/SP",
+    telefone: "5511999990001",
+    email: "contato@cantinadoze.com.br",
+    contrato: { status: "assinado", documentoUrl: "", assinadoEm: "2026-06-02" },
+    boleto: { status: "pago", valor: 997, vencimento: "2026-08-05" },
+    intensidade: { status: "ativo", observacao: "Postagens regulares, bom engajamento.", atualizadoEm: "2026-08-01" },
+  },
+  {
+    id: "c2",
+    nome: "Sabor & Cia",
+    cnpj: "98.765.432/0001-10",
+    endereco: "Av. Beira Mar, 780 — Recife/PE",
+    telefone: "5581999990002",
+    email: "financeiro@saborecia.com.br",
+    contrato: { status: "pendente", documentoUrl: "", assinadoEm: null },
+    boleto: { status: "atrasado", valor: 997, vencimento: "2026-07-28" },
+    intensidade: { status: "em_queda", observacao: "Sem posts há 12 dias.", atualizadoEm: "2026-08-04" },
+  },
+  {
+    id: "c3",
+    nome: "Brasa Alta Churrascaria",
+    cnpj: "45.678.912/0001-33",
+    endereco: "Rua dos Grelhados, 88 — Belo Horizonte/MG",
+    telefone: "5531999990003",
+    email: "gerencia@brasaalta.com.br",
+    contrato: { status: "assinado", documentoUrl: "", assinadoEm: "2026-05-14" },
+    boleto: { status: "pendente", valor: 1497, vencimento: "2026-08-15" },
+    intensidade: { status: "ativo", observacao: "Boa recorrência de stories.", atualizadoEm: "2026-08-03" },
+  },
+  {
+    id: "c4",
+    nome: "Empório Verde Vida",
+    cnpj: "11.222.333/0001-44",
+    endereco: "Rua das Acácias, 45 — Curitiba/PR",
+    telefone: "5541999990004",
+    email: "oi@emporioverdevida.com.br",
+    contrato: { status: "pendente", documentoUrl: "", assinadoEm: null },
+    boleto: { status: "atrasado", valor: 497, vencimento: "2026-07-20" },
+    intensidade: { status: "inativo", observacao: "Sem atividade há 30 dias.", atualizadoEm: "2026-08-02" },
+  },
+  {
+    id: "c5",
+    nome: "Pizzaria Napolitana",
+    cnpj: "22.333.444/0001-55",
+    endereco: "Rua Itália, 120 — Porto Alegre/RS",
+    telefone: "5551999990005",
+    email: "contato@napolitana.com.br",
+    contrato: { status: "assinado", documentoUrl: "", assinadoEm: "2026-04-22" },
+    boleto: { status: "pago", valor: 997, vencimento: "2026-08-10" },
+    intensidade: { status: "ativo", observacao: "Campanha de reels performando bem.", atualizadoEm: "2026-08-05" },
+  },
+];
+
+export const INITIAL_LEADS = [
+  {
+    id: "l1",
+    nome: "Restaurante Ponto Certo",
+    email: "contato@pontocerto.com.br",
+    telefone: "5511988880001",
+    origem: "google_forms",
+    status: "novo",
+    criadoEm: "2026-08-08",
+  },
+  {
+    id: "l2",
+    nome: "Boteco da Esquina",
+    email: "boteco@daesquina.com.br",
+    telefone: "5521988880002",
+    origem: "google_forms",
+    status: "contatado",
+    criadoEm: "2026-08-06",
+  },
+  {
+    id: "l3",
+    nome: "Sushi Yama",
+    email: "contato@sushiyama.com.br",
+    telefone: "5531988880003",
+    origem: "google_forms",
+    status: "novo",
+    criadoEm: "2026-08-09",
+  },
+];
