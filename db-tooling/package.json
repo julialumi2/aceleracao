@@ -1,0 +1,10 @@
+{
+  "name": "db-tooling",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Ferramental de schema/migração do Prisma — isolado do app (front-end), nunca é buildado nem deployado com ele.",
+  "devDependencies": {
+    "dotenv": "^16.4.5",
+    "prisma": "^7.9.1"
+  }
+}

@@ -4,7 +4,7 @@ dist
 .env.local
 supabase-selfhost/.env
 
-/src/generated/prisma
+db-tooling/generated/
 .claude/settings.local.json
 
 # Docs de referência que o `prisma init` gera pra assistentes de IA —
