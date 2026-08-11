@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive } from "lucide-react";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
@@ -63,7 +63,7 @@ export default function ClientDetail({ client, onBack, initialTab = "dados", ...
         ))}
       </div>
 
-      {tab === "dados" && <DadosTab client={client} onUpdate={handlers.onUpdate} />}
+      {tab === "dados" && <DadosTab client={client} onUpdate={handlers.onUpdate} onArchiveClient={handlers.onArchiveClient} />}
       {tab === "contrato" && <ContratoTab client={client} {...handlers} />}
       {tab === "cobranca" && <CobrancaTab client={client} {...handlers} />}
       {tab === "intensidade" && <IntensidadeTab client={client} {...handlers} />}
@@ -88,7 +88,20 @@ function TextField({ label, value, onChange }) {
   );
 }
 
-function DadosTab({ client, onUpdate }) {
+function DadosTab({ client, onUpdate, onArchiveClient }) {
+  const [confirmArquivar, setConfirmArquivar] = useState(false);
+  const [arquivando, setArquivando] = useState(false);
+
+  async function arquivar() {
+    if (arquivando) return;
+    setArquivando(true);
+    try {
+      await onArchiveClient(client);
+    } finally {
+      setArquivando(false);
+    }
+  }
+
   return (
     <Panel>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -122,6 +135,35 @@ function DadosTab({ client, onUpdate }) {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="mt-6 border-t border-line/60 pt-5">
+        <p className="mb-1 text-xs font-medium text-ink-muted">Arquivar cliente</p>
+        <p className="mb-3 text-xs text-ink-dim">
+          Remove esse cliente das listas ativas (Dashboard, Cobranças, Intensidade). O cadastro e todo o histórico continuam
+          guardados e podem ser restaurados a qualquer momento em Clientes → Ver arquivados.
+        </p>
+        {confirmArquivar ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={arquivar}
+              disabled={arquivando}
+              className="rounded-xl bg-flame/15 px-4 py-2 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
+            >
+              Confirmar arquivamento
+            </button>
+            <button onClick={() => setConfirmArquivar(false)} className="text-xs text-ink-muted hover:text-ink">
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmArquivar(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-line px-4 py-2 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
+          >
+            <Archive size={13} /> Arquivar cliente
+          </button>
+        )}
       </div>
     </Panel>
   );

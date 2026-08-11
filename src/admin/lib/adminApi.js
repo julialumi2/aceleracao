@@ -6,7 +6,18 @@ export async function fetchClients() {
   const { data, error } = await supabase
     .from("restaurants")
     .select("*, contracts(*), contract_events(*), invoices(*), intensity_checks(*)")
+    .is("arquivado_em", null)
     .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(mapRestaurantRow);
+}
+
+export async function fetchArchivedClients() {
+  const { data, error } = await supabase
+    .from("restaurants")
+    .select("*, contracts(*), contract_events(*), invoices(*), intensity_checks(*)")
+    .not("arquivado_em", "is", null)
+    .order("arquivado_em", { ascending: false });
   if (error) throw error;
   return (data || []).map(mapRestaurantRow);
 }
@@ -42,6 +53,7 @@ function mapRestaurantRow(row) {
     email: row.email || "",
     cardapioUrl: row.cardapio_url || "",
     saude: row.saude || "laranja",
+    arquivadoEm: row.arquivado_em || null,
     cobrancaRecorrente: {
       valor: row.valor_recorrente != null ? Number(row.valor_recorrente) : null,
       diaVencimento: row.dia_vencimento_recorrente,
@@ -230,6 +242,20 @@ export async function createClient({ nome, cnpj, telefone, email, endereco }) {
   if (contractError) throw contractError;
 
   return mapRestaurantRow({ ...restaurant, contracts: contract, contract_events: [], invoices: [], intensity_checks: [] });
+}
+
+// ---------- Arquivamento (exclusão reversível) ----------
+
+export async function archiveClient(id) {
+  const arquivadoEm = new Date().toISOString();
+  const { error } = await supabase.from("restaurants").update({ arquivado_em: arquivadoEm }).eq("id", id);
+  if (error) throw error;
+  return arquivadoEm;
+}
+
+export async function restoreClient(id) {
+  const { error } = await supabase.from("restaurants").update({ arquivado_em: null }).eq("id", id);
+  if (error) throw error;
 }
 
 export async function convertLeadToClient(lead) {

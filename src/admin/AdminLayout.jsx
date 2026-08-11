@@ -22,6 +22,9 @@ import {
   updateLeadStatus,
   convertLeadToClient,
   createClient,
+  fetchArchivedClients,
+  archiveClient,
+  restoreClient,
 } from "./lib/adminApi.js";
 import { Loader2, LayoutDashboard, Users, Contact, Wallet, Settings as SettingsIcon } from "lucide-react";
 
@@ -41,6 +44,9 @@ export default function AdminLayout({ session, onLogout }) {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [archivedClients, setArchivedClients] = useState([]);
+  const [archivedLoaded, setArchivedLoaded] = useState(false);
+  const [loadingArchived, setLoadingArchived] = useState(false);
 
   useEffect(() => {
     loadAll();
@@ -174,6 +180,33 @@ export default function AdminLayout({ session, onLogout }) {
     openClient(novoCliente.id, "dados");
   }
 
+  async function loadArchivedClients() {
+    if (archivedLoaded) return;
+    setLoadingArchived(true);
+    try {
+      const data = await fetchArchivedClients();
+      setArchivedClients(data);
+      setArchivedLoaded(true);
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoadingArchived(false);
+    }
+  }
+
+  async function handleArchiveClient(client) {
+    const arquivadoEm = await archiveClient(client.id);
+    setClients((prev) => prev.filter((c) => c.id !== client.id));
+    setArchivedClients((prev) => [{ ...client, arquivadoEm }, ...prev]);
+    if (selectedClientId === client.id) setSelectedClientId(null);
+  }
+
+  async function handleRestoreClient(client) {
+    await restoreClient(client.id);
+    setArchivedClients((prev) => prev.filter((c) => c.id !== client.id));
+    setClients((prev) => [{ ...client, arquivadoEm: null }, ...prev]);
+  }
+
   const selectedClient = clients.find((c) => c.id === selectedClientId) || null;
 
   const clientHandlers = {
@@ -186,6 +219,7 @@ export default function AdminLayout({ session, onLogout }) {
     onMarkInvoiceAlertSent: handleMarkInvoiceAlertSent,
     onAddIntensityCheck: handleAddIntensityCheck,
     onMarkIntensityMessageSent: handleMarkIntensityMessageSent,
+    onArchiveClient: handleArchiveClient,
   };
 
   return (
@@ -227,7 +261,15 @@ export default function AdminLayout({ session, onLogout }) {
                     onBack={() => setSelectedClientId(null)}
                   />
                 ) : (
-                  <ClientsList clients={clients} onOpenClient={openClient} onCreateClient={handleCreateClient} />
+                  <ClientsList
+                    clients={clients}
+                    onOpenClient={openClient}
+                    onCreateClient={handleCreateClient}
+                    archivedClients={archivedClients}
+                    loadingArchived={loadingArchived}
+                    onLoadArchived={loadArchivedClients}
+                    onRestoreClient={handleRestoreClient}
+                  />
                 ))}
 
               {active === "leads" && (
