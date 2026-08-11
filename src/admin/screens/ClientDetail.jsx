@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed } from "lucide-react";
+import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2 } from "lucide-react";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
 import { sortByVencimento, currentInvoice } from "../lib/invoices.js";
+import { calcularProximaCobranca, diaDoVencimento } from "../lib/recurringBilling.js";
 
 const TABS = [
   { key: "dados", label: "Dados", icon: Building2 },
@@ -184,7 +185,7 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) 
   );
 }
 
-function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAlertSent }) {
+function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAlertSent, onSetRecurringBilling }) {
   const [novo, setNovo] = useState({ valor: "", vencimento: "" });
   const [salvando, setSalvando] = useState(false);
   const boletos = sortByVencimento(client.boletos || []);
@@ -201,6 +202,8 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
   }
 
   return (
+    <>
+      <RecurringBillingSetup client={client} onSetRecurringBilling={onSetRecurringBilling} />
     <Panel>
       <p className="mb-4 text-xs font-medium text-ink-muted">Boletos, do vencimento mais próximo ao mais distante</p>
 
@@ -263,6 +266,124 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
         >
           <Plus size={14} /> Adicionar
         </button>
+      </div>
+    </Panel>
+    </>
+  );
+}
+
+function RecurringBillingSetup({ client, onSetRecurringBilling }) {
+  const [aberto, setAberto] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [form, setForm] = useState({ valor: "", jaPago: "sim", data: new Date().toISOString().slice(0, 10) });
+
+  const configurado = client.cobrancaRecorrente?.valor != null;
+  const preview = form.data ? calcularProximaCobranca(form.data, form.jaPago === "sim") : null;
+
+  async function salvar() {
+    if (!form.valor || !form.data || salvando) return;
+    setSalvando(true);
+    try {
+      const proximaCobrancaEm = calcularProximaCobranca(form.data, form.jaPago === "sim");
+      await onSetRecurringBilling(client, {
+        valor: Number(form.valor) || 0,
+        diaVencimento: diaDoVencimento(form.data),
+        proximaCobrancaEm,
+      });
+      setAberto(false);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  if (configurado && !aberto) {
+    return (
+      <Panel>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+              <CheckCircle2 size={15} className="text-emerald-bright" />
+              Cobrança recorrente configurada
+            </p>
+            <p className="mt-1 text-xs text-ink-dim">
+              R$ {client.cobrancaRecorrente.valor.toFixed(2)}/mês, todo dia {client.cobrancaRecorrente.diaVencimento} · próxima cobrança em{" "}
+              {formatDate(client.cobrancaRecorrente.proximaCobrancaEm)}
+            </p>
+            <p className="mt-2 text-xs text-ink-dim">
+              {client.cobrancaRecorrente.asaasSubscriptionId
+                ? "Ativa no Asaas."
+                : "Aguardando integração com o Asaas — assinatura ainda não foi criada lá."}
+            </p>
+          </div>
+          <button onClick={() => setAberto(true)} className="shrink-0 text-xs font-medium text-emerald-bright hover:underline">
+            Editar
+          </button>
+        </div>
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel>
+      <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+        <CalendarClock size={15} className="text-emerald-bright" />
+        Configurar cobrança recorrente
+      </p>
+      <p className="mt-1 text-xs text-ink-dim">
+        Preço combinado com esse cliente — define o valor e o dia de vencimento da mensalidade.
+      </p>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <TextField label="Valor recorrente (R$)" value={form.valor} onChange={(v) => setForm((f) => ({ ...f, valor: v }))} />
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-medium text-ink-muted">Já pagou a 1ª parcela?</span>
+          <div className="flex gap-2">
+            {[
+              ["sim", "Sim"],
+              ["nao", "Não"],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, jaPago: value }))}
+                className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors ${
+                  form.jaPago === value ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </label>
+      </div>
+
+      <div className="mt-4">
+        <TextField
+          label={form.jaPago === "sim" ? "Data em que pagou" : "Data prevista pra pagar"}
+          value={form.data}
+          onChange={(v) => setForm((f) => ({ ...f, data: v }))}
+        />
+      </div>
+
+      {preview && (
+        <p className="mt-3 text-xs text-ink-dim">
+          Próxima cobrança da recorrência: <span className="text-ink">{formatDate(preview)}</span>, todo dia {diaDoVencimento(form.data)}
+        </p>
+      )}
+
+      <div className="mt-5 flex items-center gap-3">
+        <button
+          onClick={salvar}
+          disabled={salvando || !form.valor || !form.data}
+          className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+        >
+          Salvar
+        </button>
+        {configurado && (
+          <button onClick={() => setAberto(false)} className="text-sm text-ink-muted hover:text-ink">
+            Cancelar
+          </button>
+        )}
       </div>
     </Panel>
   );

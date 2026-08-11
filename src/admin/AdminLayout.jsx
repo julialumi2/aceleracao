@@ -11,6 +11,7 @@ import {
   fetchClients,
   fetchLeads,
   updateClientFields,
+  setRecurringBilling,
   setContractStatus,
   setContractDocumentUrl,
   addInvoice,
@@ -65,6 +66,19 @@ export default function AdminLayout({ session, onLogout }) {
   async function updateClient(id, patch) {
     patchClientLocal(id, patch);
     await updateClientFields(id, patch).catch((err) => setLoadError(err.message));
+  }
+
+  async function handleSetRecurringBilling(client, { valor, diaVencimento, proximaCobrancaEm }) {
+    await setRecurringBilling(client.id, { valor, diaVencimento, proximaCobrancaEm });
+    patchClientLocal(client.id, {
+      cobrancaRecorrente: {
+        ...client.cobrancaRecorrente,
+        valor,
+        diaVencimento,
+        proximaCobrancaEm,
+        configuradaEm: new Date().toISOString(),
+      },
+    });
   }
 
   async function handleSetContractStatus(client, status) {
@@ -148,6 +162,7 @@ export default function AdminLayout({ session, onLogout }) {
 
   const clientHandlers = {
     onUpdate: updateClient,
+    onSetRecurringBilling: handleSetRecurringBilling,
     onSetContractStatus: handleSetContractStatus,
     onSetContractDocumentUrl: handleSetContractDocumentUrl,
     onAddInvoice: handleAddInvoice,

@@ -42,6 +42,14 @@ function mapRestaurantRow(row) {
     email: row.email || "",
     cardapioUrl: row.cardapio_url || "",
     saude: row.saude || "laranja",
+    cobrancaRecorrente: {
+      valor: row.valor_recorrente != null ? Number(row.valor_recorrente) : null,
+      diaVencimento: row.dia_vencimento_recorrente,
+      proximaCobrancaEm: row.proxima_cobranca_em,
+      configuradaEm: row.cobranca_configurada_em,
+      asaasCustomerId: row.asaas_customer_id,
+      asaasSubscriptionId: row.asaas_subscription_id,
+    },
     contrato: {
       status: contract?.status || "pendente",
       documentoUrl: contract?.clicksign_document_url || "",
@@ -97,6 +105,24 @@ export async function updateClientFields(id, fields) {
   }
   if (Object.keys(payload).length === 0) return;
   const { error } = await supabase.from("restaurants").update(payload).eq("id", id);
+  if (error) throw error;
+}
+
+// ---------- Cobrança recorrente ----------
+// Só grava a decisão (valor + dia de vencimento calculado). A criação da
+// assinatura no Asaas em si acontece numa Edge Function separada — a
+// chave de API não pode ficar no navegador. asaas_customer_id/
+// asaas_subscription_id continuam nulos até essa parte estar ligada.
+export async function setRecurringBilling(id, { valor, diaVencimento, proximaCobrancaEm }) {
+  const { error } = await supabase
+    .from("restaurants")
+    .update({
+      valor_recorrente: valor,
+      dia_vencimento_recorrente: diaVencimento,
+      proxima_cobranca_em: proximaCobrancaEm,
+      cobranca_configurada_em: new Date().toISOString(),
+    })
+    .eq("id", id);
   if (error) throw error;
 }
 
