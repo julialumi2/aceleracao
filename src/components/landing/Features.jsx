@@ -21,9 +21,9 @@ const FEATURES = [
   },
   {
     icon: LineChart,
-    title: "Métricas e Otimizações Mensais",
+    title: "Métricas e Otimizações Semanais",
     description:
-      "Acompanhamento constante dos números, com ajustes mês a mês pra manter o resultado subindo.",
+      "Acompanhamento constante dos números, com ajustes semana a semana pra manter o resultado subindo.",
   },
   {
     icon: MessageCircle,
@@ -33,7 +33,7 @@ const FEATURES = [
   },
   {
     icon: Camera,
-    title: "Conteúdo Orgânico",
+    title: "Direcionamento de conteúdo",
     description:
       "Direcionamentos do que postar nas redes, pra manter a presença ativa entre uma campanha e outra.",
   },
