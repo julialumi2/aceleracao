@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminSidebar from "./AdminSidebar.jsx";
 import AdminDashboard from "./screens/AdminDashboard.jsx";
 import ClientsList from "./screens/ClientsList.jsx";
@@ -7,8 +7,21 @@ import LeadsList from "./screens/LeadsList.jsx";
 import Billing from "./screens/Billing.jsx";
 import Intensity from "./screens/Intensity.jsx";
 import Settings from "./screens/Settings.jsx";
-import { INITIAL_CLIENTS, INITIAL_LEADS } from "./lib/mockData.js";
-import { LayoutDashboard, Users, Contact, Wallet, Settings as SettingsIcon } from "lucide-react";
+import {
+  fetchClients,
+  fetchLeads,
+  updateClientFields,
+  setContractStatus,
+  setContractDocumentUrl,
+  addInvoice,
+  setInvoiceStatus,
+  markInvoiceAlertSent,
+  addIntensityCheck,
+  markIntensityMessageSent,
+  updateLeadStatus,
+  convertLeadToClient,
+} from "./lib/adminApi.js";
+import { Loader2, LayoutDashboard, Users, Contact, Wallet, Settings as SettingsIcon } from "lucide-react";
 
 const MOBILE_NAV = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
@@ -21,11 +34,94 @@ const MOBILE_NAV = [
 export default function AdminLayout({ session, onLogout }) {
   const [active, setActive] = useState("dashboard");
   const [selectedClientId, setSelectedClientId] = useState(null);
-  const [clients, setClients] = useState(INITIAL_CLIENTS);
-  const [leads, setLeads] = useState(INITIAL_LEADS);
+  const [clients, setClients] = useState([]);
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  function updateClient(id, patch) {
+  useEffect(() => {
+    loadAll();
+  }, []);
+
+  async function loadAll() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const [clientsData, leadsData] = await Promise.all([fetchClients(), fetchLeads()]);
+      setClients(clientsData);
+      setLeads(leadsData);
+    } catch (err) {
+      setLoadError(err.message || "Não foi possível carregar os dados do Supabase.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function patchClientLocal(id, patch) {
     setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  }
+
+  // Campos simples do cadastro (nome, CNPJ, cardápio, saúde etc.)
+  async function updateClient(id, patch) {
+    patchClientLocal(id, patch);
+    await updateClientFields(id, patch).catch((err) => setLoadError(err.message));
+  }
+
+  async function handleSetContractStatus(client, status) {
+    const evento = await setContractStatus(client.id, status);
+    patchClientLocal(client.id, {
+      contrato: {
+        ...client.contrato,
+        status,
+        assinadoEm: status === "assinado" ? new Date().toISOString().slice(0, 10) : null,
+        historico: [...client.contrato.historico, evento],
+      },
+    });
+  }
+
+  async function handleSetContractDocumentUrl(client, url) {
+    patchClientLocal(client.id, { contrato: { ...client.contrato, documentoUrl: url } });
+    await setContractDocumentUrl(client.id, url).catch((err) => setLoadError(err.message));
+  }
+
+  async function handleAddInvoice(client, { valor, vencimento }) {
+    const boleto = await addInvoice(client.id, { valor, vencimento });
+    patchClientLocal(client.id, { boletos: [...client.boletos, boleto] });
+  }
+
+  async function handleSetInvoiceStatus(client, invoiceId, status) {
+    patchClientLocal(client.id, {
+      boletos: client.boletos.map((b) => (b.id === invoiceId ? { ...b, status } : b)),
+    });
+    await setInvoiceStatus(invoiceId, status).catch((err) => setLoadError(err.message));
+  }
+
+  async function handleMarkInvoiceAlertSent(client, invoiceId) {
+    const hoje = await markInvoiceAlertSent(invoiceId);
+    patchClientLocal(client.id, {
+      boletos: client.boletos.map((b) => (b.id === invoiceId ? { ...b, alertaEnviadoEm: hoje } : b)),
+    });
+  }
+
+  async function handleAddIntensityCheck(client, { status, observacao }) {
+    const check = await addIntensityCheck(client.id, { status, observacao });
+    patchClientLocal(client.id, {
+      intensidade: {
+        status: check.status,
+        observacao: check.observacao,
+        atualizadoEm: check.data,
+        historico: [...client.intensidade.historico, check],
+      },
+    });
+  }
+
+  async function handleMarkIntensityMessageSent(client) {
+    const historico = [...client.intensidade.historico];
+    const ultima = historico[historico.length - 1];
+    if (!ultima) return;
+    historico[historico.length - 1] = { ...ultima, mensagemEnviada: true };
+    patchClientLocal(client.id, { intensidade: { ...client.intensidade, historico } });
+    await markIntensityMessageSent(ultima.id).catch((err) => setLoadError(err.message));
   }
 
   function navigate(key) {
@@ -37,32 +133,29 @@ export default function AdminLayout({ session, onLogout }) {
     setSelectedClientId(id);
   }
 
-  function convertLead(lead) {
-    setClients((prev) => [
-      ...prev,
-      {
-        id: `c-${lead.id}`,
-        nome: lead.nome,
-        cnpj: "",
-        endereco: "",
-        telefone: lead.telefone,
-        email: lead.email,
-        cardapioUrl: "",
-        saude: "laranja",
-        contrato: { status: "pendente", documentoUrl: "", assinadoEm: null, historico: [] },
-        boletos: [],
-        intensidade: {
-          status: "ativo",
-          observacao: "Cliente recém-convertido.",
-          atualizadoEm: new Date().toISOString().slice(0, 10),
-          historico: [],
-        },
-      },
-    ]);
+  async function handleUpdateLeadStatus(lead, status) {
+    setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status } : l)));
+    await updateLeadStatus(lead.id, status).catch((err) => setLoadError(err.message));
+  }
+
+  async function convertLead(lead) {
+    const novoCliente = await convertLeadToClient(lead);
+    setClients((prev) => [novoCliente, ...prev]);
     setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status: "convertido" } : l)));
   }
 
   const selectedClient = clients.find((c) => c.id === selectedClientId) || null;
+
+  const clientHandlers = {
+    onUpdate: updateClient,
+    onSetContractStatus: handleSetContractStatus,
+    onSetContractDocumentUrl: handleSetContractDocumentUrl,
+    onAddInvoice: handleAddInvoice,
+    onSetInvoiceStatus: handleSetInvoiceStatus,
+    onMarkInvoiceAlertSent: handleMarkInvoiceAlertSent,
+    onAddIntensityCheck: handleAddIntensityCheck,
+    onMarkIntensityMessageSent: handleMarkIntensityMessageSent,
+  };
 
   return (
     <div className="flex min-h-screen bg-base text-ink">
@@ -75,26 +168,53 @@ export default function AdminLayout({ session, onLogout }) {
         </div>
 
         <main className="flex-1 px-5 py-8 md:px-10 md:py-10">
-          {active === "dashboard" && <AdminDashboard clients={clients} leads={leads} onNavigate={navigate} />}
-
-          {active === "clientes" &&
-            (selectedClient ? (
-              <ClientDetail client={selectedClient} onUpdate={updateClient} onBack={() => setSelectedClientId(null)} />
-            ) : (
-              <ClientsList clients={clients} onOpenClient={openClient} />
-            ))}
-
-          {active === "leads" && <LeadsList leads={leads} setLeads={setLeads} onConvert={convertLead} />}
-
-          {active === "cobrancas" && (
-            <Billing clients={clients} onUpdate={updateClient} onOpenClient={(id) => { setActive("clientes"); openClient(id); }} />
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-ink-muted">
+              <Loader2 size={16} className="animate-spin" /> Carregando dados do Supabase...
+            </div>
           )}
 
-          {active === "intensidade" && (
-            <Intensity clients={clients} onUpdate={updateClient} onOpenClient={(id) => { setActive("clientes"); openClient(id); }} />
+          {!loading && loadError && (
+            <div className="mb-6 rounded-xl border border-flame/30 bg-flame/5 px-4 py-3 text-sm text-flame">
+              {loadError} — conferindo com dados já carregados nesta sessão.
+            </div>
           )}
 
-          {active === "configuracoes" && <Settings />}
+          {!loading && (
+            <>
+              {active === "dashboard" && <AdminDashboard clients={clients} leads={leads} onNavigate={navigate} />}
+
+              {active === "clientes" &&
+                (selectedClient ? (
+                  <ClientDetail client={selectedClient} {...clientHandlers} onBack={() => setSelectedClientId(null)} />
+                ) : (
+                  <ClientsList clients={clients} onOpenClient={openClient} />
+                ))}
+
+              {active === "leads" && (
+                <LeadsList leads={leads} onUpdateStatus={handleUpdateLeadStatus} onConvert={convertLead} />
+              )}
+
+              {active === "cobrancas" && (
+                <Billing
+                  clients={clients}
+                  onSetInvoiceStatus={handleSetInvoiceStatus}
+                  onMarkInvoiceAlertSent={handleMarkInvoiceAlertSent}
+                  onOpenClient={(id) => { setActive("clientes"); openClient(id); }}
+                />
+              )}
+
+              {active === "intensidade" && (
+                <Intensity
+                  clients={clients}
+                  onMarkMessageSent={handleMarkIntensityMessageSent}
+                  onOpenClient={(id) => { setActive("clientes"); openClient(id); }}
+                />
+              )}
+
+              {active === "configuracoes" && <Settings />}
+            </>
+          )}
         </main>
 
         <nav className="grid grid-cols-5 border-t border-line/60 bg-surface/60 lg:hidden">

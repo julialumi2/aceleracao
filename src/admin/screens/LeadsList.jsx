@@ -1,6 +1,5 @@
 import { UserPlus, MessageCircle } from "lucide-react";
 import StatusBadge from "../components/StatusBadge.jsx";
-import { updateLeadStatus } from "../lib/adminApi.js";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
 
@@ -13,12 +12,7 @@ function relativeDaysLabel(iso) {
   return `recebido há ${dias} dias`;
 }
 
-export default function LeadsList({ leads, setLeads, onConvert }) {
-  async function setStatus(lead, status) {
-    setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status } : l)));
-    await updateLeadStatus(lead.id, status).catch(() => null);
-  }
-
+export default function LeadsList({ leads, onUpdateStatus, onConvert }) {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-8">
@@ -52,7 +46,7 @@ export default function LeadsList({ leads, setLeads, onConvert }) {
                 <StatusBadge status={lead.status} />
                 <select
                   value={lead.status}
-                  onChange={(e) => setStatus(lead, e.target.value)}
+                  onChange={(e) => onUpdateStatus(lead, e.target.value)}
                   className="rounded-lg border border-line bg-surface-raised px-2.5 py-1.5 text-xs text-ink focus:outline-none"
                 >
                   {STATUSES.map((s) => (

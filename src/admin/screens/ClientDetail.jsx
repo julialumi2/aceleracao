@@ -3,7 +3,6 @@ import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle,
 import StatusBadge from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
-import { updateContractStatus, updateInvoiceStatus, saveIntensityCheck } from "../lib/adminApi.js";
 import { sortByVencimento, currentInvoice } from "../lib/invoices.js";
 
 const TABS = [
@@ -25,7 +24,7 @@ function formatDate(iso) {
   return `${d}/${m}/${y}`;
 }
 
-export default function ClientDetail({ client, onUpdate, onBack }) {
+export default function ClientDetail({ client, onBack, ...handlers }) {
   const [tab, setTab] = useState("dados");
   const boletoAtual = currentInvoice(client.boletos);
 
@@ -63,10 +62,10 @@ export default function ClientDetail({ client, onUpdate, onBack }) {
         ))}
       </div>
 
-      {tab === "dados" && <DadosTab client={client} onUpdate={onUpdate} />}
-      {tab === "contrato" && <ContratoTab client={client} onUpdate={onUpdate} />}
-      {tab === "cobranca" && <CobrancaTab client={client} onUpdate={onUpdate} />}
-      {tab === "intensidade" && <IntensidadeTab client={client} onUpdate={onUpdate} />}
+      {tab === "dados" && <DadosTab client={client} onUpdate={handlers.onUpdate} />}
+      {tab === "contrato" && <ContratoTab client={client} {...handlers} />}
+      {tab === "cobranca" && <CobrancaTab client={client} {...handlers} />}
+      {tab === "intensidade" && <IntensidadeTab client={client} {...handlers} />}
     </div>
   );
 }
@@ -127,18 +126,7 @@ function DadosTab({ client, onUpdate }) {
   );
 }
 
-function ContratoTab({ client, onUpdate }) {
-  async function setStatus(status) {
-    const historico = [
-      ...(client.contrato.historico || []),
-      { id: `h-${Date.now()}`, data: new Date().toISOString().slice(0, 10), evento: status === "assinado" ? "Contrato assinado pelo cliente" : "Status marcado como pendente" },
-    ];
-    onUpdate(client.id, {
-      contrato: { ...client.contrato, status, assinadoEm: status === "assinado" ? new Date().toISOString().slice(0, 10) : null, historico },
-    });
-    await updateContractStatus(client.id, status).catch(() => null);
-  }
-
+function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) {
   return (
     <Panel>
       <div className="flex items-center justify-between">
@@ -153,7 +141,7 @@ function ContratoTab({ client, onUpdate }) {
 
       <div className="mt-5 flex gap-2">
         <button
-          onClick={() => setStatus("pendente")}
+          onClick={() => onSetContractStatus(client, "pendente")}
           className={`flex-1 rounded-full py-2.5 text-sm font-medium transition-colors ${
             client.contrato.status === "pendente" ? "bg-amber-400/15 text-amber-300" : "border border-line text-ink-muted hover:text-ink"
           }`}
@@ -161,7 +149,7 @@ function ContratoTab({ client, onUpdate }) {
           Marcar como pendente
         </button>
         <button
-          onClick={() => setStatus("assinado")}
+          onClick={() => onSetContractStatus(client, "assinado")}
           className={`flex-1 rounded-full py-2.5 text-sm font-medium transition-colors ${
             client.contrato.status === "assinado" ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
           }`}
@@ -174,7 +162,7 @@ function ContratoTab({ client, onUpdate }) {
         <TextField
           label="Link do documento (Clicksign)"
           value={client.contrato.documentoUrl}
-          onChange={(v) => onUpdate(client.id, { contrato: { ...client.contrato, documentoUrl: v } })}
+          onChange={(v) => onSetContractDocumentUrl(client, v)}
         />
       </div>
 
@@ -196,22 +184,20 @@ function ContratoTab({ client, onUpdate }) {
   );
 }
 
-function CobrancaTab({ client, onUpdate }) {
+function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAlertSent }) {
   const [novo, setNovo] = useState({ valor: "", vencimento: "" });
+  const [salvando, setSalvando] = useState(false);
   const boletos = sortByVencimento(client.boletos || []);
 
-  async function setStatus(boletoId, status) {
-    const novosBoletos = client.boletos.map((b) => (b.id === boletoId ? { ...b, status } : b));
-    onUpdate(client.id, { boletos: novosBoletos });
-    const alvo = novosBoletos.find((b) => b.id === boletoId);
-    await updateInvoiceStatus(client.id, alvo).catch(() => null);
-  }
-
-  function adicionarBoleto() {
-    if (!novo.valor || !novo.vencimento) return;
-    const boleto = { id: `b-${Date.now()}`, valor: Number(novo.valor) || 0, vencimento: novo.vencimento, status: "pendente", alertaEnviadoEm: null };
-    onUpdate(client.id, { boletos: [...(client.boletos || []), boleto] });
-    setNovo({ valor: "", vencimento: "" });
+  async function adicionarBoleto() {
+    if (!novo.valor || !novo.vencimento || salvando) return;
+    setSalvando(true);
+    try {
+      await onAddInvoice(client, { valor: Number(novo.valor) || 0, vencimento: novo.vencimento });
+      setNovo({ valor: "", vencimento: "" });
+    } finally {
+      setSalvando(false);
+    }
   }
 
   return (
@@ -236,7 +222,7 @@ function CobrancaTab({ client, onUpdate }) {
                 {["pendente", "atrasado", "pago"].map((s) => (
                   <button
                     key={s}
-                    onClick={() => setStatus(b.id, s)}
+                    onClick={() => onSetInvoiceStatus(client, b.id, s)}
                     className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                       b.status === s ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
                     }`}
@@ -249,6 +235,7 @@ function CobrancaTab({ client, onUpdate }) {
                     href={waLink}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={() => onMarkInvoiceAlertSent(client, b.id)}
                     className="ml-auto flex items-center gap-1.5 rounded-full border border-emerald-brand/40 px-3 py-1.5 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
                   >
                     <MessageCircle size={12} />
@@ -271,7 +258,8 @@ function CobrancaTab({ client, onUpdate }) {
         </div>
         <button
           onClick={adicionarBoleto}
-          className="flex items-center gap-1.5 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-medium text-base transition-colors hover:bg-emerald-bright"
+          disabled={salvando}
+          className="flex items-center gap-1.5 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-medium text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
         >
           <Plus size={14} /> Adicionar
         </button>
@@ -280,27 +268,19 @@ function CobrancaTab({ client, onUpdate }) {
   );
 }
 
-function IntensidadeTab({ client, onUpdate }) {
+function IntensidadeTab({ client, onAddIntensityCheck, onMarkIntensityMessageSent }) {
   const [observacaoNova, setObservacaoNova] = useState("");
+  const [salvando, setSalvando] = useState(false);
 
   async function registrarChecagem(status) {
-    const hoje = new Date().toISOString().slice(0, 10);
-    const historico = [
-      ...(client.intensidade.historico || []),
-      { id: `i-${Date.now()}`, data: hoje, status, observacao: observacaoNova || client.intensidade.observacao, mensagemEnviada: false },
-    ];
-    const intensidade = { status, observacao: observacaoNova || client.intensidade.observacao, atualizadoEm: hoje, historico };
-    onUpdate(client.id, { intensidade });
-    setObservacaoNova("");
-    await saveIntensityCheck(client.id, intensidade).catch(() => null);
-  }
-
-  function marcarMensagemEnviada() {
-    const historico = [...(client.intensidade.historico || [])];
-    if (historico.length > 0) {
-      historico[historico.length - 1] = { ...historico[historico.length - 1], mensagemEnviada: true };
+    if (salvando) return;
+    setSalvando(true);
+    try {
+      await onAddIntensityCheck(client, { status, observacao: observacaoNova || client.intensidade.observacao });
+      setObservacaoNova("");
+    } finally {
+      setSalvando(false);
     }
-    onUpdate(client.id, { intensidade: { ...client.intensidade, historico } });
   }
 
   const waLink = buildWhatsAppLink(client.telefone, intensityAlertMessage(client));
@@ -329,7 +309,8 @@ function IntensidadeTab({ client, onUpdate }) {
           <button
             key={s}
             onClick={() => registrarChecagem(s)}
-            className={`rounded-full px-4 py-2 text-xs font-medium transition-colors ${
+            disabled={salvando}
+            className={`rounded-full px-4 py-2 text-xs font-medium transition-colors disabled:opacity-60 ${
               client.intensidade.status === s ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
             }`}
           >
@@ -343,7 +324,7 @@ function IntensidadeTab({ client, onUpdate }) {
           href={waLink}
           target="_blank"
           rel="noreferrer"
-          onClick={marcarMensagemEnviada}
+          onClick={() => onMarkIntensityMessageSent(client)}
           className="mt-5 flex items-center justify-center gap-2 rounded-full bg-emerald-brand px-5 py-3 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright"
         >
           <MessageCircle size={16} />

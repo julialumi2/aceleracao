@@ -9,18 +9,7 @@ function formatDate(iso) {
   return `${d}/${m}/${y}`;
 }
 
-export default function Intensity({ clients, onUpdate, onOpenClient }) {
-  function marcarMensagemEnviada(client) {
-    const hoje = new Date().toISOString().slice(0, 10);
-    const historico = [...(client.intensidade.historico || [])];
-    const ultima = historico[historico.length - 1];
-    if (ultima && ultima.data === hoje) {
-      historico[historico.length - 1] = { ...ultima, mensagemEnviada: true };
-    } else {
-      historico.push({ id: `i-${Date.now()}`, data: hoje, status: client.intensidade.status, observacao: client.intensidade.observacao, mensagemEnviada: true });
-    }
-    onUpdate(client.id, { intensidade: { ...client.intensidade, historico } });
-  }
+export default function Intensity({ clients, onMarkMessageSent, onOpenClient }) {
   const precisaAtencao = clients.filter((c) => c.intensidade.status !== "ativo");
   const ativos = clients.filter((c) => c.intensidade.status === "ativo");
 
@@ -58,16 +47,16 @@ export default function Intensity({ clients, onUpdate, onOpenClient }) {
                     <ChevronRight size={15} className="hidden text-ink-dim sm:block" />
                   </div>
                 </button>
-                <button
-                  onClick={() => {
-                    window.open(waLink, "_blank", "noreferrer");
-                    marcarMensagemEnviada(c);
-                  }}
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => onMarkMessageSent(c)}
                   className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-brand px-3 py-2 text-xs font-medium text-base transition-colors hover:bg-emerald-bright"
                 >
                   <MessageCircle size={13} />
                   Enviar mensagem
-                </button>
+                </a>
               </div>
             );
           })}

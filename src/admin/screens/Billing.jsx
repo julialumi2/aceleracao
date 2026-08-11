@@ -16,7 +16,7 @@ function allInvoices(clients) {
   return sortByVencimento(clients.flatMap((c) => (c.boletos || []).map((b) => ({ ...b, cliente: c }))));
 }
 
-export default function Billing({ clients, onUpdate, onOpenClient }) {
+export default function Billing({ clients, onSetInvoiceStatus, onMarkInvoiceAlertSent, onOpenClient }) {
   const invoices = allInvoices(clients);
   const atrasados = invoices.filter((b) => b.status === "atrasado");
   const pendentes = invoices.filter((b) => b.status === "pendente");
@@ -24,13 +24,6 @@ export default function Billing({ clients, onUpdate, onOpenClient }) {
 
   const alertasPendentes = atrasados.filter((b) => !b.alertaEnviadoEm).length;
   const alertasDisparados = atrasados.filter((b) => b.alertaEnviadoEm).length;
-
-  function marcarAlertaEnviado(boleto) {
-    const cliente = boleto.cliente;
-    const hoje = new Date().toISOString().slice(0, 10);
-    const boletos = cliente.boletos.map((b) => (b.id === boleto.id ? { ...b, alertaEnviadoEm: hoje } : b));
-    onUpdate(cliente.id, { boletos });
-  }
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -50,14 +43,21 @@ export default function Billing({ clients, onUpdate, onOpenClient }) {
         </div>
       )}
 
-      <Section title={`Atrasados (${atrasados.length})`} invoices={atrasados} onOpenClient={onOpenClient} onAlert={marcarAlertaEnviado} showAlert />
-      <Section title={`Pendentes (${pendentes.length})`} invoices={pendentes} onOpenClient={onOpenClient} />
-      <Section title={`Em dia (${pagos.length})`} invoices={pagos} onOpenClient={onOpenClient} />
+      <Section
+        title={`Atrasados (${atrasados.length})`}
+        invoices={atrasados}
+        onOpenClient={onOpenClient}
+        onSetInvoiceStatus={onSetInvoiceStatus}
+        onMarkInvoiceAlertSent={onMarkInvoiceAlertSent}
+        showAlert
+      />
+      <Section title={`Pendentes (${pendentes.length})`} invoices={pendentes} onOpenClient={onOpenClient} onSetInvoiceStatus={onSetInvoiceStatus} />
+      <Section title={`Em dia (${pagos.length})`} invoices={pagos} onOpenClient={onOpenClient} onSetInvoiceStatus={onSetInvoiceStatus} />
     </div>
   );
 }
 
-function Section({ title, invoices, onOpenClient, onAlert, showAlert = false }) {
+function Section({ title, invoices, onOpenClient, onMarkInvoiceAlertSent, showAlert = false }) {
   if (invoices.length === 0) return null;
 
   return (
@@ -84,11 +84,11 @@ function Section({ title, invoices, onOpenClient, onAlert, showAlert = false }) 
               </button>
 
               {showAlert && (
-                <button
-                  onClick={() => {
-                    window.open(waLink, "_blank", "noreferrer");
-                    onAlert(b);
-                  }}
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => onMarkInvoiceAlertSent(b.cliente, b.id)}
                   className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                     b.alertaEnviadoEm
                       ? "border border-line text-ink-muted hover:text-ink"
@@ -97,7 +97,7 @@ function Section({ title, invoices, onOpenClient, onAlert, showAlert = false }) 
                 >
                   <MessageCircle size={13} />
                   {b.alertaEnviadoEm ? "Reenviar" : "Alertar"}
-                </button>
+                </a>
               )}
             </div>
           );

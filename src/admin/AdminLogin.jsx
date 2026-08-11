@@ -15,10 +15,13 @@ export default function AdminLogin({ onAuthenticated, onBack }) {
       // Login da equipe usa o mesmo Supabase Auth; a distinção de papel
       // (admin/mentor/financeiro) deve vir de uma tabela `staff_members`
       // consultada após o login, quando isso entrar em produção.
-      await signInWithEmail(form).catch(() => null);
+      // Precisa ter sucesso de verdade: as tabelas do painel são protegidas
+      // por RLS (só usuário autenticado lê/escreve), então sem sessão válida
+      // o painel abriria vazio.
+      await signInWithEmail(form);
       onAuthenticated({ name: form.email.split("@")[0] || "Equipe", email: form.email });
     } catch (err) {
-      setError(err.message || "Não foi possível entrar. Tente novamente.");
+      setError("E-mail ou senha incorretos.");
     } finally {
       setLoading(false);
     }
