@@ -1,4 +1,4 @@
-import { Users, FileWarning, ReceiptText, TrendingDown, Contact, Activity } from "lucide-react";
+import { Users, FileWarning, ReceiptText, TrendingDown, Contact, Activity, FileSignature, CalendarClock, ChevronRight, PartyPopper } from "lucide-react";
 import KpiCard from "../components/KpiCard.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { currentInvoice } from "../lib/invoices.js";
@@ -13,11 +13,68 @@ function isThisWeek(dateStr) {
   return date >= sevenDaysAgo && date <= now;
 }
 
-export default function AdminDashboard({ clients, leads, onNavigate }) {
+// Junta tudo que precisa de uma decisão da equipe num só lugar, em vez de
+// espalhado pelas telas de Clientes/Cobranças/Intensidade.
+function buildAcoesPendentes(clients) {
+  const acoes = [];
+
+  for (const c of clients) {
+    const boleto = currentInvoice(c.boletos);
+    if (boleto?.status === "atrasado" && !boleto.alertaEnviadoEm) {
+      acoes.push({
+        id: `${c.id}-boleto`,
+        cliente: c,
+        tab: "cobranca",
+        icon: ReceiptText,
+        tone: "text-flame",
+        texto: `Boleto atrasado — R$ ${boleto.valor.toFixed(2)}, sem alerta enviado`,
+        prioridade: 1,
+      });
+    }
+    if (c.contrato.status === "pendente") {
+      acoes.push({
+        id: `${c.id}-contrato`,
+        cliente: c,
+        tab: "contrato",
+        icon: FileSignature,
+        tone: "text-amber-300",
+        texto: "Contrato pendente de assinatura",
+        prioridade: 2,
+      });
+    }
+    if (c.cobrancaRecorrente?.valor == null) {
+      acoes.push({
+        id: `${c.id}-cobranca-config`,
+        cliente: c,
+        tab: "cobranca",
+        icon: CalendarClock,
+        tone: "text-amber-300",
+        texto: "Cobrança recorrente não configurada",
+        prioridade: 3,
+      });
+    }
+    if (c.intensidade.status !== "ativo") {
+      acoes.push({
+        id: `${c.id}-intensidade`,
+        cliente: c,
+        tab: "intensidade",
+        icon: TrendingDown,
+        tone: "text-amber-300",
+        texto: c.intensidade.status === "inativo" ? "Intensidade inativa" : "Intensidade em queda",
+        prioridade: 4,
+      });
+    }
+  }
+
+  return acoes.sort((a, b) => a.prioridade - b.prioridade);
+}
+
+export default function AdminDashboard({ clients, leads, onNavigate, onOpenClient }) {
   const contratosPendentes = clients.filter((c) => c.contrato.status === "pendente").length;
   const boletosAtrasados = clients.filter((c) => currentInvoice(c.boletos)?.status === "atrasado").length;
   const baixaIntensidade = clients.filter((c) => c.intensidade.status !== "ativo").length;
   const leadsNovosSemana = leads.filter((l) => isThisWeek(l.criadoEm)).length;
+  const acoesPendentes = buildAcoesPendentes(clients);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -35,6 +92,38 @@ export default function AdminDashboard({ clients, leads, onNavigate }) {
       </div>
 
       <div className="mt-8 rounded-2xl border border-line bg-surface p-6">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <Activity size={15} className="text-emerald-bright" />
+          Ações pendentes hoje ({acoesPendentes.length})
+        </h2>
+        <p className="mt-1 text-xs text-ink-dim">Contrato, cobrança e intensidade que precisam de uma decisão — cada item já leva pra aba certa do cliente.</p>
+
+        <div className="mt-4 overflow-hidden rounded-xl border border-line/60">
+          {acoesPendentes.map(({ id, cliente, tab, icon: Icon, tone, texto }) => (
+            <button
+              key={id}
+              onClick={() => onOpenClient(cliente.id, tab)}
+              className="flex w-full items-center justify-between gap-3 border-b border-line/40 bg-surface-raised px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-surface"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <Icon size={16} className={`shrink-0 ${tone}`} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-ink">{cliente.nome}</p>
+                  <p className="truncate text-xs text-ink-dim">{texto}</p>
+                </div>
+              </div>
+              <ChevronRight size={15} className="shrink-0 text-ink-dim" />
+            </button>
+          ))}
+          {acoesPendentes.length === 0 && (
+            <p className="flex items-center justify-center gap-2 px-4 py-8 text-center text-sm text-ink-dim">
+              <PartyPopper size={16} /> Tudo em dia — nenhuma ação pendente agora.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-line bg-surface p-6">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
             <Activity size={15} className="text-emerald-bright" />
@@ -65,54 +154,6 @@ export default function AdminDashboard({ clients, leads, onNavigate }) {
               </div>
             );
           })}
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-line bg-surface p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <TrendingDown size={15} className="text-amber-300" />
-              Clientes em queda de intensidade
-            </h2>
-            <button onClick={() => onNavigate("intensidade")} className="text-xs font-medium text-emerald-bright hover:underline">
-              Ver todos
-            </button>
-          </div>
-          <ul className="mt-4 space-y-3">
-            {clients
-              .filter((c) => c.intensidade.status !== "ativo")
-              .map((c) => (
-                <li key={c.id} className="flex items-center justify-between text-sm">
-                  <span className="text-ink-muted">{c.nome}</span>
-                  <StatusBadge status={c.intensidade.status} />
-                </li>
-              ))}
-            {baixaIntensidade === 0 && <p className="text-sm text-ink-dim">Nenhum cliente em queda no momento.</p>}
-          </ul>
-        </div>
-
-        <div className="rounded-2xl border border-line bg-surface p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <ReceiptText size={15} className="text-flame" />
-              Boletos em atraso
-            </h2>
-            <button onClick={() => onNavigate("cobrancas")} className="text-xs font-medium text-emerald-bright hover:underline">
-              Ver cobranças
-            </button>
-          </div>
-          <ul className="mt-4 space-y-3">
-            {clients
-              .filter((c) => currentInvoice(c.boletos)?.status === "atrasado")
-              .map((c) => (
-                <li key={c.id} className="flex items-center justify-between text-sm">
-                  <span className="text-ink-muted">{c.nome}</span>
-                  <span className="font-mono text-xs text-ink-dim">R$ {currentInvoice(c.boletos).valor.toFixed(2)}</span>
-                </li>
-              ))}
-            {boletosAtrasados === 0 && <p className="text-sm text-ink-dim">Nenhum boleto atrasado no momento.</p>}
-          </ul>
         </div>
       </div>
     </div>

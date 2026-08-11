@@ -25,8 +25,8 @@ function formatDate(iso) {
   return `${d}/${m}/${y}`;
 }
 
-export default function ClientDetail({ client, onBack, ...handlers }) {
-  const [tab, setTab] = useState("dados");
+export default function ClientDetail({ client, onBack, initialTab = "dados", ...handlers }) {
+  const [tab, setTab] = useState(initialTab);
   const boletoAtual = currentInvoice(client.boletos);
 
   return (

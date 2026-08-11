@@ -35,6 +35,7 @@ const MOBILE_NAV = [
 export default function AdminLayout({ session, onLogout }) {
   const [active, setActive] = useState("dashboard");
   const [selectedClientId, setSelectedClientId] = useState(null);
+  const [selectedTab, setSelectedTab] = useState("dados");
   const [clients, setClients] = useState([]);
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -143,8 +144,14 @@ export default function AdminLayout({ session, onLogout }) {
     setActive(key);
   }
 
-  function openClient(id) {
+  function openClient(id, tab = "dados") {
     setSelectedClientId(id);
+    setSelectedTab(tab);
+  }
+
+  function openClientTab(id, tab) {
+    setActive("clientes");
+    openClient(id, tab);
   }
 
   async function handleUpdateLeadStatus(lead, status) {
@@ -197,11 +204,19 @@ export default function AdminLayout({ session, onLogout }) {
 
           {!loading && (
             <>
-              {active === "dashboard" && <AdminDashboard clients={clients} leads={leads} onNavigate={navigate} />}
+              {active === "dashboard" && (
+                <AdminDashboard clients={clients} leads={leads} onNavigate={navigate} onOpenClient={openClientTab} />
+              )}
 
               {active === "clientes" &&
                 (selectedClient ? (
-                  <ClientDetail client={selectedClient} {...clientHandlers} onBack={() => setSelectedClientId(null)} />
+                  <ClientDetail
+                    key={`${selectedClient.id}:${selectedTab}`}
+                    client={selectedClient}
+                    initialTab={selectedTab}
+                    {...clientHandlers}
+                    onBack={() => setSelectedClientId(null)}
+                  />
                 ) : (
                   <ClientsList clients={clients} onOpenClient={openClient} />
                 ))}
@@ -215,7 +230,7 @@ export default function AdminLayout({ session, onLogout }) {
                   clients={clients}
                   onSetInvoiceStatus={handleSetInvoiceStatus}
                   onMarkInvoiceAlertSent={handleMarkInvoiceAlertSent}
-                  onOpenClient={(id) => { setActive("clientes"); openClient(id); }}
+                  onOpenClient={(id) => openClientTab(id, "cobranca")}
                 />
               )}
 
@@ -223,7 +238,7 @@ export default function AdminLayout({ session, onLogout }) {
                 <Intensity
                   clients={clients}
                   onMarkMessageSent={handleMarkIntensityMessageSent}
-                  onOpenClient={(id) => { setActive("clientes"); openClient(id); }}
+                  onOpenClient={(id) => openClientTab(id, "intensidade")}
                 />
               )}
 
