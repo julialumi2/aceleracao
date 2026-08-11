@@ -69,14 +69,16 @@ export default function AdminLayout({ session, onLogout }) {
     await updateClientFields(id, patch).catch((err) => setLoadError(err.message));
   }
 
-  async function handleSetRecurringBilling(client, { valor, diaVencimento, proximaCobrancaEm }) {
-    await setRecurringBilling(client.id, { valor, diaVencimento, proximaCobrancaEm });
+  async function handleSetRecurringBilling(client, { valor, diaVencimento, proximaCobrancaEm, asaasCustomerId, asaasSubscriptionId }) {
+    await setRecurringBilling(client.id, { valor, diaVencimento, proximaCobrancaEm, asaasCustomerId, asaasSubscriptionId });
     patchClientLocal(client.id, {
       cobrancaRecorrente: {
         ...client.cobrancaRecorrente,
         valor,
         diaVencimento,
         proximaCobrancaEm,
+        asaasCustomerId: asaasCustomerId || client.cobrancaRecorrente?.asaasCustomerId || null,
+        asaasSubscriptionId: asaasSubscriptionId || client.cobrancaRecorrente?.asaasSubscriptionId || null,
         configuradaEm: new Date().toISOString(),
       },
     });

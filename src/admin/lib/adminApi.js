@@ -109,20 +109,26 @@ export async function updateClientFields(id, fields) {
 }
 
 // ---------- Cobrança recorrente ----------
-// Só grava a decisão (valor + dia de vencimento calculado). A criação da
-// assinatura no Asaas em si acontece numa Edge Function separada — a
-// chave de API não pode ficar no navegador. asaas_customer_id/
-// asaas_subscription_id continuam nulos até essa parte estar ligada.
-export async function setRecurringBilling(id, { valor, diaVencimento, proximaCobrancaEm }) {
-  const { error } = await supabase
-    .from("restaurants")
-    .update({
-      valor_recorrente: valor,
-      dia_vencimento_recorrente: diaVencimento,
-      proxima_cobranca_em: proximaCobrancaEm,
-      cobranca_configurada_em: new Date().toISOString(),
-    })
-    .eq("id", id);
+// Dois casos:
+// 1. Cliente novo: só grava a decisão (valor + dia calculado a partir da
+//    data informada). A criação da assinatura no Asaas em si acontece
+//    numa Edge Function separada — a chave de API não pode ficar no
+//    navegador. asaas_customer_id/asaas_subscription_id ficam nulos até
+//    essa parte estar ligada.
+// 2. Cliente que já tem assinatura no Asaas (ex.: base antiga sendo
+//    importada): não cria nada novo, só vincula os IDs que já existem lá
+//    — evita duplicar cobrança de quem já paga.
+export async function setRecurringBilling(id, { valor, diaVencimento, proximaCobrancaEm, asaasCustomerId, asaasSubscriptionId }) {
+  const payload = {
+    valor_recorrente: valor,
+    dia_vencimento_recorrente: diaVencimento,
+    proxima_cobranca_em: proximaCobrancaEm,
+    cobranca_configurada_em: new Date().toISOString(),
+  };
+  if (asaasCustomerId) payload.asaas_customer_id = asaasCustomerId;
+  if (asaasSubscriptionId) payload.asaas_subscription_id = asaasSubscriptionId;
+
+  const { error } = await supabase.from("restaurants").update(payload).eq("id", id);
   if (error) throw error;
 }
 

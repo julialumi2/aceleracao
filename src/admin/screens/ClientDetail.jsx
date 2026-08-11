@@ -275,20 +275,39 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
 function RecurringBillingSetup({ client, onSetRecurringBilling }) {
   const [aberto, setAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [form, setForm] = useState({ valor: "", jaPago: "sim", data: new Date().toISOString().slice(0, 10) });
+  const [modo, setModo] = useState("existente"); // "novo" | "existente"
+  const [formNovo, setFormNovo] = useState({ valor: "", jaPago: "sim", data: new Date().toISOString().slice(0, 10) });
+  const [formExistente, setFormExistente] = useState({ valor: "", diaVencimento: "", proximaCobrancaEm: "", asaasCustomerId: "", asaasSubscriptionId: "" });
 
   const configurado = client.cobrancaRecorrente?.valor != null;
-  const preview = form.data ? calcularProximaCobranca(form.data, form.jaPago === "sim") : null;
+  const preview = formNovo.data ? calcularProximaCobranca(formNovo.data, formNovo.jaPago === "sim") : null;
 
-  async function salvar() {
-    if (!form.valor || !form.data || salvando) return;
+  async function salvarNovo() {
+    if (!formNovo.valor || !formNovo.data || salvando) return;
     setSalvando(true);
     try {
-      const proximaCobrancaEm = calcularProximaCobranca(form.data, form.jaPago === "sim");
+      const proximaCobrancaEm = calcularProximaCobranca(formNovo.data, formNovo.jaPago === "sim");
       await onSetRecurringBilling(client, {
-        valor: Number(form.valor) || 0,
-        diaVencimento: diaDoVencimento(form.data),
+        valor: Number(formNovo.valor) || 0,
+        diaVencimento: diaDoVencimento(formNovo.data),
         proximaCobrancaEm,
+      });
+      setAberto(false);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function salvarExistente() {
+    if (!formExistente.valor || !formExistente.diaVencimento || !formExistente.proximaCobrancaEm || salvando) return;
+    setSalvando(true);
+    try {
+      await onSetRecurringBilling(client, {
+        valor: Number(formExistente.valor) || 0,
+        diaVencimento: Number(formExistente.diaVencimento),
+        proximaCobrancaEm: formExistente.proximaCobrancaEm,
+        asaasCustomerId: formExistente.asaasCustomerId || undefined,
+        asaasSubscriptionId: formExistente.asaasSubscriptionId || undefined,
       });
       setAberto(false);
     } finally {
@@ -311,7 +330,7 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
             </p>
             <p className="mt-2 text-xs text-ink-dim">
               {client.cobrancaRecorrente.asaasSubscriptionId
-                ? "Ativa no Asaas."
+                ? `Vinculada à assinatura ${client.cobrancaRecorrente.asaasSubscriptionId} no Asaas.`
                 : "Aguardando integração com o Asaas — assinatura ainda não foi criada lá."}
             </p>
           </div>
@@ -329,62 +348,126 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
         <CalendarClock size={15} className="text-emerald-bright" />
         Configurar cobrança recorrente
       </p>
-      <p className="mt-1 text-xs text-ink-dim">
-        Preço combinado com esse cliente — define o valor e o dia de vencimento da mensalidade.
-      </p>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <TextField label="Valor recorrente (R$)" value={form.valor} onChange={(v) => setForm((f) => ({ ...f, valor: v }))} />
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-ink-muted">Já pagou a 1ª parcela?</span>
-          <div className="flex gap-2">
-            {[
-              ["sim", "Sim"],
-              ["nao", "Não"],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, jaPago: value }))}
-                className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors ${
-                  form.jaPago === value ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </label>
-      </div>
-
-      <div className="mt-4">
-        <TextField
-          label={form.jaPago === "sim" ? "Data em que pagou" : "Data prevista pra pagar"}
-          value={form.data}
-          onChange={(v) => setForm((f) => ({ ...f, data: v }))}
-        />
-      </div>
-
-      {preview && (
-        <p className="mt-3 text-xs text-ink-dim">
-          Próxima cobrança da recorrência: <span className="text-ink">{formatDate(preview)}</span>, todo dia {diaDoVencimento(form.data)}
-        </p>
-      )}
-
-      <div className="mt-5 flex items-center gap-3">
+      <div className="mt-3 flex gap-1 rounded-xl border border-line bg-surface-raised p-1">
         <button
-          onClick={salvar}
-          disabled={salvando || !form.valor || !form.data}
-          className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+          type="button"
+          onClick={() => setModo("existente")}
+          className={`flex-1 rounded-lg py-2 text-xs font-medium transition-colors ${
+            modo === "existente" ? "bg-emerald-brand text-base" : "text-ink-muted hover:text-ink"
+          }`}
         >
-          Salvar
+          Já tem assinatura no Asaas
         </button>
-        {configurado && (
-          <button onClick={() => setAberto(false)} className="text-sm text-ink-muted hover:text-ink">
-            Cancelar
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setModo("novo")}
+          className={`flex-1 rounded-lg py-2 text-xs font-medium transition-colors ${
+            modo === "novo" ? "bg-emerald-brand text-base" : "text-ink-muted hover:text-ink"
+          }`}
+        >
+          Cliente novo
+        </button>
       </div>
+
+      {modo === "existente" ? (
+        <>
+          <p className="mt-3 text-xs text-ink-dim">
+            Cliente que já paga vocês — só registra o que já existe no Asaas, sem criar nada novo (evita duplicar a cobrança).
+          </p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <TextField label="Valor recorrente (R$)" value={formExistente.valor} onChange={(v) => setFormExistente((f) => ({ ...f, valor: v }))} />
+            <TextField label="Dia de vencimento (1–28)" value={formExistente.diaVencimento} onChange={(v) => setFormExistente((f) => ({ ...f, diaVencimento: v }))} />
+          </div>
+          <div className="mt-4">
+            <TextField
+              label="Próxima cobrança prevista"
+              value={formExistente.proximaCobrancaEm}
+              onChange={(v) => setFormExistente((f) => ({ ...f, proximaCobrancaEm: v }))}
+            />
+            <p className="mt-1 text-xs text-ink-dim">Confere no painel do Asaas — "Data do próximo vencimento" da assinatura.</p>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <TextField label="ID do cliente no Asaas" value={formExistente.asaasCustomerId} onChange={(v) => setFormExistente((f) => ({ ...f, asaasCustomerId: v }))} />
+            <TextField label="ID da assinatura no Asaas" value={formExistente.asaasSubscriptionId} onChange={(v) => setFormExistente((f) => ({ ...f, asaasSubscriptionId: v }))} />
+          </div>
+
+          <div className="mt-5 flex items-center gap-3">
+            <button
+              onClick={salvarExistente}
+              disabled={salvando || !formExistente.valor || !formExistente.diaVencimento || !formExistente.proximaCobrancaEm}
+              className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+            >
+              Salvar
+            </button>
+            {configurado && (
+              <button onClick={() => setAberto(false)} className="text-sm text-ink-muted hover:text-ink">
+                Cancelar
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="mt-3 text-xs text-ink-dim">
+            Preço combinado com esse cliente — define o valor e o dia de vencimento da mensalidade.
+          </p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <TextField label="Valor recorrente (R$)" value={formNovo.valor} onChange={(v) => setFormNovo((f) => ({ ...f, valor: v }))} />
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-ink-muted">Já pagou a 1ª parcela?</span>
+              <div className="flex gap-2">
+                {[
+                  ["sim", "Sim"],
+                  ["nao", "Não"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFormNovo((f) => ({ ...f, jaPago: value }))}
+                    className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors ${
+                      formNovo.jaPago === value ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </label>
+          </div>
+
+          <div className="mt-4">
+            <TextField
+              label={formNovo.jaPago === "sim" ? "Data em que pagou" : "Data prevista pra pagar"}
+              value={formNovo.data}
+              onChange={(v) => setFormNovo((f) => ({ ...f, data: v }))}
+            />
+          </div>
+
+          {preview && (
+            <p className="mt-3 text-xs text-ink-dim">
+              Próxima cobrança da recorrência: <span className="text-ink">{formatDate(preview)}</span>, todo dia {diaDoVencimento(formNovo.data)}
+            </p>
+          )}
+
+          <div className="mt-5 flex items-center gap-3">
+            <button
+              onClick={salvarNovo}
+              disabled={salvando || !formNovo.valor || !formNovo.data}
+              className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+            >
+              Salvar
+            </button>
+            {configurado && (
+              <button onClick={() => setAberto(false)} className="text-sm text-ink-muted hover:text-ink">
+                Cancelar
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </Panel>
   );
 }
