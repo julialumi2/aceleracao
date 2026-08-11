@@ -109,7 +109,7 @@ function DadosTab({ client, onUpdate, onArchiveClient }) {
         <TextField label="CNPJ" value={client.cnpj} onChange={(v) => onUpdate(client.id, { cnpj: v })} />
         <TextField label="Telefone (WhatsApp)" value={client.telefone} onChange={(v) => onUpdate(client.id, { telefone: v })} />
         <TextField label="E-mail" value={client.email} onChange={(v) => onUpdate(client.id, { email: v })} />
-        <TextField label="Endereço" value={client.endereco} onChange={(v) => onUpdate(client.id, { endereco: v })} />
+        <TextField label="CEP" value={client.cep} onChange={(v) => onUpdate(client.id, { cep: v })} />
         <TextField
           label="Link do cardápio"
           value={client.cardapioUrl}

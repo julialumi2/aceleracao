@@ -14,7 +14,7 @@ const CAMPOS_NOVO_CLIENTE = [
   { key: "cnpj", label: "CNPJ" },
   { key: "telefone", label: "Telefone (WhatsApp)" },
   { key: "email", label: "E-mail" },
-  { key: "endereco", label: "Endereço" },
+  { key: "cep", label: "CEP" },
 ];
 
 function formatArchivedDate(iso) {
@@ -26,7 +26,7 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ contrato: "todos", boleto: "todos", intensidade: "todos" });
   const [mostrarForm, setMostrarForm] = useState(false);
-  const [novo, setNovo] = useState({ nome: "", cnpj: "", telefone: "", email: "", endereco: "" });
+  const [novo, setNovo] = useState({ nome: "", cnpj: "", telefone: "", email: "", cep: "" });
   const [salvando, setSalvando] = useState(false);
   const [verArquivados, setVerArquivados] = useState(false);
 
@@ -44,7 +44,7 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
     setSalvando(true);
     try {
       await onCreateClient(novo);
-      setNovo({ nome: "", cnpj: "", telefone: "", email: "", endereco: "" });
+      setNovo({ nome: "", cnpj: "", telefone: "", email: "", cep: "" });
       setMostrarForm(false);
     } finally {
       setSalvando(false);
