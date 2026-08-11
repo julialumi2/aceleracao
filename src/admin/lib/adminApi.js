@@ -182,6 +182,16 @@ export async function addInvoice(restaurantId, { valor, vencimento }) {
   return { id: data.id, valor: Number(data.valor), vencimento: data.vencimento, status: data.status, alertaEnviadoEm: data.alerta_enviado_em };
 }
 
+export async function updateInvoice(invoiceId, { valor, vencimento }) {
+  const { error } = await supabase.from("invoices").update({ valor, vencimento }).eq("id", invoiceId);
+  if (error) throw error;
+}
+
+export async function deleteInvoice(invoiceId) {
+  const { error } = await supabase.from("invoices").delete().eq("id", invoiceId);
+  if (error) throw error;
+}
+
 export async function setInvoiceStatus(invoiceId, status) {
   const { error } = await supabase.from("invoices").update({ status }).eq("id", invoiceId);
   if (error) throw error;

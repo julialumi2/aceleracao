@@ -16,6 +16,8 @@ import {
   setContractDocumentUrl,
   addInvoice,
   setInvoiceStatus,
+  updateInvoice,
+  deleteInvoice,
   markInvoiceAlertSent,
   addIntensityCheck,
   markIntensityMessageSent,
@@ -120,6 +122,20 @@ export default function AdminLayout({ session, onLogout }) {
     await setInvoiceStatus(invoiceId, status).catch((err) => setLoadError(err.message));
   }
 
+  async function handleUpdateInvoice(client, invoiceId, { valor, vencimento }) {
+    patchClientLocal(client.id, {
+      boletos: client.boletos.map((b) => (b.id === invoiceId ? { ...b, valor, vencimento } : b)),
+    });
+    await updateInvoice(invoiceId, { valor, vencimento }).catch((err) => setLoadError(err.message));
+  }
+
+  async function handleDeleteInvoice(client, invoiceId) {
+    patchClientLocal(client.id, {
+      boletos: client.boletos.filter((b) => b.id !== invoiceId),
+    });
+    await deleteInvoice(invoiceId).catch((err) => setLoadError(err.message));
+  }
+
   async function handleMarkInvoiceAlertSent(client, invoiceId) {
     const hoje = await markInvoiceAlertSent(invoiceId);
     patchClientLocal(client.id, {
@@ -216,6 +232,8 @@ export default function AdminLayout({ session, onLogout }) {
     onSetContractDocumentUrl: handleSetContractDocumentUrl,
     onAddInvoice: handleAddInvoice,
     onSetInvoiceStatus: handleSetInvoiceStatus,
+    onUpdateInvoice: handleUpdateInvoice,
+    onDeleteInvoice: handleDeleteInvoice,
     onMarkInvoiceAlertSent: handleMarkInvoiceAlertSent,
     onAddIntensityCheck: handleAddIntensityCheck,
     onMarkIntensityMessageSent: handleMarkIntensityMessageSent,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive } from "lucide-react";
+import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive, Pencil, Trash2 } from "lucide-react";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
@@ -19,10 +19,12 @@ const SAUDE_OPTIONS = [
   { value: "laranja", label: "Não iniciado" },
 ];
 
+const MESES_ABREV = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
 function formatDate(iso) {
   if (!iso) return "—";
   const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
+  return `${d}/${MESES_ABREV[Number(m) - 1]}/${y}`;
 }
 
 export default function ClientDetail({ client, onBack, initialTab = "dados", ...handlers }) {
@@ -227,7 +229,7 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) 
   );
 }
 
-function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAlertSent, onSetRecurringBilling }) {
+function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAlertSent, onUpdateInvoice, onDeleteInvoice, onSetRecurringBilling }) {
   const [novo, setNovo] = useState({ valor: "", vencimento: "" });
   const [salvando, setSalvando] = useState(false);
   const boletos = sortByVencimento(client.boletos || []);
@@ -253,47 +255,17 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
       </p>
 
       <div className="space-y-3">
-        {boletos.map((b) => {
-          const waLink = buildWhatsAppLink(client.telefone, billingAlertMessage(client, b));
-          return (
-            <div key={b.id} className="rounded-xl border border-line/60 bg-surface-raised p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <span className="font-mono text-sm text-ink">R$ {b.valor.toFixed(2)}</span>
-                  <span className="ml-2 text-xs text-ink-dim">vence {formatDate(b.vencimento)}</span>
-                  {b.alertaEnviadoEm && <span className="ml-2 text-xs text-ink-dim">· alerta enviado {formatDate(b.alertaEnviadoEm)}</span>}
-                </div>
-                <StatusBadge status={b.status} />
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {["pendente", "atrasado", "pago"].map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => onSetInvoiceStatus(client, b.id, s)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                      b.status === s ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
-                    }`}
-                  >
-                    {s === "pendente" ? "Pendente" : s === "atrasado" ? "Atrasado" : "Pago"}
-                  </button>
-                ))}
-                {b.status === "atrasado" && (
-                  <a
-                    href={waLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => onMarkInvoiceAlertSent(client, b.id)}
-                    className="ml-auto flex items-center gap-1.5 rounded-full border border-emerald-brand/40 px-3 py-1.5 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
-                  >
-                    <MessageCircle size={12} />
-                    Alertar
-                  </a>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {boletos.map((b) => (
+          <BoletoCard
+            key={b.id}
+            client={client}
+            boleto={b}
+            onSetInvoiceStatus={onSetInvoiceStatus}
+            onMarkInvoiceAlertSent={onMarkInvoiceAlertSent}
+            onUpdateInvoice={onUpdateInvoice}
+            onDeleteInvoice={onDeleteInvoice}
+          />
+        ))}
         {boletos.length === 0 && <p className="text-sm text-ink-dim">Nenhum boleto cadastrado ainda.</p>}
       </div>
 
@@ -320,6 +292,128 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
       </div>
     </Panel>
     </>
+  );
+}
+
+function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertSent, onUpdateInvoice, onDeleteInvoice }) {
+  const [editando, setEditando] = useState(false);
+  const [confirmExcluir, setConfirmExcluir] = useState(false);
+  const [form, setForm] = useState({ valor: String(b.valor), vencimento: b.vencimento });
+  const [salvando, setSalvando] = useState(false);
+
+  const waLink = buildWhatsAppLink(client.telefone, billingAlertMessage(client, b));
+
+  async function salvarEdicao() {
+    if (!form.valor || !form.vencimento || salvando) return;
+    setSalvando(true);
+    try {
+      await onUpdateInvoice(client, b.id, { valor: Number(form.valor) || 0, vencimento: form.vencimento });
+      setEditando(false);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function excluir() {
+    if (salvando) return;
+    setSalvando(true);
+    try {
+      await onDeleteInvoice(client, b.id);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  if (editando) {
+    return (
+      <div className="rounded-xl border border-line/60 bg-surface-raised p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <TextField label="Valor (R$)" value={form.valor} onChange={(v) => setForm((f) => ({ ...f, valor: v }))} />
+          <TextField label="Vencimento" value={form.vencimento} onChange={(v) => setForm((f) => ({ ...f, vencimento: v }))} />
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <button
+            onClick={salvarEdicao}
+            disabled={salvando}
+            className="rounded-full bg-emerald-brand px-4 py-1.5 text-xs font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+          >
+            Salvar
+          </button>
+          <button onClick={() => setEditando(false)} className="text-xs text-ink-muted hover:text-ink">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-line/60 bg-surface-raised p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <span className="font-mono text-sm text-ink">R$ {b.valor.toFixed(2)}</span>
+          <span className="ml-2 text-xs text-ink-dim">vence {formatDate(b.vencimento)}</span>
+          {b.alertaEnviadoEm && <span className="ml-2 text-xs text-ink-dim">· alerta enviado {formatDate(b.alertaEnviadoEm)}</span>}
+        </div>
+        <StatusBadge status={b.status} />
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {["pendente", "atrasado", "pago"].map((s) => (
+          <button
+            key={s}
+            onClick={() => onSetInvoiceStatus(client, b.id, s)}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              b.status === s ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
+            }`}
+          >
+            {s === "pendente" ? "Pendente" : s === "atrasado" ? "Atrasado" : "Pago"}
+          </button>
+        ))}
+        {b.status === "atrasado" && (
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => onMarkInvoiceAlertSent(client, b.id)}
+            className="ml-auto flex items-center gap-1.5 rounded-full border border-emerald-brand/40 px-3 py-1.5 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
+          >
+            <MessageCircle size={12} />
+            Alertar
+          </a>
+        )}
+      </div>
+
+      <div className="mt-2 flex items-center justify-end gap-2 border-t border-line/40 pt-2">
+        <button
+          onClick={() => setEditando(true)}
+          className="flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
+        >
+          <Pencil size={12} /> Editar
+        </button>
+        {confirmExcluir ? (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={excluir}
+              disabled={salvando}
+              className="rounded-full bg-flame/15 px-3 py-1.5 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
+            >
+              Confirmar exclusão
+            </button>
+            <button onClick={() => setConfirmExcluir(false)} className="text-xs text-ink-muted hover:text-ink">
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmExcluir(true)}
+            className="flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
+          >
+            <Trash2 size={12} /> Excluir
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
