@@ -198,7 +198,7 @@ export default function AdminLayout({ session, onLogout }) {
           <button onClick={onLogout} className="text-xs text-ink-muted">Sair</button>
         </div>
 
-        <main className="flex-1 px-5 py-8 md:px-10 md:py-10">
+        <main className="flex-1 px-5 pt-8 pb-24 md:px-10 md:pt-10 md:pb-24 lg:pb-10">
           {loading && (
             <div className="flex items-center gap-2 text-sm text-ink-muted">
               <Loader2 size={16} className="animate-spin" /> Carregando dados do Supabase...
@@ -256,7 +256,7 @@ export default function AdminLayout({ session, onLogout }) {
           )}
         </main>
 
-        <nav className="grid grid-cols-5 border-t border-line/60 bg-surface/60 lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line/60 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {MOBILE_NAV.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
