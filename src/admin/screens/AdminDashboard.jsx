@@ -83,7 +83,7 @@ export default function AdminDashboard({ clients, leads, onNavigate, onOpenClien
         <p className="mt-1 text-sm text-ink-muted">Resumo do que precisa de atenção hoje.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
         <KpiCard icon={Users} label="Clientes ativos" value={clients.length} />
         <KpiCard icon={ReceiptText} label="Boletos atrasados" value={boletosAtrasados} tone={boletosAtrasados ? "danger" : "default"} />
         <KpiCard icon={FileWarning} label="Contratos pendentes" value={contratosPendentes} tone={contratosPendentes ? "warning" : "default"} />
