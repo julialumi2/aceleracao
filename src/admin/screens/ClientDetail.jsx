@@ -77,14 +77,17 @@ function Panel({ children }) {
   return <div className="rounded-2xl border border-line bg-surface p-6">{children}</div>;
 }
 
-function TextField({ label, value, onChange }) {
+function TextField({ label, value, onChange, type = "text" }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-medium text-ink-muted">{label}</span>
       <input
+        type={type}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+        className={`w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none ${
+          type === "date" ? "[color-scheme:dark]" : ""
+        }`}
       />
     </label>
   );
@@ -276,7 +279,7 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
             <TextField label="Valor (R$)" value={novo.valor} onChange={(v) => setNovo((n) => ({ ...n, valor: v }))} />
           </div>
           <div className="min-w-[140px] flex-1">
-            <TextField label="Vencimento" value={novo.vencimento} onChange={(v) => setNovo((n) => ({ ...n, vencimento: v }))} />
+            <TextField label="Vencimento" type="date" value={novo.vencimento} onChange={(v) => setNovo((n) => ({ ...n, vencimento: v }))} />
           </div>
           <button
             onClick={adicionarBoleto}
@@ -329,7 +332,7 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
       <div className="rounded-xl border border-line/60 bg-surface-raised p-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <TextField label="Valor (R$)" value={form.valor} onChange={(v) => setForm((f) => ({ ...f, valor: v }))} />
-          <TextField label="Vencimento" value={form.vencimento} onChange={(v) => setForm((f) => ({ ...f, vencimento: v }))} />
+          <TextField label="Vencimento" type="date" value={form.vencimento} onChange={(v) => setForm((f) => ({ ...f, vencimento: v }))} />
         </div>
         <div className="mt-3 flex items-center gap-3">
           <button
@@ -528,6 +531,7 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
           <div className="mt-4">
             <TextField
               label="Próxima cobrança prevista"
+              type="date"
               value={formExistente.proximaCobrancaEm}
               onChange={(v) => setFormExistente((f) => ({ ...f, proximaCobrancaEm: v }))}
             />
@@ -586,6 +590,7 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
           <div className="mt-4">
             <TextField
               label={formNovo.jaPago === "sim" ? "Data em que pagou" : "Data prevista pra pagar"}
+              type="date"
               value={formNovo.data}
               onChange={(v) => setFormNovo((f) => ({ ...f, data: v }))}
             />
