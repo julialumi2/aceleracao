@@ -21,6 +21,7 @@ import {
   markIntensityMessageSent,
   updateLeadStatus,
   convertLeadToClient,
+  createClient,
 } from "./lib/adminApi.js";
 import { Loader2, LayoutDashboard, Users, Contact, Wallet, Settings as SettingsIcon } from "lucide-react";
 
@@ -167,6 +168,12 @@ export default function AdminLayout({ session, onLogout }) {
     setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status: "convertido" } : l)));
   }
 
+  async function handleCreateClient(fields) {
+    const novoCliente = await createClient(fields);
+    setClients((prev) => [novoCliente, ...prev]);
+    openClient(novoCliente.id, "dados");
+  }
+
   const selectedClient = clients.find((c) => c.id === selectedClientId) || null;
 
   const clientHandlers = {
@@ -220,7 +227,7 @@ export default function AdminLayout({ session, onLogout }) {
                     onBack={() => setSelectedClientId(null)}
                   />
                 ) : (
-                  <ClientsList clients={clients} onOpenClient={openClient} />
+                  <ClientsList clients={clients} onOpenClient={openClient} onCreateClient={handleCreateClient} />
                 ))}
 
               {active === "leads" && (

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, ChevronRight } from "lucide-react";
+import { Search, ChevronRight, UserPlus } from "lucide-react";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { currentInvoice } from "../lib/invoices.js";
 
@@ -9,9 +9,20 @@ const FILTERS = {
   intensidade: ["todos", "ativo", "em_queda", "inativo"],
 };
 
-export default function ClientsList({ clients, onOpenClient }) {
+const CAMPOS_NOVO_CLIENTE = [
+  { key: "nome", label: "Nome" },
+  { key: "cnpj", label: "CNPJ" },
+  { key: "telefone", label: "Telefone (WhatsApp)" },
+  { key: "email", label: "E-mail" },
+  { key: "endereco", label: "Endereço" },
+];
+
+export default function ClientsList({ clients, onOpenClient, onCreateClient }) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ contrato: "todos", boleto: "todos", intensidade: "todos" });
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [novo, setNovo] = useState({ nome: "", cnpj: "", telefone: "", email: "", endereco: "" });
+  const [salvando, setSalvando] = useState(false);
 
   const filtered = clients.filter((c) => {
     const boleto = currentInvoice(c.boletos);
@@ -22,6 +33,18 @@ export default function ClientsList({ clients, onOpenClient }) {
     return matchesQuery && matchesContrato && matchesBoleto && matchesIntensidade;
   });
 
+  async function salvarNovoCliente() {
+    if (!novo.nome.trim() || salvando) return;
+    setSalvando(true);
+    try {
+      await onCreateClient(novo);
+      setNovo({ nome: "", cnpj: "", telefone: "", email: "", endereco: "" });
+      setMostrarForm(false);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -30,16 +53,58 @@ export default function ClientsList({ clients, onOpenClient }) {
           <p className="mt-1 text-sm text-ink-muted">{filtered.length} de {clients.length} clientes</p>
         </div>
 
-        <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:w-64">
-          <Search size={15} className="text-ink-dim" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar cliente..."
-            className="w-full bg-transparent text-sm text-ink placeholder:text-ink-dim focus:outline-none"
-          />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:w-64">
+            <Search size={15} className="text-ink-dim" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar cliente..."
+              className="w-full bg-transparent text-sm text-ink placeholder:text-ink-dim focus:outline-none"
+            />
+          </div>
+          <button
+            onClick={() => setMostrarForm((v) => !v)}
+            className="flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright"
+          >
+            <UserPlus size={15} />
+            Adicionar cliente
+          </button>
         </div>
       </div>
+
+      {mostrarForm && (
+        <div className="mb-6 rounded-2xl border border-line bg-surface p-6">
+          <p className="text-sm font-medium text-ink">Novo cliente</p>
+          <p className="mt-1 text-xs text-ink-dim">Cliente que fechou por fora do formulário — cadastra direto aqui.</p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {CAMPOS_NOVO_CLIENTE.map(({ key, label }) => (
+              <label key={key} className="block">
+                <span className="mb-1.5 block text-xs font-medium text-ink-muted">{label}</span>
+                <input
+                  value={novo[key]}
+                  onChange={(e) => setNovo((n) => ({ ...n, [key]: e.target.value }))}
+                  className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+                />
+              </label>
+            ))}
+          </div>
+
+          <div className="mt-5 flex items-center gap-3">
+            <button
+              onClick={salvarNovoCliente}
+              disabled={!novo.nome.trim() || salvando}
+              className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+            >
+              Salvar e abrir cadastro
+            </button>
+            <button onClick={() => setMostrarForm(false)} className="text-sm text-ink-muted hover:text-ink">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mb-6 flex flex-wrap gap-3">
         <FilterSelect label="Contrato" value={filters.contrato} options={FILTERS.contrato} onChange={(v) => setFilters((f) => ({ ...f, contrato: v }))} />

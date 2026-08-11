@@ -205,7 +205,10 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
     <>
       <RecurringBillingSetup client={client} onSetRecurringBilling={onSetRecurringBilling} />
     <Panel>
-      <p className="mb-4 text-xs font-medium text-ink-muted">Boletos, do vencimento mais próximo ao mais distante</p>
+      <p className="mb-1 text-xs font-medium text-ink-muted">Boletos, do vencimento mais próximo ao mais distante</p>
+      <p className="mb-4 text-xs text-ink-dim">
+        O boleto em si é gerado no Asaas — aqui é só onde a gente acompanha o status e dispara o lembrete de cobrança pro cliente.
+      </p>
 
       <div className="space-y-3">
         {boletos.map((b) => {
@@ -252,20 +255,26 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
         {boletos.length === 0 && <p className="text-sm text-ink-dim">Nenhum boleto cadastrado ainda.</p>}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-line/60 pt-5">
-        <div className="min-w-[120px] flex-1">
-          <TextField label="Novo boleto — valor (R$)" value={novo.valor} onChange={(v) => setNovo((n) => ({ ...n, valor: v }))} />
+      <div className="mt-5 border-t border-line/60 pt-5">
+        <p className="mb-3 text-xs font-medium text-ink-muted">Registrar boleto já emitido no Asaas</p>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-[120px] flex-1">
+            <TextField label="Valor (R$)" value={novo.valor} onChange={(v) => setNovo((n) => ({ ...n, valor: v }))} />
+          </div>
+          <div className="min-w-[140px] flex-1">
+            <TextField label="Vencimento" value={novo.vencimento} onChange={(v) => setNovo((n) => ({ ...n, vencimento: v }))} />
+          </div>
+          <button
+            onClick={adicionarBoleto}
+            disabled={salvando}
+            className="flex items-center gap-1.5 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-medium text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+          >
+            <Plus size={14} /> Registrar
+          </button>
         </div>
-        <div className="min-w-[140px] flex-1">
-          <TextField label="Vencimento" value={novo.vencimento} onChange={(v) => setNovo((n) => ({ ...n, vencimento: v }))} />
-        </div>
-        <button
-          onClick={adicionarBoleto}
-          disabled={salvando}
-          className="flex items-center gap-1.5 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-medium text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
-        >
-          <Plus size={14} /> Adicionar
-        </button>
+        <p className="mt-2 text-xs text-ink-dim">
+          Só copia o valor e vencimento que já existem no Asaas — não gera boleto novo nem cobra o cliente.
+        </p>
       </div>
     </Panel>
     </>

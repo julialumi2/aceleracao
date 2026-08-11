@@ -212,6 +212,26 @@ export async function updateLeadStatus(leadId, status) {
   if (error) throw error;
 }
 
+// Cadastro direto (sem passar por um lead) — cliente que fechou por
+// fora do formulário, indicação, etc.
+export async function createClient({ nome, cnpj, telefone, email, endereco }) {
+  const { data: restaurant, error } = await supabase
+    .from("restaurants")
+    .insert({ nome, cnpj: cnpj || null, telefone: telefone || null, email: email || null, endereco: endereco || null, saude: "laranja" })
+    .select()
+    .single();
+  if (error) throw error;
+
+  const { data: contract, error: contractError } = await supabase
+    .from("contracts")
+    .insert({ restaurant_id: restaurant.id, status: "pendente" })
+    .select()
+    .single();
+  if (contractError) throw contractError;
+
+  return mapRestaurantRow({ ...restaurant, contracts: contract, contract_events: [], invoices: [], intensity_checks: [] });
+}
+
 export async function convertLeadToClient(lead) {
   const { data: restaurant, error } = await supabase
     .from("restaurants")
