@@ -9,8 +9,8 @@ const DEFAULT_TEMPLATES = {
 
 const TEAM = [
   { name: "Guilherme Araújo", email: "guilherme.araujo@artesanos.adm.br", role: "Admin" },
-  { name: "Kevyn", email: "kevynadm02artesanos@gmail.com", role: "Admin" },
-  { name: "Kethllyn", email: "kethllynadmartesanos@outlook.com", role: "Admin" },
+  { name: "Kevyn", email: "kevynadm02artesanos@gmail.com", role: "Adm" },
+  { name: "Kethllyn", email: "kethllynadmartesanos@outlook.com", role: "Adm" },
   { name: "Julia", email: "julia.suzuki@artesanos.adm.br", role: "TI" },
 ];
 
