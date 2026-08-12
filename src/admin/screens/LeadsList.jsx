@@ -1,4 +1,5 @@
-import { UserPlus, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { UserPlus, MessageCircle, Search } from "lucide-react";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
@@ -13,17 +14,33 @@ function relativeDaysLabel(iso) {
 }
 
 export default function LeadsList({ leads, onUpdateStatus, onConvert }) {
+  const [query, setQuery] = useState("");
+
+  const filtered = leads.filter((lead) => lead.nome.toLowerCase().includes(query.toLowerCase()));
+
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Leads</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Respostas do formulário de captação, sincronizadas na tabela <code className="font-mono text-xs">leads</code>.
-        </p>
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Leads</h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            Respostas do formulário de captação, sincronizadas na tabela <code className="font-mono text-xs">leads</code>.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:w-64">
+          <Search size={15} className="text-ink-dim" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar lead..."
+            className="w-full bg-transparent text-sm text-ink placeholder:text-ink-dim focus:outline-none"
+          />
+        </div>
       </div>
 
       <div className="space-y-3">
-        {leads.map((lead) => {
+        {filtered.map((lead) => {
           const waLink = buildWhatsAppLink(lead.telefone, leadFirstContactMessage(lead));
           const recente = Math.floor((new Date() - new Date(lead.criadoEm)) / (1000 * 60 * 60 * 24)) <= 1;
           return (
@@ -80,6 +97,9 @@ export default function LeadsList({ leads, onUpdateStatus, onConvert }) {
           );
         })}
 
+        {filtered.length === 0 && leads.length > 0 && (
+          <p className="text-sm text-ink-dim">Nenhum lead encontrado com esse nome.</p>
+        )}
         {leads.length === 0 && <p className="text-sm text-ink-dim">Nenhum lead recebido ainda.</p>}
       </div>
     </div>
