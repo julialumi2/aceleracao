@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, LayoutDashboard, Users, Contact, Wallet, Activity, Settings, LogOut, Menu } from "lucide-react";
+import { ShieldCheck, LayoutDashboard, Users, Contact, Wallet, Activity, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -19,31 +19,44 @@ export default function AdminSidebar({ active, onNavigate, session, onLogout }) 
         collapsed ? "w-20" : "w-64"
       }`}
     >
-      <div className={`flex items-center gap-2 px-4 py-6 ${collapsed ? "justify-center" : ""}`}>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
-          <ShieldCheck size={18} />
-        </span>
+      <div className={`flex items-center gap-2 px-4 py-6 ${collapsed ? "justify-center" : "justify-between"}`}>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
+            <ShieldCheck size={18} />
+          </span>
+          {!collapsed && (
+            <div className="min-w-0">
+              <span className="block truncate font-display text-base font-semibold leading-tight tracking-wide text-ink">
+                Aceleração Delivery
+              </span>
+              <span className="block truncate text-[11px] leading-tight text-ink-dim">Painel interno</span>
+            </div>
+          )}
+        </div>
         {!collapsed && (
-          <div className="min-w-0">
-            <span className="block truncate font-display text-base font-semibold leading-tight tracking-wide text-ink">
-              Aceleração Delivery
-            </span>
-            <span className="block truncate text-[11px] leading-tight text-ink-dim">Painel interno</span>
-          </div>
+          <button
+            onClick={() => setCollapsed(true)}
+            aria-label="Recolher menu"
+            title="Recolher menu"
+            className="shrink-0 rounded-full border border-line p-1.5 text-ink-dim transition-colors hover:bg-surface-raised hover:text-ink"
+          >
+            <ChevronLeft size={14} />
+          </button>
         )}
       </div>
 
-      <button
-        onClick={() => setCollapsed((c) => !c)}
-        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-        title={collapsed ? "Expandir menu" : "Recolher menu"}
-        className={`mx-3 mb-3 flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium text-ink-muted transition-colors hover:bg-surface-raised hover:text-ink ${
-          collapsed ? "justify-center" : ""
-        }`}
-      >
-        <Menu size={16} className="shrink-0" />
-        {!collapsed && "Recolher menu"}
-      </button>
+      {collapsed && (
+        <div className="mb-2 flex justify-center">
+          <button
+            onClick={() => setCollapsed(false)}
+            aria-label="Expandir menu"
+            title="Expandir menu"
+            className="rounded-full border border-line p-1.5 text-ink-dim transition-colors hover:bg-surface-raised hover:text-ink"
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
 
       <nav className="flex-1 space-y-1 px-3">
         {NAV_ITEMS.map(({ key, label, icon: Icon }) => {
