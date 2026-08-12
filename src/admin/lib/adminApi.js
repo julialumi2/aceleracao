@@ -90,10 +90,11 @@ function mapLeadRow(row) {
   return {
     id: row.id,
     nome: row.nome,
-    email: row.email,
+    email: row.email || "",
     telefone: row.telefone || "",
     origem: row.origem,
     status: row.status,
+    temperatura: row.temperatura || null,
     criadoEm: row.created_at.slice(0, 10),
   };
 }
@@ -232,6 +233,24 @@ export async function markIntensityMessageSent(checkId) {
 export async function updateLeadStatus(leadId, status) {
   const { error } = await supabase.from("leads").update({ status }).eq("id", leadId);
   if (error) throw error;
+}
+
+export async function updateLeadTemperatura(leadId, temperatura) {
+  const { error } = await supabase.from("leads").update({ temperatura }).eq("id", leadId);
+  if (error) throw error;
+}
+
+// Lead que não fechou em call — indicado pela equipe ou vindo de um
+// formulário de tráfego frio, cadastrado na mão até termos sincronia
+// automática com o formulário.
+export async function createLead({ nome, telefone, email, origem, temperatura }) {
+  const { data, error } = await supabase
+    .from("leads")
+    .insert({ nome, telefone: telefone || null, email: email || null, origem: origem || "manual", temperatura: temperatura || null, status: "novo" })
+    .select()
+    .single();
+  if (error) throw error;
+  return mapLeadRow(data);
 }
 
 // Cadastro direto (sem passar por um lead) — cliente que fechou por

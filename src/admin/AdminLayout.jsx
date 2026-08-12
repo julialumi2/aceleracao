@@ -22,6 +22,8 @@ import {
   addIntensityCheck,
   markIntensityMessageSent,
   updateLeadStatus,
+  updateLeadTemperatura,
+  createLead,
   convertLeadToClient,
   createClient,
   fetchArchivedClients,
@@ -184,6 +186,16 @@ export default function AdminLayout({ session, onLogout }) {
     await updateLeadStatus(lead.id, status).catch((err) => setLoadError(err.message));
   }
 
+  async function handleUpdateLeadTemperatura(lead, temperatura) {
+    setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, temperatura } : l)));
+    await updateLeadTemperatura(lead.id, temperatura).catch((err) => setLoadError(err.message));
+  }
+
+  async function handleCreateLead(fields) {
+    const novoLead = await createLead(fields);
+    setLeads((prev) => [novoLead, ...prev]);
+  }
+
   async function convertLead(lead) {
     const novoCliente = await convertLeadToClient(lead);
     setClients((prev) => [novoCliente, ...prev]);
@@ -291,7 +303,13 @@ export default function AdminLayout({ session, onLogout }) {
                 ))}
 
               {active === "leads" && (
-                <LeadsList leads={leads} onUpdateStatus={handleUpdateLeadStatus} onConvert={convertLead} />
+                <LeadsList
+                  leads={leads}
+                  onUpdateStatus={handleUpdateLeadStatus}
+                  onUpdateTemperatura={handleUpdateLeadTemperatura}
+                  onCreateLead={handleCreateLead}
+                  onConvert={convertLead}
+                />
               )}
 
               {active === "cobrancas" && (

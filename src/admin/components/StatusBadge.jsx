@@ -18,6 +18,10 @@ const STYLES = {
   saude_verde: "bg-green-400/10 text-green-300 border-green-400/30",
   saude_amarelo: "bg-amber-400/10 text-amber-300 border-amber-400/30",
   saude_laranja: "bg-orange-400/10 text-orange-300 border-orange-400/30",
+  // temperatura do lead
+  temp_frio: "bg-sky-400/10 text-sky-300 border-sky-400/30",
+  temp_morno: "bg-amber-400/10 text-amber-300 border-amber-400/30",
+  temp_quente: "bg-flame/10 text-flame border-flame/30",
 };
 
 const LABELS = {
@@ -35,6 +39,9 @@ const LABELS = {
   saude_verde: "Rodando com resultado",
   saude_amarelo: "Rodando, sem resultado",
   saude_laranja: "Tráfego não iniciado",
+  temp_frio: "Frio",
+  temp_morno: "Morno",
+  temp_quente: "Quente",
 };
 
 export default function StatusBadge({ status }) {
