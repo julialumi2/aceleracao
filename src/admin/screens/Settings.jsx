@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { MessageSquareText, Users, Plug, Check } from "lucide-react";
+import { MessageSquareText, Users, Plug, Check, KeyRound } from "lucide-react";
+import { signInWithEmail, updatePassword } from "../../lib/supabase.js";
 
 const DEFAULT_TEMPLATES = {
   boleto: "Olá, {nome}! Notamos que o boleto no valor de R$ {valor}, com vencimento em {vencimento}, ainda está em aberto. Pode verificar e regularizar quando possível? Qualquer dúvida, estamos à disposição 🙏",
@@ -19,7 +20,7 @@ const INTEGRATIONS = [
   { name: "Instagram Graph API", description: "Verificação automática de intensidade", connected: false },
 ];
 
-export default function Settings() {
+export default function Settings({ session }) {
   const [templates, setTemplates] = useState(DEFAULT_TEMPLATES);
   const [saved, setSaved] = useState(false);
 
@@ -34,6 +35,8 @@ export default function Settings() {
         <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Configurações</h1>
         <p className="mt-1 text-sm text-ink-muted">Modelos de mensagem, equipe e integrações.</p>
       </div>
+
+      <PasswordSection session={session} />
 
       <section className="rounded-2xl border border-line bg-surface p-6">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
@@ -124,5 +127,86 @@ export default function Settings() {
         </ul>
       </section>
     </div>
+  );
+}
+
+function PasswordSection({ session }) {
+  const [form, setForm] = useState({ atual: "", nova: "", confirmar: "" });
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState(false);
+
+  async function trocarSenha() {
+    setErro("");
+    setSucesso(false);
+    if (!form.atual || !form.nova || !form.confirmar) return;
+    if (form.nova.length < 6) {
+      setErro("A nova senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
+    if (form.nova !== form.confirmar) {
+      setErro("A confirmação não bate com a nova senha.");
+      return;
+    }
+    setSalvando(true);
+    try {
+      // Reconfirma a senha atual antes de trocar — evita que alguém na
+      // frente do computador destravado mude a senha sem saber a atual.
+      await signInWithEmail({ email: session?.email, password: form.atual });
+      await updatePassword(form.nova);
+      setSucesso(true);
+      setForm({ atual: "", nova: "", confirmar: "" });
+    } catch (err) {
+      setErro("Senha atual incorreta.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-line bg-surface p-6">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <KeyRound size={15} className="text-emerald-bright" />
+        Trocar senha
+      </h2>
+      <p className="mt-1 text-xs text-ink-dim">Altera a senha de acesso da sua conta ({session?.email || "conta atual"}).</p>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <PasswordField label="Senha atual" value={form.atual} onChange={(v) => setForm((f) => ({ ...f, atual: v }))} />
+        <PasswordField label="Nova senha" value={form.nova} onChange={(v) => setForm((f) => ({ ...f, nova: v }))} />
+        <PasswordField label="Confirmar nova senha" value={form.confirmar} onChange={(v) => setForm((f) => ({ ...f, confirmar: v }))} />
+      </div>
+
+      {erro && <p className="mt-3 text-sm text-flame">{erro}</p>}
+
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          onClick={trocarSenha}
+          disabled={salvando}
+          className="rounded-full bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+        >
+          Salvar nova senha
+        </button>
+        {sucesso && (
+          <span className="flex items-center gap-1.5 text-sm text-emerald-bright">
+            <Check size={15} /> Senha alterada
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function PasswordField({ label, value, onChange }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium text-ink-muted">{label}</span>
+      <input
+        type="password"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+      />
+    </label>
   );
 }

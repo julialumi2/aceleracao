@@ -311,7 +311,7 @@ export default function AdminLayout({ session, onLogout }) {
                 />
               )}
 
-              {active === "configuracoes" && <Settings />}
+              {active === "configuracoes" && <Settings session={session} />}
             </>
           )}
         </main>

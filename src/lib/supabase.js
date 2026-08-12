@@ -25,6 +25,11 @@ export async function signInWithEmail({ email, password }) {
   return data;
 }
 
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
 export async function saveRestaurantProfile(payload) {
   // Tabela esperada: public.restaurants (ver onboarding form)
   const { data, error } = await supabase.from("restaurants").upsert(payload).select().single();
