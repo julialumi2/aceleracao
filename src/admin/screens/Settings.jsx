@@ -9,8 +9,9 @@ const DEFAULT_TEMPLATES = {
 
 const TEAM = [
   { name: "Guilherme Araújo", email: "guilherme.araujo@artesanos.adm.br", role: "Admin" },
-  { name: "Equipe Financeiro", email: "financeiro@salacheia.com.br", role: "Financeiro" },
-  { name: "Equipe Mentoria", email: "mentoria@salacheia.com.br", role: "Mentor" },
+  { name: "Kevyn", email: "kevynadm02artesanos@gmail.com", role: "Admin" },
+  { name: "Kethllyn", email: "kethllynadmartesanos@outlook.com", role: "Admin" },
+  { name: "Julia", email: "julia.suzuki@artesanos.adm.br", role: "TI" },
 ];
 
 const INTEGRATIONS = [
