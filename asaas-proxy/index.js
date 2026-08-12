@@ -31,7 +31,10 @@ app.use(express.json());
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 app.post("/webhooks/asaas", async (req, res) => {
+  console.log(`Webhook recebido: event=${req.body?.event} subscription=${req.body?.payment?.subscription} id=${req.body?.payment?.id}`);
+
   if (req.header("asaas-access-token") !== ASAAS_WEBHOOK_TOKEN) {
+    console.warn("Webhook rejeitado: token inválido");
     return res.status(401).json({ error: "token inválido" });
   }
 
@@ -40,6 +43,7 @@ app.post("/webhooks/asaas", async (req, res) => {
 
   if (!status || !payment) {
     // Evento que não precisamos tratar (ex.: PAYMENT_DELETED) — só confirma o recebimento.
+    console.log(`Evento ignorado (não mapeado): ${event}`);
     return res.status(200).json({ ignored: true });
   }
 
