@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquareText, Users, Plug, Check, KeyRound } from "lucide-react";
+import { MessageSquareText, Users, Plug, Check, KeyRound, Eye, EyeOff } from "lucide-react";
 import { signInWithEmail, updatePassword } from "../../lib/supabase.js";
 
 const DEFAULT_TEMPLATES = {
@@ -198,15 +198,26 @@ function PasswordSection({ session }) {
 }
 
 function PasswordField({ label, value, onChange }) {
+  const [visivel, setVisivel] = useState(false);
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-medium text-ink-muted">{label}</span>
-      <input
-        type="password"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
-      />
+      <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 focus-within:border-emerald-brand/60">
+        <input
+          type={visivel ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full bg-transparent text-sm text-ink focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setVisivel((v) => !v)}
+          className="shrink-0 text-ink-dim transition-colors hover:text-ink"
+          aria-label={visivel ? "Ocultar senha" : "Mostrar senha"}
+        >
+          {visivel ? <EyeOff size={15} /> : <Eye size={15} />}
+        </button>
+      </div>
     </label>
   );
 }

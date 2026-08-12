@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, ArrowLeft, Mail, Lock, Loader2 } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { signInWithEmail } from "../lib/supabase.js";
 
 export default function AdminLogin({ onAuthenticated, onBack }) {
@@ -78,19 +78,32 @@ export default function AdminLogin({ onAuthenticated, onBack }) {
 }
 
 function Field({ icon: Icon, label, type, placeholder, value, onChange }) {
+  const [visivel, setVisivel] = useState(false);
+  const isPassword = type === "password";
+
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-medium text-ink-muted">{label}</span>
       <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-3 transition-colors focus-within:border-emerald-brand/60">
         <Icon size={16} className="shrink-0 text-ink-dim" />
         <input
-          type={type}
+          type={isPassword && visivel ? "text" : type}
           required
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="w-full bg-transparent text-sm text-ink placeholder:text-ink-dim focus:outline-none"
         />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setVisivel((v) => !v)}
+            className="shrink-0 text-ink-dim transition-colors hover:text-ink"
+            aria-label={visivel ? "Ocultar senha" : "Mostrar senha"}
+          >
+            {visivel ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+        )}
       </div>
     </label>
   );
