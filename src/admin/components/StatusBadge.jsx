@@ -15,6 +15,8 @@ const STYLES = {
   contatado: "bg-amber-400/10 text-amber-300 border-amber-400/30",
   convertido: "bg-emerald-brand/10 text-emerald-bright border-emerald-brand/30",
   descartado: "bg-ink-dim/10 text-ink-dim border-line",
+  // cliente que cancelou a mentoria
+  cancelado: "bg-ink-dim/10 text-ink-dim border-line",
   // saúde da campanha (independente da intensidade de redes sociais)
   saude_verde: "bg-green-400/10 text-green-300 border-green-400/30",
   saude_amarelo: "bg-amber-400/10 text-amber-300 border-amber-400/30",
@@ -38,6 +40,7 @@ const LABELS = {
   contatado: "Contatado",
   convertido: "Convertido",
   descartado: "Descartado",
+  cancelado: "Cancelado",
   saude_verde: "Rodando com resultado",
   saude_amarelo: "Rodando, sem resultado",
   saude_laranja: "Tráfego não iniciado",

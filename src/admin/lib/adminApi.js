@@ -54,6 +54,8 @@ function mapRestaurantRow(row) {
     cardapioUrl: row.cardapio_url || "",
     saude: row.saude || "laranja",
     arquivadoEm: row.arquivado_em || null,
+    canceladoEm: row.cancelado_em || null,
+    motivoCancelamento: row.motivo_cancelamento || "",
     cobrancaRecorrente: {
       valor: row.valor_recorrente != null ? Number(row.valor_recorrente) : null,
       diaVencimento: row.dia_vencimento_recorrente,
@@ -327,6 +329,25 @@ export async function archiveClient(id) {
 
 export async function restoreClient(id) {
   const { error } = await supabase.from("restaurants").update({ arquivado_em: null }).eq("id", id);
+  if (error) throw error;
+}
+
+// ---------- Cancelamento (diferente de arquivar) ----------
+// Cliente cancelou a mentoria mas pode ainda dever boleto — continua
+// aparecendo em Cobranças, só some das métricas de "cliente ativo".
+
+export async function setCancelamento(id, motivo) {
+  const canceladoEm = new Date().toISOString();
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ cancelado_em: canceladoEm, motivo_cancelamento: motivo || null })
+    .eq("id", id);
+  if (error) throw error;
+  return canceladoEm;
+}
+
+export async function reativarCliente(id) {
+  const { error } = await supabase.from("restaurants").update({ cancelado_em: null, motivo_cancelamento: null }).eq("id", id);
   if (error) throw error;
 }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive, Pencil, Trash2, Ban, RotateCcw } from "lucide-react";
 import StatusBadge, { NextBillingBadge } from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
@@ -43,6 +43,7 @@ export default function ClientDetail({ client, onBack, initialTab = "dados", ...
           <p className="mt-1 text-sm text-ink-dim">{client.cnpj || "CNPJ não informado"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {client.canceladoEm && <StatusBadge status="cancelado" />}
           <StatusBadge status={client.contrato.status} context="contrato" />
           {resumoCobranca?.tipo === "boleto" && <StatusBadge status={resumoCobranca.boleto.status} />}
           {resumoCobranca?.tipo === "previsao" && <NextBillingBadge label={`Próximo boleto: ${formatDate(resumoCobranca.data)}`} />}
@@ -66,7 +67,15 @@ export default function ClientDetail({ client, onBack, initialTab = "dados", ...
         ))}
       </div>
 
-      {tab === "dados" && <DadosTab client={client} onUpdate={handlers.onUpdate} onArchiveClient={handlers.onArchiveClient} />}
+      {tab === "dados" && (
+        <DadosTab
+          client={client}
+          onUpdate={handlers.onUpdate}
+          onArchiveClient={handlers.onArchiveClient}
+          onSetCancelamento={handlers.onSetCancelamento}
+          onReativarCliente={handlers.onReativarCliente}
+        />
+      )}
       {tab === "contrato" && <ContratoTab client={client} {...handlers} />}
       {tab === "cobranca" && <CobrancaTab client={client} {...handlers} />}
       {tab === "intensidade" && <IntensidadeTab client={client} {...handlers} />}
@@ -94,9 +103,13 @@ function TextField({ label, value, onChange, type = "text" }) {
   );
 }
 
-function DadosTab({ client, onUpdate, onArchiveClient }) {
+function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReativarCliente }) {
   const [confirmArquivar, setConfirmArquivar] = useState(false);
   const [arquivando, setArquivando] = useState(false);
+  const [cancelando, setCancelando] = useState(false);
+  const [mostrarFormCancelar, setMostrarFormCancelar] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [reativando, setReativando] = useState(false);
 
   async function arquivar() {
     if (arquivando) return;
@@ -105,6 +118,28 @@ function DadosTab({ client, onUpdate, onArchiveClient }) {
       await onArchiveClient(client);
     } finally {
       setArquivando(false);
+    }
+  }
+
+  async function cancelar() {
+    if (cancelando) return;
+    setCancelando(true);
+    try {
+      await onSetCancelamento(client, motivo);
+      setMostrarFormCancelar(false);
+      setMotivo("");
+    } finally {
+      setCancelando(false);
+    }
+  }
+
+  async function reativar() {
+    if (reativando) return;
+    setReativando(true);
+    try {
+      await onReativarCliente(client);
+    } finally {
+      setReativando(false);
     }
   }
 
@@ -141,6 +176,70 @@ function DadosTab({ client, onUpdate, onArchiveClient }) {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="mt-6 border-t border-line/60 pt-5">
+        <p className="mb-1 text-xs font-medium text-ink-muted">Cancelamento da mentoria</p>
+        {client.canceladoEm ? (
+          <>
+            <p className="mb-3 text-xs text-ink-dim">
+              Cancelado em {formatDate(client.canceladoEm.slice(0, 10))}
+              {client.motivoCancelamento && (
+                <>
+                  {" "}
+                  — motivo: <span className="text-ink-muted">{client.motivoCancelamento}</span>
+                </>
+              )}
+              . Continua aparecendo em Cobranças até os boletos em aberto serem resolvidos.
+            </p>
+            <button
+              onClick={reativar}
+              disabled={reativando}
+              className="flex items-center gap-1.5 rounded-xl border border-line px-4 py-2 text-xs font-medium text-ink-muted transition-colors hover:border-emerald-brand/40 hover:text-emerald-bright disabled:opacity-60"
+            >
+              <RotateCcw size={13} /> Reativar cliente
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="mb-3 text-xs text-ink-dim">
+              Cliente que saiu da mentoria mas ainda pode dever boleto — diferente de arquivar, continua aparecendo em Cobranças
+              até a dívida ser resolvida.
+            </p>
+            {mostrarFormCancelar ? (
+              <div>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium text-ink-muted">Motivo do cancelamento</span>
+                  <textarea
+                    value={motivo}
+                    onChange={(e) => setMotivo(e.target.value)}
+                    rows={2}
+                    className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+                  />
+                </label>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    onClick={cancelar}
+                    disabled={cancelando}
+                    className="rounded-xl bg-flame/15 px-4 py-2 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
+                  >
+                    Confirmar cancelamento
+                  </button>
+                  <button onClick={() => setMostrarFormCancelar(false)} className="text-xs text-ink-muted hover:text-ink">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setMostrarFormCancelar(true)}
+                className="flex items-center gap-1.5 rounded-xl border border-line px-4 py-2 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
+              >
+                <Ban size={13} /> Marcar como cancelado
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       <div className="mt-6 border-t border-line/60 pt-5">

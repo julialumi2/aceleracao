@@ -33,6 +33,7 @@ function buildAcoesPendentes(clients) {
         });
       }
     }
+    if (c.canceladoEm) continue;
     if (c.contrato.status === "pendente") {
       acoes.push({
         id: `${c.id}-contrato`,
@@ -72,9 +73,10 @@ function buildAcoesPendentes(clients) {
 }
 
 export default function AdminDashboard({ clients, leads, onNavigate, onOpenClient }) {
-  const contratosPendentes = clients.filter((c) => c.contrato.status === "pendente").length;
+  const clientesAtivos = clients.filter((c) => !c.canceladoEm);
+  const contratosPendentes = clientesAtivos.filter((c) => c.contrato.status === "pendente").length;
   const boletosAtrasados = clients.filter((c) => currentInvoice(c.boletos)?.status === "atrasado").length;
-  const baixaIntensidade = clients.filter((c) => c.intensidade.status !== "ativo").length;
+  const baixaIntensidade = clientesAtivos.filter((c) => c.intensidade.status !== "ativo").length;
   const leadsNovosSemana = leads.filter((l) => isThisWeek(l.criadoEm)).length;
   const acoesPendentes = buildAcoesPendentes(clients);
 
@@ -86,7 +88,7 @@ export default function AdminDashboard({ clients, leads, onNavigate, onOpenClien
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-        <KpiCard icon={Users} label="Clientes ativos" value={clients.length} />
+        <KpiCard icon={Users} label="Clientes ativos" value={clientesAtivos.length} />
         <KpiCard icon={ReceiptText} label="Boletos atrasados" value={boletosAtrasados} tone={boletosAtrasados ? "danger" : "default"} />
         <KpiCard icon={FileWarning} label="Contratos pendentes" value={contratosPendentes} tone={contratosPendentes ? "warning" : "default"} />
         <KpiCard icon={Contact} label="Leads novos (7 dias)" value={leadsNovosSemana} />
@@ -140,7 +142,7 @@ export default function AdminDashboard({ clients, leads, onNavigate, onOpenClien
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {SAUDE_ORDER.map((cor) => {
-            const clientesDaCor = clients.filter((c) => c.saude === cor);
+            const clientesDaCor = clientesAtivos.filter((c) => c.saude === cor);
             return (
               <div key={cor} className="rounded-xl border border-line/60 bg-surface-raised p-4">
                 <StatusBadge status={`saude_${cor}`} />

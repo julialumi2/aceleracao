@@ -29,6 +29,8 @@ import {
   fetchArchivedClients,
   archiveClient,
   restoreClient,
+  setCancelamento,
+  reativarCliente,
 } from "./lib/adminApi.js";
 import { Loader2, LayoutDashboard, Users, Contact, Wallet, Settings as SettingsIcon } from "lucide-react";
 
@@ -249,6 +251,16 @@ export default function AdminLayout({ session, onLogout }) {
     if (selectedClientId === client.id) setSelectedClientId(null);
   }
 
+  async function handleSetCancelamento(client, motivo) {
+    const canceladoEm = await setCancelamento(client.id, motivo);
+    patchClientLocal(client.id, { canceladoEm, motivoCancelamento: motivo || "" });
+  }
+
+  async function handleReativarCliente(client) {
+    await reativarCliente(client.id);
+    patchClientLocal(client.id, { canceladoEm: null, motivoCancelamento: "" });
+  }
+
   async function handleRestoreClient(client) {
     await restoreClient(client.id);
     setArchivedClients((prev) => prev.filter((c) => c.id !== client.id));
@@ -270,6 +282,8 @@ export default function AdminLayout({ session, onLogout }) {
     onAddIntensityCheck: handleAddIntensityCheck,
     onMarkIntensityMessageSent: handleMarkIntensityMessageSent,
     onArchiveClient: handleArchiveClient,
+    onSetCancelamento: handleSetCancelamento,
+    onReativarCliente: handleReativarCliente,
   };
 
   return (

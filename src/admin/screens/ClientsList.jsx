@@ -195,7 +195,10 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
                   className="grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left transition-colors last:border-b-0 hover:bg-surface-raised sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto]"
                 >
                   <div className="col-span-2 sm:col-span-1">
-                    <p className="text-sm font-medium text-ink">{c.nome}</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="text-sm font-medium text-ink">{c.nome}</p>
+                      {c.canceladoEm && <StatusBadge status="cancelado" />}
+                    </div>
                     <p className="text-xs text-ink-dim">{c.cnpj || "CNPJ não informado"}</p>
                   </div>
                   <StatusBadge status={c.contrato.status} context="contrato" />
