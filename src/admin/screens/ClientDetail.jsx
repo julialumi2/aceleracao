@@ -256,9 +256,9 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
     <>
       <RecurringBillingSetup client={client} onSetRecurringBilling={onSetRecurringBilling} />
     <Panel>
-      <p className="mb-1 text-xs font-medium text-ink-muted">Boletos, do vencimento mais recente ao mais antigo</p>
+      <p className="mb-1 text-xs font-medium text-ink-muted">Histórico de boletos registrados, do vencimento mais recente ao mais antigo</p>
       <p className="mb-4 text-xs text-ink-dim">
-        O boleto em si é gerado no Asaas — aqui é só onde a gente acompanha o status e dispara o lembrete de cobrança pro cliente.
+        Só aparece aqui o que já foi registrado (pago manualmente ou sincronizado do Asaas) — a previsão da próxima cobrança, lá em cima, não conta como um boleto até ele existir de verdade.
       </p>
 
       <div className="space-y-3">
@@ -505,8 +505,16 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
               Cobrança recorrente configurada
             </p>
             <p className="mt-1 text-xs text-ink-dim">
-              R$ {client.cobrancaRecorrente.valor.toFixed(2)}/mês, todo dia {client.cobrancaRecorrente.diaVencimento} · próxima cobrança em{" "}
-              {formatDate(client.cobrancaRecorrente.proximaCobrancaEm)}
+              R$ {client.cobrancaRecorrente.valor.toFixed(2)}/mês, todo dia {client.cobrancaRecorrente.diaVencimento}
+            </p>
+            <p className="mt-2 text-xs text-ink-dim">
+              <span className="font-medium text-ink-muted">Previsão</span> da próxima cobrança:{" "}
+              <span className="text-ink">{formatDate(client.cobrancaRecorrente.proximaCobrancaEm)}</span>
+              {(client.boletos || []).some((b) => b.vencimento === client.cobrancaRecorrente.proximaCobrancaEm) ? (
+                " — já tem um boleto registrado pra essa data, veja na lista abaixo."
+              ) : (
+                <> — ainda <span className="font-medium">sem boleto registrado</span> pra essa data. Isto é só uma estimativa; não é um boleto de verdade.</>
+              )}
             </p>
             <p className="mt-2 text-xs text-ink-dim">
               {client.cobrancaRecorrente.asaasSubscriptionId
