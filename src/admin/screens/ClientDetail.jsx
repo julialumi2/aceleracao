@@ -236,7 +236,7 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
   const [novo, setNovo] = useState({ valor: "", vencimento: "", asaasId: "" });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-  const boletos = sortByVencimento(client.boletos || []);
+  const boletos = [...sortByVencimento(client.boletos || [])].reverse();
 
   async function adicionarBoleto() {
     if (!novo.valor || !novo.vencimento || salvando) return;
@@ -256,7 +256,7 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
     <>
       <RecurringBillingSetup client={client} onSetRecurringBilling={onSetRecurringBilling} />
     <Panel>
-      <p className="mb-1 text-xs font-medium text-ink-muted">Boletos, do vencimento mais próximo ao mais distante</p>
+      <p className="mb-1 text-xs font-medium text-ink-muted">Boletos, do vencimento mais recente ao mais antigo</p>
       <p className="mb-4 text-xs text-ink-dim">
         O boleto em si é gerado no Asaas — aqui é só onde a gente acompanha o status e dispara o lembrete de cobrança pro cliente.
       </p>
