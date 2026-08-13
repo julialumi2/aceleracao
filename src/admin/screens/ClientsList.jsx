@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Search, ChevronRight, UserPlus, Archive, ArchiveRestore } from "lucide-react";
-import StatusBadge from "../components/StatusBadge.jsx";
-import { currentInvoice } from "../lib/invoices.js";
+import StatusBadge, { NextBillingBadge } from "../components/StatusBadge.jsx";
+import { currentInvoice, billingSummary, formatDateAbrev } from "../lib/invoices.js";
 
 const FILTERS = {
   contrato: ["todos", "pendente", "assinado"],
@@ -187,7 +187,7 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
             </div>
 
             {filtered.map((c) => {
-              const boleto = currentInvoice(c.boletos);
+              const resumo = billingSummary(c);
               return (
                 <button
                   key={c.id}
@@ -199,7 +199,9 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
                     <p className="text-xs text-ink-dim">{c.cnpj || "CNPJ não informado"}</p>
                   </div>
                   <StatusBadge status={c.contrato.status} context="contrato" />
-                  {boleto ? <StatusBadge status={boleto.status} /> : <span className="text-xs text-ink-dim">—</span>}
+                  {resumo?.tipo === "boleto" && <StatusBadge status={resumo.boleto.status} />}
+                  {resumo?.tipo === "previsao" && <NextBillingBadge label={formatDateAbrev(resumo.data)} />}
+                  {!resumo && <span className="text-xs text-ink-dim">—</span>}
                   <StatusBadge status={c.intensidade.status} />
                   <StatusBadge status={`saude_${c.saude}`} />
                   <ChevronRight size={16} className="hidden text-ink-dim sm:block" />

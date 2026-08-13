@@ -36,3 +36,28 @@ export function alertStage(boleto) {
   if (diffDias === -2) return "depois";
   return null;
 }
+
+const MESES_ABREV = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+export function formatDateAbrev(iso) {
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${MESES_ABREV[Number(m) - 1]}/${y}`;
+}
+
+// O que mostrar como resumo de cobrança pra um cliente, em vez de sempre
+// pegar o "boleto atual": se não tem nada pendente/atrasado, mas já
+// existe uma previsão de próxima cobrança sem boleto correspondente
+// ainda, prioriza mostrar essa previsão — evita dar a impressão de que
+// um boleto "pago" de mês passado é o status atual da cobrança.
+export function billingSummary(client) {
+  const boleto = currentInvoice(client.boletos);
+  const temUrgente = boleto && boleto.status !== "pago";
+  if (temUrgente) return { tipo: "boleto", boleto };
+
+  const prevista = client.cobrancaRecorrente?.proximaCobrancaEm;
+  const jaRegistrado = prevista && (client.boletos || []).some((b) => b.vencimento === prevista);
+  if (prevista && !jaRegistrado) return { tipo: "previsao", data: prevista };
+
+  return boleto ? { tipo: "boleto", boleto } : null;
+}

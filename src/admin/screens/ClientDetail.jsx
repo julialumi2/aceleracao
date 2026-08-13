@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive, Pencil, Trash2 } from "lucide-react";
-import StatusBadge from "../components/StatusBadge.jsx";
+import StatusBadge, { NextBillingBadge } from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
-import { sortByVencimento, currentInvoice, alertStage, ALERT_STAGE_LABELS } from "../lib/invoices.js";
+import { sortByVencimento, alertStage, ALERT_STAGE_LABELS, billingSummary } from "../lib/invoices.js";
 import { calcularProximaCobranca, diaDoVencimento } from "../lib/recurringBilling.js";
 
 const TABS = [
@@ -29,7 +29,7 @@ function formatDate(iso) {
 
 export default function ClientDetail({ client, onBack, initialTab = "dados", ...handlers }) {
   const [tab, setTab] = useState(initialTab);
-  const boletoAtual = currentInvoice(client.boletos);
+  const resumoCobranca = billingSummary(client);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -44,7 +44,8 @@ export default function ClientDetail({ client, onBack, initialTab = "dados", ...
         </div>
         <div className="flex flex-wrap gap-2">
           <StatusBadge status={client.contrato.status} context="contrato" />
-          {boletoAtual && <StatusBadge status={boletoAtual.status} />}
+          {resumoCobranca?.tipo === "boleto" && <StatusBadge status={resumoCobranca.boleto.status} />}
+          {resumoCobranca?.tipo === "previsao" && <NextBillingBadge label={`Próximo boleto: ${formatDate(resumoCobranca.data)}`} />}
           <StatusBadge status={client.intensidade.status} />
           <StatusBadge status={`saude_${client.saude}`} />
         </div>
