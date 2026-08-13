@@ -426,12 +426,14 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
   const [modo, setModo] = useState("existente"); // "novo" | "existente"
   const [formNovo, setFormNovo] = useState({ valor: "", jaPago: "sim", data: new Date().toISOString().slice(0, 10) });
   const [formExistente, setFormExistente] = useState({ valor: "", diaVencimento: "", proximaCobrancaEm: "", asaasCustomerId: "", asaasSubscriptionId: "" });
+  const [erro, setErro] = useState("");
 
   const configurado = client.cobrancaRecorrente?.valor != null;
   const preview = formNovo.data ? calcularProximaCobranca(formNovo.data, formNovo.jaPago === "sim") : null;
 
   async function salvarNovo() {
     if (!formNovo.valor || !formNovo.data || salvando) return;
+    setErro("");
     setSalvando(true);
     try {
       const proximaCobrancaEm = calcularProximaCobranca(formNovo.data, formNovo.jaPago === "sim");
@@ -441,6 +443,8 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
         proximaCobrancaEm,
       });
       setAberto(false);
+    } catch (err) {
+      setErro(err.message || "Não foi possível salvar. Tenta de novo.");
     } finally {
       setSalvando(false);
     }
@@ -448,6 +452,7 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
 
   async function salvarExistente() {
     if (!formExistente.valor || !formExistente.diaVencimento || !formExistente.proximaCobrancaEm || salvando) return;
+    setErro("");
     setSalvando(true);
     try {
       await onSetRecurringBilling(client, {
@@ -458,6 +463,8 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
         asaasSubscriptionId: formExistente.asaasSubscriptionId || undefined,
       });
       setAberto(false);
+    } catch (err) {
+      setErro(err.message || "Não foi possível salvar. Tenta de novo.");
     } finally {
       setSalvando(false);
     }
@@ -526,7 +533,7 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <TextField label="Valor recorrente (R$)" value={formExistente.valor} onChange={(v) => setFormExistente((f) => ({ ...f, valor: v }))} />
-            <TextField label="Dia de vencimento (1–28)" value={formExistente.diaVencimento} onChange={(v) => setFormExistente((f) => ({ ...f, diaVencimento: v }))} />
+            <TextField label="Dia de vencimento (1–31)" value={formExistente.diaVencimento} onChange={(v) => setFormExistente((f) => ({ ...f, diaVencimento: v }))} />
           </div>
           <div className="mt-4">
             <TextField
@@ -541,6 +548,8 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
             <TextField label="ID do cliente no Asaas" value={formExistente.asaasCustomerId} onChange={(v) => setFormExistente((f) => ({ ...f, asaasCustomerId: v }))} />
             <TextField label="ID da assinatura no Asaas" value={formExistente.asaasSubscriptionId} onChange={(v) => setFormExistente((f) => ({ ...f, asaasSubscriptionId: v }))} />
           </div>
+
+          {erro && <p className="mt-3 text-sm text-flame">{erro}</p>}
 
           <div className="mt-5 flex items-center gap-3">
             <button
@@ -601,6 +610,8 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
               Próxima cobrança da recorrência: <span className="text-ink">{formatDate(preview)}</span>, todo dia {diaDoVencimento(formNovo.data)}
             </p>
           )}
+
+          {erro && <p className="mt-3 text-sm text-flame">{erro}</p>}
 
           <div className="mt-5 flex items-center gap-3">
             <button
