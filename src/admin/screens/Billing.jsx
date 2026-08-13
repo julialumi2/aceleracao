@@ -1,13 +1,25 @@
-import { MessageCircle, ChevronRight, CheckCircle2, Clock, BellRing } from "lucide-react";
+import { useState } from "react";
+import { MessageCircle, ChevronRight, CheckCircle2, Clock, BellRing, Filter } from "lucide-react";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage } from "../lib/messageTemplates.js";
 import { sortByVencimento, alertStage, ALERT_STAGE_LABELS } from "../lib/invoices.js";
 
+const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
 function formatDate(iso) {
   if (!iso) return "—";
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
+}
+
+function mesKey(iso) {
+  return iso.slice(0, 7); // "AAAA-MM"
+}
+
+function mesLabel(key) {
+  const [y, m] = key.split("-");
+  return `${MESES[Number(m) - 1]} de ${y}`;
 }
 
 // Achata todos os boletos de todos os clientes numa lista só, cada um
@@ -17,7 +29,12 @@ function allInvoices(clients) {
 }
 
 export default function Billing({ clients, onSetInvoiceStatus, onMarkInvoiceAlertSent, onOpenClient }) {
-  const invoices = allInvoices(clients);
+  const [mesFiltro, setMesFiltro] = useState("todos");
+
+  const todasInvoices = allInvoices(clients);
+  const meses = [...new Set(todasInvoices.map((b) => mesKey(b.vencimento)))].sort().reverse();
+  const invoices = mesFiltro === "todos" ? todasInvoices : todasInvoices.filter((b) => mesKey(b.vencimento) === mesFiltro);
+
   const atrasados = invoices.filter((b) => b.status === "atrasado");
   const pendentes = invoices.filter((b) => b.status === "pendente");
   const pagos = [...invoices.filter((b) => b.status === "pago")].reverse();
@@ -31,9 +48,29 @@ export default function Billing({ clients, onSetInvoiceStatus, onMarkInvoiceAler
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Cobranças</h1>
-        <p className="mt-1 text-sm text-ink-muted">Visão consolidada dos boletos (Asaas) de todos os clientes.</p>
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Cobranças</h1>
+          <p className="mt-1 text-sm text-ink-muted">Visão consolidada dos boletos (Asaas) de todos os clientes.</p>
+        </div>
+
+        {meses.length > 0 && (
+          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm">
+            <Filter size={14} className="text-ink-dim" />
+            <select
+              value={mesFiltro}
+              onChange={(e) => setMesFiltro(e.target.value)}
+              className="bg-transparent text-ink focus:outline-none"
+            >
+              <option value="todos" className="bg-surface text-ink">Todos os meses</option>
+              {meses.map((m) => (
+                <option key={m} value={m} className="bg-surface text-ink">
+                  {mesLabel(m)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       {lembretesHoje.length > 0 && (
@@ -92,7 +129,7 @@ export default function Billing({ clients, onSetInvoiceStatus, onMarkInvoiceAler
         onMarkInvoiceAlertSent={onMarkInvoiceAlertSent}
         showAlert
       />
-      <Section title={`Pendentes (${pendentes.length})`} invoices={pendentes} onOpenClient={onOpenClient} onSetInvoiceStatus={onSetInvoiceStatus} />
+      <Section title={`A pagar (${pendentes.length})`} invoices={pendentes} onOpenClient={onOpenClient} onSetInvoiceStatus={onSetInvoiceStatus} />
       <Section title={`Em dia (${pagos.length})`} invoices={pagos} onOpenClient={onOpenClient} onSetInvoiceStatus={onSetInvoiceStatus} />
     </div>
   );

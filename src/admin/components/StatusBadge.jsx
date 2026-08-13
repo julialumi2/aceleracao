@@ -27,7 +27,8 @@ const STYLES = {
 
 const LABELS = {
   assinado: "Assinado",
-  pendente: "Pendente",
+  pendente: "A pagar",
+  contrato_pendente: "Pendente",
   pago: "Pago",
   atrasado: "Atrasado",
   ativo: "Ativo",
@@ -48,12 +49,13 @@ const LABELS = {
 export default function StatusBadge({ status, context }) {
   const key = context ? `${context}_${status}` : status;
   const style = STYLES[key] || STYLES[status] || "border-line text-ink-muted";
+  const label = LABELS[key] || LABELS[status] || status;
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${style}`}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current" />
-      {LABELS[status] || status}
+      {label}
     </span>
   );
 }

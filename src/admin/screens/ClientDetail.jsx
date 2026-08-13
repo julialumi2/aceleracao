@@ -396,7 +396,7 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
               b.status === s ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
             }`}
           >
-            {s === "pendente" ? "Pendente" : s === "atrasado" ? "Atrasado" : "Pago"}
+            {s === "pendente" ? "A pagar" : s === "atrasado" ? "Atrasado" : "Pago"}
           </button>
         ))}
         {stage && (
