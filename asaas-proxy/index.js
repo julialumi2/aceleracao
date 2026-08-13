@@ -52,7 +52,11 @@ app.post("/webhooks/asaas", async (req, res) => {
     return res.status(200).json({ ignored: true, reason: "sem assinatura vinculada" });
   }
 
-  const { data: restaurant, error: findError } = await supabase
+  // Clientes quinzenais têm DUAS assinaturas no Asaas (uma por dia de
+  // vencimento), então a assinatura recebida pode bater com qualquer uma
+  // das duas colunas.
+  let restaurant = null;
+  const { data: porAssinaturaPrincipal, error: findError } = await supabase
     .from("restaurants")
     .select("id")
     .eq("asaas_subscription_id", payment.subscription)
@@ -61,6 +65,21 @@ app.post("/webhooks/asaas", async (req, res) => {
   if (findError) {
     console.error("Erro ao buscar restaurante:", findError.message);
     return res.status(500).json({ error: "erro ao buscar cliente" });
+  }
+  restaurant = porAssinaturaPrincipal;
+
+  if (!restaurant) {
+    const { data: porAssinaturaSecundaria, error: findError2 } = await supabase
+      .from("restaurants")
+      .select("id")
+      .eq("asaas_subscription_id_2", payment.subscription)
+      .maybeSingle();
+
+    if (findError2) {
+      console.error("Erro ao buscar restaurante (assinatura 2):", findError2.message);
+      return res.status(500).json({ error: "erro ao buscar cliente" });
+    }
+    restaurant = porAssinaturaSecundaria;
   }
 
   if (!restaurant) {

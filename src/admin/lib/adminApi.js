@@ -61,6 +61,11 @@ function mapRestaurantRow(row) {
       configuradaEm: row.cobranca_configurada_em,
       asaasCustomerId: row.asaas_customer_id,
       asaasSubscriptionId: row.asaas_subscription_id,
+      periodicidade: row.periodicidade || "mensal",
+      valor2: row.valor_recorrente_2 != null ? Number(row.valor_recorrente_2) : null,
+      diaVencimento2: row.dia_vencimento_recorrente_2,
+      proximaCobrancaEm2: row.proxima_cobranca_em_2,
+      asaasSubscriptionId2: row.asaas_subscription_id_2,
     },
     contrato: {
       status: contract?.status || "pendente",
@@ -132,15 +137,45 @@ export async function updateClientFields(id, fields) {
 // 2. Cliente que já tem assinatura no Asaas (ex.: base antiga sendo
 //    importada): não cria nada novo, só vincula os IDs que já existem lá
 //    — evita duplicar cobrança de quem já paga.
-export async function setRecurringBilling(id, { valor, diaVencimento, proximaCobrancaEm, asaasCustomerId, asaasSubscriptionId }) {
+export async function setRecurringBilling(
+  id,
+  {
+    valor,
+    diaVencimento,
+    proximaCobrancaEm,
+    asaasCustomerId,
+    asaasSubscriptionId,
+    periodicidade,
+    valor2,
+    diaVencimento2,
+    proximaCobrancaEm2,
+    asaasSubscriptionId2,
+  }
+) {
   const payload = {
     valor_recorrente: valor,
     dia_vencimento_recorrente: diaVencimento,
     proxima_cobranca_em: proximaCobrancaEm,
     cobranca_configurada_em: new Date().toISOString(),
+    periodicidade: periodicidade || "mensal",
   };
   if (asaasCustomerId) payload.asaas_customer_id = asaasCustomerId;
   if (asaasSubscriptionId) payload.asaas_subscription_id = asaasSubscriptionId;
+
+  // Segunda assinatura só existe pra clientes quinzenais (dois vencimentos
+  // separados no Asaas) — se não for quinzenal, zera pra não deixar lixo
+  // de uma configuração anterior.
+  if (periodicidade === "quinzenal") {
+    payload.valor_recorrente_2 = valor2;
+    payload.dia_vencimento_recorrente_2 = diaVencimento2;
+    payload.proxima_cobranca_em_2 = proximaCobrancaEm2;
+    if (asaasSubscriptionId2) payload.asaas_subscription_id_2 = asaasSubscriptionId2;
+  } else {
+    payload.valor_recorrente_2 = null;
+    payload.dia_vencimento_recorrente_2 = null;
+    payload.proxima_cobranca_em_2 = null;
+    payload.asaas_subscription_id_2 = null;
+  }
 
   const { error } = await supabase.from("restaurants").update(payload).eq("id", id);
   if (error) throw error;

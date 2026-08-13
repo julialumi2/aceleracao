@@ -50,14 +50,20 @@ export function formatDateAbrev(iso) {
 // existe uma previsão de próxima cobrança sem boleto correspondente
 // ainda, prioriza mostrar essa previsão — evita dar a impressão de que
 // um boleto "pago" de mês passado é o status atual da cobrança.
+// Cliente quinzenal tem duas previsões (uma por assinatura no Asaas) —
+// mostra a mais próxima entre as que ainda não têm boleto registrado.
 export function billingSummary(client) {
   const boleto = currentInvoice(client.boletos);
   const temUrgente = boleto && boleto.status !== "pago";
   if (temUrgente) return { tipo: "boleto", boleto };
 
-  const prevista = client.cobrancaRecorrente?.proximaCobrancaEm;
-  const jaRegistrado = prevista && (client.boletos || []).some((b) => b.vencimento === prevista);
-  if (prevista && !jaRegistrado) return { tipo: "previsao", data: prevista };
+  const boletos = client.boletos || [];
+  const previstas = [client.cobrancaRecorrente?.proximaCobrancaEm, client.cobrancaRecorrente?.proximaCobrancaEm2]
+    .filter(Boolean)
+    .filter((data) => !boletos.some((b) => b.vencimento === data))
+    .sort();
+
+  if (previstas.length) return { tipo: "previsao", data: previstas[0] };
 
   return boleto ? { tipo: "boleto", boleto } : null;
 }

@@ -80,8 +80,23 @@ export default function AdminLayout({ session, onLogout }) {
     await updateClientFields(id, patch).catch((err) => setLoadError(err.message));
   }
 
-  async function handleSetRecurringBilling(client, { valor, diaVencimento, proximaCobrancaEm, asaasCustomerId, asaasSubscriptionId }) {
-    await setRecurringBilling(client.id, { valor, diaVencimento, proximaCobrancaEm, asaasCustomerId, asaasSubscriptionId });
+  async function handleSetRecurringBilling(
+    client,
+    { valor, diaVencimento, proximaCobrancaEm, asaasCustomerId, asaasSubscriptionId, periodicidade, valor2, diaVencimento2, proximaCobrancaEm2, asaasSubscriptionId2 }
+  ) {
+    await setRecurringBilling(client.id, {
+      valor,
+      diaVencimento,
+      proximaCobrancaEm,
+      asaasCustomerId,
+      asaasSubscriptionId,
+      periodicidade,
+      valor2,
+      diaVencimento2,
+      proximaCobrancaEm2,
+      asaasSubscriptionId2,
+    });
+    const quinzenal = periodicidade === "quinzenal";
     patchClientLocal(client.id, {
       cobrancaRecorrente: {
         ...client.cobrancaRecorrente,
@@ -90,6 +105,11 @@ export default function AdminLayout({ session, onLogout }) {
         proximaCobrancaEm,
         asaasCustomerId: asaasCustomerId || client.cobrancaRecorrente?.asaasCustomerId || null,
         asaasSubscriptionId: asaasSubscriptionId || client.cobrancaRecorrente?.asaasSubscriptionId || null,
+        periodicidade: periodicidade || "mensal",
+        valor2: quinzenal ? valor2 : null,
+        diaVencimento2: quinzenal ? diaVencimento2 : null,
+        proximaCobrancaEm2: quinzenal ? proximaCobrancaEm2 : null,
+        asaasSubscriptionId2: quinzenal ? asaasSubscriptionId2 || client.cobrancaRecorrente?.asaasSubscriptionId2 || null : null,
         configuradaEm: new Date().toISOString(),
       },
     });

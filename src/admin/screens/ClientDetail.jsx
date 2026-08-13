@@ -451,7 +451,18 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
   const [salvando, setSalvando] = useState(false);
   const [modo, setModo] = useState("existente"); // "novo" | "existente"
   const [formNovo, setFormNovo] = useState({ valor: "", jaPago: "sim", data: new Date().toISOString().slice(0, 10) });
-  const [formExistente, setFormExistente] = useState({ valor: "", diaVencimento: "", proximaCobrancaEm: "", asaasCustomerId: "", asaasSubscriptionId: "" });
+  const [formExistente, setFormExistente] = useState({
+    valor: "",
+    diaVencimento: "",
+    proximaCobrancaEm: "",
+    asaasCustomerId: "",
+    asaasSubscriptionId: "",
+    periodicidade: "mensal",
+    valor2: "",
+    diaVencimento2: "",
+    proximaCobrancaEm2: "",
+    asaasSubscriptionId2: "",
+  });
   const [erro, setErro] = useState("");
 
   const configurado = client.cobrancaRecorrente?.valor != null;
@@ -477,7 +488,10 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
   }
 
   async function salvarExistente() {
-    if (!formExistente.valor || !formExistente.diaVencimento || !formExistente.proximaCobrancaEm || salvando) return;
+    const quinzenal = formExistente.periodicidade === "quinzenal";
+    const camposBasicosOk = formExistente.valor && formExistente.diaVencimento && formExistente.proximaCobrancaEm;
+    const camposQuinzenalOk = !quinzenal || (formExistente.valor2 && formExistente.diaVencimento2 && formExistente.proximaCobrancaEm2);
+    if (!camposBasicosOk || !camposQuinzenalOk || salvando) return;
     setErro("");
     setSalvando(true);
     try {
@@ -487,6 +501,11 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
         proximaCobrancaEm: formExistente.proximaCobrancaEm,
         asaasCustomerId: formExistente.asaasCustomerId || undefined,
         asaasSubscriptionId: formExistente.asaasSubscriptionId || undefined,
+        periodicidade: formExistente.periodicidade,
+        valor2: quinzenal ? Number(formExistente.valor2) || 0 : undefined,
+        diaVencimento2: quinzenal ? Number(formExistente.diaVencimento2) : undefined,
+        proximaCobrancaEm2: quinzenal ? formExistente.proximaCobrancaEm2 : undefined,
+        asaasSubscriptionId2: quinzenal ? formExistente.asaasSubscriptionId2 || undefined : undefined,
       });
       setAberto(false);
     } catch (err) {
@@ -505,9 +524,16 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
               <CheckCircle2 size={15} className="text-emerald-bright" />
               Cobrança recorrente configurada
             </p>
-            <p className="mt-1 text-xs text-ink-dim">
-              R$ {client.cobrancaRecorrente.valor.toFixed(2)}/mês, todo dia {client.cobrancaRecorrente.diaVencimento}
-            </p>
+            {client.cobrancaRecorrente.periodicidade === "quinzenal" ? (
+              <p className="mt-1 text-xs text-ink-dim">
+                Quinzenal — R$ {client.cobrancaRecorrente.valor.toFixed(2)} todo dia {client.cobrancaRecorrente.diaVencimento} e R${" "}
+                {(client.cobrancaRecorrente.valor2 ?? 0).toFixed(2)} todo dia {client.cobrancaRecorrente.diaVencimento2}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-ink-dim">
+                R$ {client.cobrancaRecorrente.valor.toFixed(2)}/mês, todo dia {client.cobrancaRecorrente.diaVencimento}
+              </p>
+            )}
             <p className="mt-2 text-xs text-ink-dim">
               <span className="font-medium text-ink-muted">Previsão</span> da próxima cobrança:{" "}
               <span className="text-ink">{formatDate(client.cobrancaRecorrente.proximaCobrancaEm)}</span>
@@ -517,10 +543,25 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
                 <> — ainda <span className="font-medium">sem boleto registrado</span> pra essa data. Isto é só uma estimativa; não é um boleto de verdade.</>
               )}
             </p>
+            {client.cobrancaRecorrente.periodicidade === "quinzenal" && client.cobrancaRecorrente.proximaCobrancaEm2 && (
+              <p className="mt-2 text-xs text-ink-dim">
+                <span className="font-medium text-ink-muted">Previsão</span> da 2ª cobrança do mês:{" "}
+                <span className="text-ink">{formatDate(client.cobrancaRecorrente.proximaCobrancaEm2)}</span>
+                {(client.boletos || []).some((b) => b.vencimento === client.cobrancaRecorrente.proximaCobrancaEm2) ? (
+                  " — já tem um boleto registrado pra essa data, veja na lista abaixo."
+                ) : (
+                  <> — ainda <span className="font-medium">sem boleto registrado</span> pra essa data.</>
+                )}
+              </p>
+            )}
             <p className="mt-2 text-xs text-ink-dim">
               {client.cobrancaRecorrente.asaasSubscriptionId
                 ? `Vinculada à assinatura ${client.cobrancaRecorrente.asaasSubscriptionId} no Asaas.`
                 : "Aguardando integração com o Asaas — assinatura ainda não foi criada lá."}
+              {client.cobrancaRecorrente.periodicidade === "quinzenal" &&
+                (client.cobrancaRecorrente.asaasSubscriptionId2
+                  ? ` 2ª assinatura: ${client.cobrancaRecorrente.asaasSubscriptionId2}.`
+                  : " 2ª assinatura ainda não vinculada.")}
             </p>
           </div>
           <button onClick={() => setAberto(true)} className="shrink-0 text-xs font-medium text-emerald-bright hover:underline">
@@ -582,6 +623,52 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
             <TextField label="ID do cliente no Asaas" value={formExistente.asaasCustomerId} onChange={(v) => setFormExistente((f) => ({ ...f, asaasCustomerId: v }))} />
             <TextField label="ID da assinatura no Asaas" value={formExistente.asaasSubscriptionId} onChange={(v) => setFormExistente((f) => ({ ...f, asaasSubscriptionId: v }))} />
           </div>
+
+          <div className="mt-4">
+            <span className="mb-1.5 block text-xs font-medium text-ink-muted">Periodicidade</span>
+            <div className="flex gap-2">
+              {[
+                ["mensal", "Mensal"],
+                ["quinzenal", "Quinzenal (2 assinaturas)"],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFormExistente((f) => ({ ...f, periodicidade: value }))}
+                  className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors ${
+                    formExistente.periodicidade === value ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {formExistente.periodicidade === "quinzenal" && (
+            <div className="mt-4 rounded-xl border border-line/60 bg-surface-raised p-4">
+              <p className="mb-3 text-xs font-medium text-ink-muted">2ª assinatura (o outro dia de vencimento no mês)</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField label="Valor recorrente (R$)" value={formExistente.valor2} onChange={(v) => setFormExistente((f) => ({ ...f, valor2: v }))} />
+                <TextField label="Dia de vencimento (1–31)" value={formExistente.diaVencimento2} onChange={(v) => setFormExistente((f) => ({ ...f, diaVencimento2: v }))} />
+              </div>
+              <div className="mt-4">
+                <TextField
+                  label="Próxima cobrança prevista"
+                  type="date"
+                  value={formExistente.proximaCobrancaEm2}
+                  onChange={(v) => setFormExistente((f) => ({ ...f, proximaCobrancaEm2: v }))}
+                />
+              </div>
+              <div className="mt-4">
+                <TextField
+                  label="ID da 2ª assinatura no Asaas"
+                  value={formExistente.asaasSubscriptionId2}
+                  onChange={(v) => setFormExistente((f) => ({ ...f, asaasSubscriptionId2: v }))}
+                />
+              </div>
+            </div>
+          )}
 
           {erro && <p className="mt-3 text-sm text-flame">{erro}</p>}
 
