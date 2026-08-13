@@ -43,7 +43,7 @@ export default function ClientDetail({ client, onBack, initialTab = "dados", ...
           <p className="mt-1 text-sm text-ink-dim">{client.cnpj || "CNPJ não informado"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <StatusBadge status={client.contrato.status} />
+          <StatusBadge status={client.contrato.status} context="contrato" />
           {boletoAtual && <StatusBadge status={boletoAtual.status} />}
           <StatusBadge status={client.intensidade.status} />
           <StatusBadge status={`saude_${client.saude}`} />
@@ -184,14 +184,14 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) 
             {client.contrato.status === "assinado" ? `Assinado em ${formatDate(client.contrato.assinadoEm)}` : "Aguardando assinatura do cliente"}
           </p>
         </div>
-        <StatusBadge status={client.contrato.status} />
+        <StatusBadge status={client.contrato.status} context="contrato" />
       </div>
 
       <div className="mt-5 flex gap-2">
         <button
           onClick={() => onSetContractStatus(client, "pendente")}
           className={`flex-1 rounded-full py-2.5 text-sm font-medium transition-colors ${
-            client.contrato.status === "pendente" ? "bg-amber-400/15 text-amber-300" : "border border-line text-ink-muted hover:text-ink"
+            client.contrato.status === "pendente" ? "bg-flame/15 text-flame" : "border border-line text-ink-muted hover:text-ink"
           }`}
         >
           Marcar como pendente
@@ -199,7 +199,7 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) 
         <button
           onClick={() => onSetContractStatus(client, "assinado")}
           className={`flex-1 rounded-full py-2.5 text-sm font-medium transition-colors ${
-            client.contrato.status === "assinado" ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
+            client.contrato.status === "assinado" ? "bg-green-400/15 text-green-300" : "border border-line text-ink-muted hover:text-ink"
           }`}
         >
           Marcar como assinado

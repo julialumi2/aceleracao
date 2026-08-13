@@ -1,12 +1,13 @@
 const STYLES = {
   // contrato
-  assinado: "bg-emerald-brand/10 text-emerald-bright border-emerald-brand/30",
+  assinado: "bg-green-400/10 text-green-300 border-green-400/30",
   pendente: "bg-amber-400/10 text-amber-300 border-amber-400/30",
+  contrato_pendente: "bg-flame/10 text-flame border-flame/30",
   // boleto
-  pago: "bg-emerald-brand/10 text-emerald-bright border-emerald-brand/30",
+  pago: "bg-green-400/10 text-green-300 border-green-400/30",
   atrasado: "bg-flame/10 text-flame border-flame/30",
   // intensidade
-  ativo: "bg-emerald-brand/10 text-emerald-bright border-emerald-brand/30",
+  ativo: "bg-green-400/10 text-green-300 border-green-400/30",
   em_queda: "bg-amber-400/10 text-amber-300 border-amber-400/30",
   inativo: "bg-flame/10 text-flame border-flame/30",
   // leads
@@ -44,12 +45,12 @@ const LABELS = {
   temp_quente: "Quente",
 };
 
-export default function StatusBadge({ status }) {
+export default function StatusBadge({ status, context }) {
+  const key = context ? `${context}_${status}` : status;
+  const style = STYLES[key] || STYLES[status] || "border-line text-ink-muted";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-        STYLES[status] || "border-line text-ink-muted"
-      }`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${style}`}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {LABELS[status] || status}

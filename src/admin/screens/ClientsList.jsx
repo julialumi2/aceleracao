@@ -198,7 +198,7 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
                     <p className="text-sm font-medium text-ink">{c.nome}</p>
                     <p className="text-xs text-ink-dim">{c.cnpj || "CNPJ não informado"}</p>
                   </div>
-                  <StatusBadge status={c.contrato.status} />
+                  <StatusBadge status={c.contrato.status} context="contrato" />
                   {boleto ? <StatusBadge status={boleto.status} /> : <span className="text-xs text-ink-dim">—</span>}
                   <StatusBadge status={c.intensidade.status} />
                   <StatusBadge status={`saude_${c.saude}`} />
