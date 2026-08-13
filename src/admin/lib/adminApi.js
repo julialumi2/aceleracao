@@ -76,6 +76,7 @@ function mapRestaurantRow(row) {
       vencimento: inv.vencimento,
       status: inv.status,
       alertaEnviadoEm: inv.alerta_enviado_em,
+      asaasId: inv.asaas_id,
     })),
     intensidade: {
       status: ultimaChecagem?.status || "ativo",
@@ -173,18 +174,25 @@ export async function setContractDocumentUrl(restaurantId, url) {
 
 // ---------- Cobrança ----------
 
-export async function addInvoice(restaurantId, { valor, vencimento }) {
+// asaasId é opcional, mas importante preencher quando o boleto já existe
+// no Asaas: sem ele, quando o webhook processar um evento de verdade pra
+// esse mesmo boleto, ele não acha essa linha pra atualizar e cria uma
+// segunda, duplicada. status também é opcional — cliente já vencido, por
+// exemplo, entra direto como "atrasado" em vez de "pendente".
+export async function addInvoice(restaurantId, { valor, vencimento, asaasId, status }) {
   const { data, error } = await supabase
     .from("invoices")
-    .insert({ restaurant_id: restaurantId, valor, vencimento, status: "pendente" })
+    .insert({ restaurant_id: restaurantId, valor, vencimento, status: status || "pendente", asaas_id: asaasId || null })
     .select()
     .single();
   if (error) throw error;
-  return { id: data.id, valor: Number(data.valor), vencimento: data.vencimento, status: data.status, alertaEnviadoEm: data.alerta_enviado_em };
+  return { id: data.id, valor: Number(data.valor), vencimento: data.vencimento, status: data.status, alertaEnviadoEm: data.alerta_enviado_em, asaasId: data.asaas_id };
 }
 
-export async function updateInvoice(invoiceId, { valor, vencimento }) {
-  const { error } = await supabase.from("invoices").update({ valor, vencimento }).eq("id", invoiceId);
+export async function updateInvoice(invoiceId, { valor, vencimento, asaasId }) {
+  const payload = { valor, vencimento };
+  if (asaasId !== undefined) payload.asaas_id = asaasId || null;
+  const { error } = await supabase.from("invoices").update(payload).eq("id", invoiceId);
   if (error) throw error;
 }
 

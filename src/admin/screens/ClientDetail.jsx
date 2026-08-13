@@ -233,16 +233,20 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) 
 }
 
 function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAlertSent, onUpdateInvoice, onDeleteInvoice, onSetRecurringBilling }) {
-  const [novo, setNovo] = useState({ valor: "", vencimento: "" });
+  const [novo, setNovo] = useState({ valor: "", vencimento: "", asaasId: "" });
   const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
   const boletos = sortByVencimento(client.boletos || []);
 
   async function adicionarBoleto() {
     if (!novo.valor || !novo.vencimento || salvando) return;
+    setErro("");
     setSalvando(true);
     try {
-      await onAddInvoice(client, { valor: Number(novo.valor) || 0, vencimento: novo.vencimento });
-      setNovo({ valor: "", vencimento: "" });
+      await onAddInvoice(client, { valor: Number(novo.valor) || 0, vencimento: novo.vencimento, asaasId: novo.asaasId || undefined });
+      setNovo({ valor: "", vencimento: "", asaasId: "" });
+    } catch (err) {
+      setErro(err.message?.includes("duplicate") ? "Já existe um boleto com esse ID do Asaas." : err.message || "Não foi possível registrar. Tenta de novo.");
     } finally {
       setSalvando(false);
     }
@@ -289,9 +293,21 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
             <Plus size={14} /> Registrar
           </button>
         </div>
+        <div className="mt-3">
+          <TextField
+            label="ID do boleto no Asaas (opcional)"
+            value={novo.asaasId}
+            onChange={(v) => setNovo((n) => ({ ...n, asaasId: v }))}
+          />
+          <p className="mt-1 text-xs text-ink-dim">
+            Se preencher, esse boleto atualiza sozinho quando o Asaas avisar que ele mudou de status — sem isso, um evento futuro
+            pode criar uma linha duplicada em vez de atualizar essa aqui.
+          </p>
+        </div>
         <p className="mt-2 text-xs text-ink-dim">
           Só copia o valor e vencimento que já existem no Asaas — não gera boleto novo nem cobra o cliente.
         </p>
+        {erro && <p className="mt-2 text-sm text-flame">{erro}</p>}
       </div>
     </Panel>
     </>
@@ -301,18 +317,22 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
 function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertSent, onUpdateInvoice, onDeleteInvoice }) {
   const [editando, setEditando] = useState(false);
   const [confirmExcluir, setConfirmExcluir] = useState(false);
-  const [form, setForm] = useState({ valor: String(b.valor), vencimento: b.vencimento });
+  const [form, setForm] = useState({ valor: String(b.valor), vencimento: b.vencimento, asaasId: b.asaasId || "" });
   const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
 
   const stage = alertStage(b);
   const waLink = buildWhatsAppLink(client.telefone, billingAlertMessage(client, b, stage));
 
   async function salvarEdicao() {
     if (!form.valor || !form.vencimento || salvando) return;
+    setErro("");
     setSalvando(true);
     try {
-      await onUpdateInvoice(client, b.id, { valor: Number(form.valor) || 0, vencimento: form.vencimento });
+      await onUpdateInvoice(client, b.id, { valor: Number(form.valor) || 0, vencimento: form.vencimento, asaasId: form.asaasId || null });
       setEditando(false);
+    } catch (err) {
+      setErro(err.message?.includes("duplicate") ? "Já existe um boleto com esse ID do Asaas." : err.message || "Não foi possível salvar. Tenta de novo.");
     } finally {
       setSalvando(false);
     }
@@ -335,6 +355,10 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
           <TextField label="Valor (R$)" value={form.valor} onChange={(v) => setForm((f) => ({ ...f, valor: v }))} />
           <TextField label="Vencimento" type="date" value={form.vencimento} onChange={(v) => setForm((f) => ({ ...f, vencimento: v }))} />
         </div>
+        <div className="mt-3">
+          <TextField label="ID do boleto no Asaas (opcional)" value={form.asaasId} onChange={(v) => setForm((f) => ({ ...f, asaasId: v }))} />
+        </div>
+        {erro && <p className="mt-2 text-sm text-flame">{erro}</p>}
         <div className="mt-3 flex items-center gap-3">
           <button
             onClick={salvarEdicao}

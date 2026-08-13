@@ -112,8 +112,8 @@ export default function AdminLayout({ session, onLogout }) {
     await setContractDocumentUrl(client.id, url).catch((err) => setLoadError(err.message));
   }
 
-  async function handleAddInvoice(client, { valor, vencimento }) {
-    const boleto = await addInvoice(client.id, { valor, vencimento });
+  async function handleAddInvoice(client, { valor, vencimento, asaasId, status }) {
+    const boleto = await addInvoice(client.id, { valor, vencimento, asaasId, status });
     patchClientLocal(client.id, { boletos: [...client.boletos, boleto] });
   }
 
@@ -124,11 +124,11 @@ export default function AdminLayout({ session, onLogout }) {
     await setInvoiceStatus(invoiceId, status).catch((err) => setLoadError(err.message));
   }
 
-  async function handleUpdateInvoice(client, invoiceId, { valor, vencimento }) {
+  async function handleUpdateInvoice(client, invoiceId, { valor, vencimento, asaasId }) {
     patchClientLocal(client.id, {
-      boletos: client.boletos.map((b) => (b.id === invoiceId ? { ...b, valor, vencimento } : b)),
+      boletos: client.boletos.map((b) => (b.id === invoiceId ? { ...b, valor, vencimento, asaasId } : b)),
     });
-    await updateInvoice(invoiceId, { valor, vencimento }).catch((err) => setLoadError(err.message));
+    await updateInvoice(invoiceId, { valor, vencimento, asaasId }).catch((err) => setLoadError(err.message));
   }
 
   async function handleDeleteInvoice(client, invoiceId) {
