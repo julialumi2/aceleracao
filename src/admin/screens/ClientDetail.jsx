@@ -3,7 +3,7 @@ import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle,
 import StatusBadge from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
-import { sortByVencimento, currentInvoice } from "../lib/invoices.js";
+import { sortByVencimento, currentInvoice, alertStage, ALERT_STAGE_LABELS } from "../lib/invoices.js";
 import { calcularProximaCobranca, diaDoVencimento } from "../lib/recurringBilling.js";
 
 const TABS = [
@@ -304,7 +304,8 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
   const [form, setForm] = useState({ valor: String(b.valor), vencimento: b.vencimento });
   const [salvando, setSalvando] = useState(false);
 
-  const waLink = buildWhatsAppLink(client.telefone, billingAlertMessage(client, b));
+  const stage = alertStage(b);
+  const waLink = buildWhatsAppLink(client.telefone, billingAlertMessage(client, b, stage));
 
   async function salvarEdicao() {
     if (!form.valor || !form.vencimento || salvando) return;
@@ -373,7 +374,7 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
             {s === "pendente" ? "Pendente" : s === "atrasado" ? "Atrasado" : "Pago"}
           </button>
         ))}
-        {b.status === "atrasado" && (
+        {stage && (
           <a
             href={waLink}
             target="_blank"
@@ -382,7 +383,7 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
             className="ml-auto flex items-center gap-1.5 rounded-full border border-emerald-brand/40 px-3 py-1.5 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
           >
             <MessageCircle size={12} />
-            Alertar
+            Alertar ({ALERT_STAGE_LABELS[stage].toLowerCase()})
           </a>
         )}
       </div>

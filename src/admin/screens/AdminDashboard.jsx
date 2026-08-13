@@ -1,7 +1,7 @@
 import { Users, FileWarning, ReceiptText, TrendingDown, Contact, Activity, FileSignature, CalendarClock, ChevronRight, PartyPopper } from "lucide-react";
 import KpiCard from "../components/KpiCard.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
-import { currentInvoice } from "../lib/invoices.js";
+import { currentInvoice, alertStage, ALERT_STAGE_LABELS } from "../lib/invoices.js";
 
 const SAUDE_ORDER = ["laranja", "amarelo", "verde"];
 
@@ -19,17 +19,19 @@ function buildAcoesPendentes(clients) {
   const acoes = [];
 
   for (const c of clients) {
-    const boleto = currentInvoice(c.boletos);
-    if (boleto?.status === "atrasado" && !boleto.alertaEnviadoEm) {
-      acoes.push({
-        id: `${c.id}-boleto`,
-        cliente: c,
-        tab: "cobranca",
-        icon: ReceiptText,
-        tone: "text-flame",
-        texto: `Boleto atrasado — R$ ${boleto.valor.toFixed(2)}, sem alerta enviado`,
-        prioridade: 1,
-      });
+    for (const boleto of c.boletos || []) {
+      const stage = alertStage(boleto);
+      if (stage && !boleto.alertaEnviadoEm) {
+        acoes.push({
+          id: `${c.id}-boleto-${boleto.id}`,
+          cliente: c,
+          tab: "cobranca",
+          icon: ReceiptText,
+          tone: stage === "depois" ? "text-flame" : "text-amber-300",
+          texto: `Boleto: ${ALERT_STAGE_LABELS[stage].toLowerCase()} — R$ ${boleto.valor.toFixed(2)}, sem alerta enviado`,
+          prioridade: 1,
+        });
+      }
     }
     if (c.contrato.status === "pendente") {
       acoes.push({
