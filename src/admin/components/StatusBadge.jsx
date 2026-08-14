@@ -15,9 +15,8 @@ const STYLES = {
   contatado: "bg-amber-400/10 text-amber-300 border-amber-400/30",
   convertido: "bg-emerald-brand/10 text-emerald-bright border-emerald-brand/30",
   descartado: "bg-ink-dim/10 text-ink-dim border-line",
-  // cliente que cancelou a mentoria — preenchido sólido de propósito, pra
-  // se destacar dos outros badges (translúcidos) e não passar despercebido.
-  cancelado: "bg-flame text-base border-flame font-semibold",
+  // cliente que cancelou a mentoria
+  cancelado: "bg-flame/10 text-flame border-flame/30",
   // saúde da campanha (independente da intensidade de redes sociais)
   saude_verde: "bg-green-400/10 text-green-300 border-green-400/30",
   saude_amarelo: "bg-amber-400/10 text-amber-300 border-amber-400/30",
