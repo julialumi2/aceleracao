@@ -68,7 +68,14 @@ export default function TasksBoard({ tasks, clients, leads, onCreateTask, onUpda
       </div>
 
       {mostrarForm && (
-        <div className="mb-6 rounded-2xl border border-line bg-surface p-6">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setMostrarForm(false)}
+        >
+        <div
+          className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-surface p-6"
+          onClick={(e) => e.stopPropagation()}
+        >
           <p className="text-sm font-medium text-ink">Nova tarefa</p>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -173,6 +180,7 @@ export default function TasksBoard({ tasks, clients, leads, onCreateTask, onUpda
               Cancelar
             </button>
           </div>
+        </div>
         </div>
       )}
 
