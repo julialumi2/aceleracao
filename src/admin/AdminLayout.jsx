@@ -273,7 +273,7 @@ export default function AdminLayout({ session, onLogout }) {
 
   async function handleSetCancelamento(client, motivo) {
     const canceladoEm = await setCancelamento(client.id, motivo);
-    patchClientLocal(client.id, { canceladoEm, motivoCancelamento: motivo || "" });
+    patchClientLocal(client.id, { canceladoEm, motivoCancelamento: motivo || "", saude: "inativo" });
   }
 
   async function handleReativarCliente(client) {

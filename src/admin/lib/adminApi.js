@@ -373,7 +373,7 @@ export async function setCancelamento(id, motivo) {
   const canceladoEm = new Date().toISOString();
   const { error } = await supabase
     .from("restaurants")
-    .update({ cancelado_em: canceladoEm, motivo_cancelamento: motivo || null })
+    .update({ cancelado_em: canceladoEm, motivo_cancelamento: motivo || null, saude: "inativo" })
     .eq("id", id);
   if (error) throw error;
   return canceladoEm;

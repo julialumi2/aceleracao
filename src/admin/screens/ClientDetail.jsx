@@ -17,6 +17,7 @@ const SAUDE_OPTIONS = [
   { value: "verde", label: "Rodando c/ resultado" },
   { value: "amarelo", label: "Rodando, sem resultado" },
   { value: "laranja", label: "Não iniciado" },
+  { value: "inativo", label: "Inativo" },
 ];
 
 const MESES_ABREV = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
