@@ -52,16 +52,15 @@ const LABELS = {
   temp_quente: "Quente",
 };
 
-export default function StatusBadge({ status, context, size = "md" }) {
+export default function StatusBadge({ status, context }) {
   const key = context ? `${context}_${status}` : status;
   const style = STYLES[key] || STYLES[status] || "border-line text-ink-muted";
   const label = LABELS[key] || LABELS[status] || status;
-  const sizeClasses = size === "sm" ? "gap-1 px-1.5 py-0.5 text-[10px] leading-none" : "gap-1.5 px-2.5 py-1 text-[11px]";
   return (
     <span
-      className={`inline-flex items-center rounded-full border font-medium ${sizeClasses} ${style}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${style}`}
     >
-      <span className={`rounded-full bg-current ${size === "sm" ? "h-1 w-1" : "h-1.5 w-1.5"}`} />
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {label}
     </span>
   );
