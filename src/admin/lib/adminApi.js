@@ -185,6 +185,29 @@ export async function setRecurringBilling(
   if (error) throw error;
 }
 
+// Reseta a configuração de cobrança recorrente pro estado "não configurado"
+// — usado quando algo foi cadastrado errado e precisa recomeçar do zero.
+// Não mexe nos boletos já registrados, só na config (valor/dia/IDs Asaas).
+export async function clearRecurringBilling(id) {
+  const { error } = await supabase
+    .from("restaurants")
+    .update({
+      valor_recorrente: null,
+      dia_vencimento_recorrente: null,
+      proxima_cobranca_em: null,
+      cobranca_configurada_em: null,
+      asaas_customer_id: null,
+      asaas_subscription_id: null,
+      periodicidade: "mensal",
+      valor_recorrente_2: null,
+      dia_vencimento_recorrente_2: null,
+      proxima_cobranca_em_2: null,
+      asaas_subscription_id_2: null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 // ---------- Contrato ----------
 
 export async function setContractStatus(restaurantId, status) {

@@ -371,7 +371,7 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) 
   );
 }
 
-function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAlertSent, onUpdateInvoice, onDeleteInvoice, onSetRecurringBilling }) {
+function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAlertSent, onUpdateInvoice, onDeleteInvoice, onSetRecurringBilling, onClearRecurringBilling }) {
   const [novo, setNovo] = useState({ valor: "", vencimento: "", asaasId: "" });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -393,7 +393,7 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
 
   return (
     <>
-      <RecurringBillingSetup client={client} onSetRecurringBilling={onSetRecurringBilling} />
+      <RecurringBillingSetup client={client} onSetRecurringBilling={onSetRecurringBilling} onClearRecurringBilling={onClearRecurringBilling} />
     <Panel>
       <p className="mb-1 text-xs font-medium text-ink-muted">Histórico de boletos registrados, do vencimento mais recente ao mais antigo</p>
       <p className="mb-4 text-xs text-ink-dim">
@@ -584,9 +584,11 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
   );
 }
 
-function RecurringBillingSetup({ client, onSetRecurringBilling }) {
+function RecurringBillingSetup({ client, onSetRecurringBilling, onClearRecurringBilling }) {
   const [aberto, setAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [confirmExcluir, setConfirmExcluir] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
   const [modo, setModo] = useState("existente"); // "novo" | "existente"
   const [formNovo, setFormNovo] = useState({ valor: "", jaPago: "sim", data: new Date().toISOString().slice(0, 10) });
   const [formExistente, setFormExistente] = useState({
@@ -622,6 +624,17 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
       setErro(err.message || "Não foi possível salvar. Tenta de novo.");
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function excluirConfiguracao() {
+    if (excluindo) return;
+    setExcluindo(true);
+    try {
+      await onClearRecurringBilling(client);
+      setConfirmExcluir(false);
+    } finally {
+      setExcluindo(false);
     }
   }
 
@@ -702,9 +715,29 @@ function RecurringBillingSetup({ client, onSetRecurringBilling }) {
                   : " 2ª assinatura ainda não vinculada.")}
             </p>
           </div>
-          <button onClick={() => setAberto(true)} className="shrink-0 text-xs font-medium text-emerald-bright hover:underline">
-            Editar
-          </button>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <button onClick={() => setAberto(true)} className="text-xs font-medium text-emerald-bright hover:underline">
+              Editar
+            </button>
+            {confirmExcluir ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={excluirConfiguracao}
+                  disabled={excluindo}
+                  className="rounded-full bg-flame/15 px-3 py-1 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
+                >
+                  Confirmar exclusão
+                </button>
+                <button onClick={() => setConfirmExcluir(false)} className="text-xs text-ink-muted hover:text-ink">
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmExcluir(true)} className="text-xs font-medium text-ink-dim hover:text-flame">
+                Excluir configuração
+              </button>
+            )}
+          </div>
         </div>
       </Panel>
     );

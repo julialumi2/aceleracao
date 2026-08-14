@@ -12,6 +12,7 @@ import {
   fetchLeads,
   updateClientFields,
   setRecurringBilling,
+  clearRecurringBilling,
   setContractStatus,
   setContractDocumentUrl,
   addInvoice,
@@ -113,6 +114,25 @@ export default function AdminLayout({ session, onLogout }) {
         proximaCobrancaEm2: quinzenal ? proximaCobrancaEm2 : null,
         asaasSubscriptionId2: quinzenal ? asaasSubscriptionId2 || client.cobrancaRecorrente?.asaasSubscriptionId2 || null : null,
         configuradaEm: new Date().toISOString(),
+      },
+    });
+  }
+
+  async function handleClearRecurringBilling(client) {
+    await clearRecurringBilling(client.id);
+    patchClientLocal(client.id, {
+      cobrancaRecorrente: {
+        valor: null,
+        diaVencimento: null,
+        proximaCobrancaEm: null,
+        configuradaEm: null,
+        asaasCustomerId: null,
+        asaasSubscriptionId: null,
+        periodicidade: "mensal",
+        valor2: null,
+        diaVencimento2: null,
+        proximaCobrancaEm2: null,
+        asaasSubscriptionId2: null,
       },
     });
   }
@@ -272,6 +292,7 @@ export default function AdminLayout({ session, onLogout }) {
   const clientHandlers = {
     onUpdate: updateClient,
     onSetRecurringBilling: handleSetRecurringBilling,
+    onClearRecurringBilling: handleClearRecurringBilling,
     onSetContractStatus: handleSetContractStatus,
     onSetContractDocumentUrl: handleSetContractDocumentUrl,
     onAddInvoice: handleAddInvoice,
