@@ -106,6 +106,8 @@ function TextField({ label, value, onChange, type = "text" }) {
   );
 }
 
+const CAMPOS_DADOS = ["empresa", "nome", "cnpj", "telefone", "email", "cep", "cardapioUrl"];
+
 function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReativarCliente }) {
   const [confirmArquivar, setConfirmArquivar] = useState(false);
   const [arquivando, setArquivando] = useState(false);
@@ -113,6 +115,27 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
   const [mostrarFormCancelar, setMostrarFormCancelar] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [reativando, setReativando] = useState(false);
+  const [form, setForm] = useState(() => Object.fromEntries(CAMPOS_DADOS.map((k) => [k, client[k] || ""])));
+  const [salvando, setSalvando] = useState(false);
+  const [salvo, setSalvo] = useState(false);
+
+  const dirty = CAMPOS_DADOS.some((k) => form[k] !== (client[k] || ""));
+
+  function editarCampo(campo, valor) {
+    setForm((f) => ({ ...f, [campo]: valor }));
+    setSalvo(false);
+  }
+
+  async function salvar() {
+    if (!dirty || salvando) return;
+    setSalvando(true);
+    try {
+      await onUpdate(client.id, form);
+      setSalvo(true);
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   async function arquivar() {
     if (arquivando) return;
@@ -149,17 +172,29 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
   return (
     <Panel>
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField label="Empresa" value={client.empresa} onChange={(v) => onUpdate(client.id, { empresa: v })} />
-        <TextField label="Nome do responsável" value={client.nome} onChange={(v) => onUpdate(client.id, { nome: v })} />
-        <TextField label="CNPJ" value={client.cnpj} onChange={(v) => onUpdate(client.id, { cnpj: v })} />
-        <TextField label="Telefone (WhatsApp)" value={client.telefone} onChange={(v) => onUpdate(client.id, { telefone: v })} />
-        <TextField label="E-mail" value={client.email} onChange={(v) => onUpdate(client.id, { email: v })} />
-        <TextField label="CEP" value={client.cep} onChange={(v) => onUpdate(client.id, { cep: v })} />
+        <TextField label="Empresa" value={form.empresa} onChange={(v) => editarCampo("empresa", v)} />
+        <TextField label="Nome do responsável" value={form.nome} onChange={(v) => editarCampo("nome", v)} />
+        <TextField label="CNPJ" value={form.cnpj} onChange={(v) => editarCampo("cnpj", v)} />
+        <TextField label="Telefone (WhatsApp)" value={form.telefone} onChange={(v) => editarCampo("telefone", v)} />
+        <TextField label="E-mail" value={form.email} onChange={(v) => editarCampo("email", v)} />
+        <TextField label="CEP" value={form.cep} onChange={(v) => editarCampo("cep", v)} />
         <TextField
           label="Link do cardápio"
-          value={client.cardapioUrl}
-          onChange={(v) => onUpdate(client.id, { cardapioUrl: v })}
+          value={form.cardapioUrl}
+          onChange={(v) => editarCampo("cardapioUrl", v)}
         />
+      </div>
+
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          onClick={salvar}
+          disabled={!dirty || salvando}
+          className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-50"
+        >
+          {salvando ? "Salvando..." : "Salvar"}
+        </button>
+        {salvo && !dirty && <span className="text-xs text-emerald-bright">Alterações salvas.</span>}
+        {dirty && <span className="text-xs text-ink-dim">Alterações não salvas.</span>}
       </div>
 
       <div className="mt-6 border-t border-line/60 pt-5">
