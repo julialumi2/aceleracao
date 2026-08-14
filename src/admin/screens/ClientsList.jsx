@@ -40,6 +40,8 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
     const matchesIntensidade = filters.intensidade === "todos" || c.intensidade.status === filters.intensidade;
     return matchesQuery && matchesContrato && matchesBoleto && matchesIntensidade;
   });
+  const filteredAtivos = filtered.filter((c) => !c.canceladoEm);
+  const filteredCancelados = filtered.filter((c) => c.canceladoEm);
 
   async function salvarNovoCliente() {
     if (!novo.nome.trim() || salvando) return;
@@ -178,53 +180,67 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
             <FilterSelect label="Intensidade" value={filters.intensidade} options={FILTERS.intensidade} onChange={(v) => setFilters((f) => ({ ...f, intensidade: v }))} />
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-line bg-surface">
-            <div className="hidden grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto] gap-4 border-b border-line/60 px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-dim sm:grid">
-              <span>Cliente</span>
-              <span>Contrato</span>
-              <span>Boleto</span>
-              <span>Intensidade</span>
-              <span>Saúde</span>
-              <span />
+          <ClientsTable clients={filteredAtivos} onOpenClient={onOpenClient} />
+          {filtered.length === 0 && (
+            <p className="px-5 py-8 text-center text-sm text-ink-dim">Nenhum cliente encontrado com esses filtros.</p>
+          )}
+
+          {filteredCancelados.length > 0 && (
+            <div className="mt-8">
+              <h2 className="mb-3 text-sm font-semibold text-ink-muted">Cancelados ({filteredCancelados.length})</h2>
+              <ClientsTable clients={filteredCancelados} onOpenClient={onOpenClient} />
             </div>
-
-            {filtered.map((c) => {
-              const resumo = billingSummary(c);
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => onOpenClient(c.id)}
-                  className={`grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left transition-colors last:border-b-0 sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto] ${
-                    c.canceladoEm ? "bg-flame/5 hover:bg-flame/10" : "hover:bg-surface-raised"
-                  }`}
-                >
-                  <div className="col-span-2 sm:col-span-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <p className="text-sm font-medium text-ink">{c.empresa || c.nome}</p>
-                      {c.canceladoEm && <StatusBadge status="cancelado" />}
-                    </div>
-                    <p className="text-xs text-ink-dim">
-                      {c.empresa ? `${c.nome} · ` : ""}
-                      {c.cnpj || "CNPJ não informado"}
-                    </p>
-                  </div>
-                  <StatusBadge status={c.contrato.status} context="contrato" />
-                  {resumo?.tipo === "boleto" && <StatusBadge status={resumo.boleto.status} />}
-                  {resumo?.tipo === "previsao" && <NextBillingBadge label={formatDateAbrev(resumo.data)} />}
-                  {!resumo && <span className="text-xs text-ink-dim">—</span>}
-                  <StatusBadge status={c.intensidade.status} />
-                  <StatusBadge status={`saude_${c.saude}`} />
-                  <ChevronRight size={16} className="hidden text-ink-dim sm:block" />
-                </button>
-              );
-            })}
-
-            {filtered.length === 0 && (
-              <p className="px-5 py-8 text-center text-sm text-ink-dim">Nenhum cliente encontrado com esses filtros.</p>
-            )}
-          </div>
+          )}
         </>
       )}
+    </div>
+  );
+}
+
+function ClientsTable({ clients, onOpenClient }) {
+  if (clients.length === 0) return null;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="hidden grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto] gap-4 border-b border-line/60 px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-dim sm:grid">
+        <span>Cliente</span>
+        <span>Contrato</span>
+        <span>Boleto</span>
+        <span>Intensidade</span>
+        <span>Saúde</span>
+        <span />
+      </div>
+
+      {clients.map((c) => {
+        const resumo = billingSummary(c);
+        return (
+          <button
+            key={c.id}
+            onClick={() => onOpenClient(c.id)}
+            className={`grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left transition-colors last:border-b-0 sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto] ${
+              c.canceladoEm ? "bg-flame/5 hover:bg-flame/10" : "hover:bg-surface-raised"
+            }`}
+          >
+            <div className="col-span-2 sm:col-span-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <p className="text-sm font-medium text-ink">{c.empresa || c.nome}</p>
+                {c.canceladoEm && <StatusBadge status="cancelado" />}
+              </div>
+              <p className="text-xs text-ink-dim">
+                {c.empresa ? `${c.nome} · ` : ""}
+                {c.cnpj || "CNPJ não informado"}
+              </p>
+            </div>
+            <StatusBadge status={c.contrato.status} context="contrato" />
+            {resumo?.tipo === "boleto" && <StatusBadge status={resumo.boleto.status} />}
+            {resumo?.tipo === "previsao" && <NextBillingBadge label={formatDateAbrev(resumo.data)} />}
+            {!resumo && <span className="text-xs text-ink-dim">—</span>}
+            <StatusBadge status={c.intensidade.status} />
+            <StatusBadge status={`saude_${c.saude}`} />
+            <ChevronRight size={16} className="hidden text-ink-dim sm:block" />
+          </button>
+        );
+      })}
     </div>
   );
 }
