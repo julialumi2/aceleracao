@@ -194,7 +194,9 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
                 <button
                   key={c.id}
                   onClick={() => onOpenClient(c.id)}
-                  className="grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left transition-colors last:border-b-0 hover:bg-surface-raised sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto]"
+                  className={`grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left transition-colors last:border-b-0 sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto] ${
+                    c.canceladoEm ? "bg-flame/5 hover:bg-flame/10" : "hover:bg-surface-raised"
+                  }`}
                 >
                   <div className="col-span-2 sm:col-span-1">
                     <div className="flex flex-wrap items-center gap-1.5">
