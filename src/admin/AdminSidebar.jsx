@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, LayoutDashboard, Users, Contact, Wallet, Activity, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldCheck, LayoutDashboard, Users, Contact, Wallet, Activity, ListTodo, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { key: "leads", label: "Leads", icon: Contact },
   { key: "cobrancas", label: "Cobranças", icon: Wallet },
   { key: "intensidade", label: "Intensidade", icon: Activity },
+  { key: "tarefas", label: "Tarefas", icon: ListTodo },
   { key: "configuracoes", label: "Configurações", icon: Settings },
 ];
 

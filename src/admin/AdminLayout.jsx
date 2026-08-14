@@ -6,10 +6,15 @@ import ClientDetail from "./screens/ClientDetail.jsx";
 import LeadsList from "./screens/LeadsList.jsx";
 import Billing from "./screens/Billing.jsx";
 import Intensity from "./screens/Intensity.jsx";
+import TasksBoard from "./screens/TasksBoard.jsx";
 import Settings from "./screens/Settings.jsx";
 import {
   fetchClients,
   fetchLeads,
+  fetchTasks,
+  createTask,
+  updateTaskStatus,
+  deleteTask,
   updateClientFields,
   setRecurringBilling,
   clearRecurringBilling,
@@ -49,6 +54,7 @@ export default function AdminLayout({ session, onLogout }) {
   const [selectedTab, setSelectedTab] = useState("dados");
   const [clients, setClients] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [archivedClients, setArchivedClients] = useState([]);
@@ -63,9 +69,10 @@ export default function AdminLayout({ session, onLogout }) {
     setLoading(true);
     setLoadError("");
     try {
-      const [clientsData, leadsData] = await Promise.all([fetchClients(), fetchLeads()]);
+      const [clientsData, leadsData, tasksData] = await Promise.all([fetchClients(), fetchLeads(), fetchTasks()]);
       setClients(clientsData);
       setLeads(leadsData);
+      setTasks(tasksData);
     } catch (err) {
       setLoadError(err.message || "Não foi possível carregar os dados do Supabase.");
     } finally {
@@ -281,6 +288,21 @@ export default function AdminLayout({ session, onLogout }) {
     patchClientLocal(client.id, { canceladoEm: null, motivoCancelamento: "" });
   }
 
+  async function handleCreateTask(fields) {
+    const novaTarefa = await createTask(fields);
+    setTasks((prev) => [novaTarefa, ...prev]);
+  }
+
+  async function handleUpdateTaskStatus(task, status) {
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status } : t)));
+    await updateTaskStatus(task.id, status).catch((err) => setLoadError(err.message));
+  }
+
+  async function handleDeleteTask(task) {
+    setTasks((prev) => prev.filter((t) => t.id !== task.id));
+    await deleteTask(task.id).catch((err) => setLoadError(err.message));
+  }
+
   async function handleRestoreClient(client) {
     await restoreClient(client.id);
     setArchivedClients((prev) => prev.filter((c) => c.id !== client.id));
@@ -381,6 +403,18 @@ export default function AdminLayout({ session, onLogout }) {
                   clients={clients}
                   onMarkMessageSent={handleMarkIntensityMessageSent}
                   onOpenClient={(id) => openClientTab(id, "intensidade")}
+                />
+              )}
+
+              {active === "tarefas" && (
+                <TasksBoard
+                  tasks={tasks}
+                  clients={clients}
+                  leads={leads}
+                  onCreateTask={handleCreateTask}
+                  onUpdateTaskStatus={handleUpdateTaskStatus}
+                  onDeleteTask={handleDeleteTask}
+                  onOpenClient={openClientTab}
                 />
               )}
 

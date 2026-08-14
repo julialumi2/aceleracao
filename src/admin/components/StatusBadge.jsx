@@ -26,6 +26,11 @@ const STYLES = {
   temp_frio: "bg-sky-400/10 text-sky-300 border-sky-400/30",
   temp_morno: "bg-amber-400/10 text-amber-300 border-amber-400/30",
   temp_quente: "bg-flame/10 text-flame border-flame/30",
+  // prioridade de tarefa
+  prioridade_urgente: "bg-flame/10 text-flame border-flame/30",
+  prioridade_alta: "bg-orange-400/10 text-orange-300 border-orange-400/30",
+  prioridade_media: "bg-amber-400/10 text-amber-300 border-amber-400/30",
+  prioridade_baixa: "bg-green-400/10 text-green-300 border-green-400/30",
 };
 
 const LABELS = {
@@ -49,6 +54,10 @@ const LABELS = {
   temp_frio: "Frio",
   temp_morno: "Morno",
   temp_quente: "Quente",
+  prioridade_urgente: "Urgente",
+  prioridade_alta: "Alta",
+  prioridade_media: "Média",
+  prioridade_baixa: "Baixa",
 };
 
 export default function StatusBadge({ status, context }) {

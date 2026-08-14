@@ -384,6 +384,60 @@ export async function reativarCliente(id) {
   if (error) throw error;
 }
 
+// ---------- Tarefas ----------
+
+function mapTaskRow(row) {
+  return {
+    id: row.id,
+    titulo: row.titulo,
+    descricao: row.descricao || "",
+    categoria: row.categoria || "",
+    prioridade: row.prioridade,
+    status: row.status,
+    prazo: row.prazo,
+    criadoEm: row.created_at,
+    cliente: row.restaurants ? { id: row.restaurants.id, nome: row.restaurants.empresa || row.restaurants.nome } : null,
+    lead: row.leads ? { id: row.leads.id, nome: row.leads.nome } : null,
+  };
+}
+
+export async function fetchTasks() {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*, restaurants(id, nome, empresa), leads(id, nome)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(mapTaskRow);
+}
+
+export async function createTask({ titulo, descricao, categoria, prioridade, prazo, restaurantId, leadId }) {
+  const { data, error } = await supabase
+    .from("tasks")
+    .insert({
+      titulo,
+      descricao: descricao || null,
+      categoria: categoria || null,
+      prioridade: prioridade || "media",
+      prazo: prazo || null,
+      restaurant_id: restaurantId || null,
+      lead_id: leadId || null,
+    })
+    .select("*, restaurants(id, nome, empresa), leads(id, nome)")
+    .single();
+  if (error) throw error;
+  return mapTaskRow(data);
+}
+
+export async function updateTaskStatus(id, status) {
+  const { error } = await supabase.from("tasks").update({ status }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteTask(id) {
+  const { error } = await supabase.from("tasks").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function convertLeadToClient(lead) {
   const { data: restaurant, error } = await supabase
     .from("restaurants")
