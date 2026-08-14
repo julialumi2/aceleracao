@@ -222,10 +222,7 @@ function ClientsTable({ clients, onOpenClient }) {
             }`}
           >
             <div className="col-span-2 sm:col-span-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <p className="text-sm font-medium text-ink">{c.empresa || c.nome}</p>
-                {c.canceladoEm && <StatusBadge status="cancelado" />}
-              </div>
+              <p className="text-sm font-medium text-ink">{c.empresa || c.nome}</p>
               <p className="text-xs text-ink-dim">
                 {c.empresa ? `${c.nome} · ` : ""}
                 {c.cnpj || "CNPJ não informado"}
