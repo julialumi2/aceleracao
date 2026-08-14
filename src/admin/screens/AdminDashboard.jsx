@@ -1,4 +1,4 @@
-import { Users, FileWarning, ReceiptText, TrendingDown, Contact, Activity, FileSignature, CalendarClock, ChevronRight, PartyPopper } from "lucide-react";
+import { Users, FileWarning, ReceiptText, TrendingDown, Contact, Activity, FileSignature, ChevronRight, PartyPopper } from "lucide-react";
 import KpiCard from "../components/KpiCard.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { currentInvoice, alertStage, ALERT_STAGE_LABELS } from "../lib/invoices.js";
@@ -43,17 +43,6 @@ function buildAcoesPendentes(clients) {
         tone: "text-amber-300",
         texto: "Contrato pendente de assinatura",
         prioridade: 2,
-      });
-    }
-    if (c.cobrancaRecorrente?.valor == null) {
-      acoes.push({
-        id: `${c.id}-cobranca-config`,
-        cliente: c,
-        tab: "cobranca",
-        icon: CalendarClock,
-        tone: "text-amber-300",
-        texto: "Cobrança recorrente não configurada",
-        prioridade: 3,
       });
     }
     if (c.intensidade.status !== "ativo") {
