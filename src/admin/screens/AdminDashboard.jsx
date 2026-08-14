@@ -112,7 +112,7 @@ export default function AdminDashboard({ clients, leads, onNavigate, onOpenClien
               <div className="flex min-w-0 items-center gap-3">
                 <Icon size={16} className={`shrink-0 ${tone}`} />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-ink">{cliente.nome}</p>
+                  <p className="truncate text-sm font-medium text-ink">{cliente.empresa || cliente.nome}</p>
                   <p className="truncate text-xs text-ink-dim">{texto}</p>
                 </div>
               </div>
@@ -150,7 +150,7 @@ export default function AdminDashboard({ clients, leads, onNavigate, onOpenClien
                 <ul className="mt-2 space-y-1">
                   {clientesDaCor.slice(0, 4).map((c) => (
                     <li key={c.id} className="truncate text-xs text-ink-muted">
-                      {c.nome}
+                      {c.empresa || c.nome}
                     </li>
                   ))}
                   {clientesDaCor.length === 0 && <li className="text-xs text-ink-dim">Nenhum cliente</li>}

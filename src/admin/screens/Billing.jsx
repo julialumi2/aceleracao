@@ -87,7 +87,7 @@ export default function Billing({ clients, onSetInvoiceStatus, onMarkInvoiceAler
                 <div key={b.id} className="flex items-center justify-between gap-4 border-b border-emerald-brand/20 px-5 py-4 last:border-b-0">
                   <button onClick={() => onOpenClient(b.cliente.id)} className="flex flex-1 items-center justify-between text-left">
                     <div>
-                      <p className="text-sm font-medium text-ink">{b.cliente.nome}</p>
+                      <p className="text-sm font-medium text-ink">{b.cliente.empresa || b.cliente.nome}</p>
                       <p className="text-xs text-ink-dim">
                         {ALERT_STAGE_LABELS[b.stage]} ({formatDate(b.vencimento)}) · R$ {b.valor.toFixed(2)}
                       </p>
@@ -148,7 +148,7 @@ function Section({ title, invoices, onOpenClient, onMarkInvoiceAlertSent, showAl
             <div key={b.id} className="flex items-center justify-between gap-4 border-b border-line/40 px-5 py-4 last:border-b-0">
               <button onClick={() => onOpenClient(b.cliente.id)} className="flex flex-1 items-center justify-between text-left">
                 <div>
-                  <p className="text-sm font-medium text-ink">{b.cliente.nome}</p>
+                  <p className="text-sm font-medium text-ink">{b.cliente.empresa || b.cliente.nome}</p>
                   <p className="text-xs text-ink-dim">
                     Vencimento: {formatDate(b.vencimento)}
                     {b.alertaEnviadoEm && ` · Alerta enviado em ${formatDate(b.alertaEnviadoEm)}`}

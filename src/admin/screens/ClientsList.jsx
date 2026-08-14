@@ -10,7 +10,8 @@ const FILTERS = {
 };
 
 const CAMPOS_NOVO_CLIENTE = [
-  { key: "nome", label: "Nome" },
+  { key: "empresa", label: "Empresa" },
+  { key: "nome", label: "Nome do responsável" },
   { key: "cnpj", label: "CNPJ" },
   { key: "telefone", label: "Telefone (WhatsApp)" },
   { key: "email", label: "E-mail" },
@@ -26,13 +27,14 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ contrato: "todos", boleto: "todos", intensidade: "todos" });
   const [mostrarForm, setMostrarForm] = useState(false);
-  const [novo, setNovo] = useState({ nome: "", cnpj: "", telefone: "", email: "", cep: "" });
+  const [novo, setNovo] = useState({ empresa: "", nome: "", cnpj: "", telefone: "", email: "", cep: "" });
   const [salvando, setSalvando] = useState(false);
   const [verArquivados, setVerArquivados] = useState(false);
 
   const filtered = clients.filter((c) => {
     const boleto = currentInvoice(c.boletos);
-    const matchesQuery = c.nome.toLowerCase().includes(query.toLowerCase());
+    const matchesQuery =
+      c.nome.toLowerCase().includes(query.toLowerCase()) || (c.empresa || "").toLowerCase().includes(query.toLowerCase());
     const matchesContrato = filters.contrato === "todos" || c.contrato.status === filters.contrato;
     const matchesBoleto = filters.boleto === "todos" || boleto?.status === filters.boleto;
     const matchesIntensidade = filters.intensidade === "todos" || c.intensidade.status === filters.intensidade;
@@ -44,7 +46,7 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
     setSalvando(true);
     try {
       await onCreateClient(novo);
-      setNovo({ nome: "", cnpj: "", telefone: "", email: "", cep: "" });
+      setNovo({ empresa: "", nome: "", cnpj: "", telefone: "", email: "", cep: "" });
       setMostrarForm(false);
     } finally {
       setSalvando(false);
@@ -196,10 +198,13 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
                 >
                   <div className="col-span-2 sm:col-span-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <p className="text-sm font-medium text-ink">{c.nome}</p>
+                      <p className="text-sm font-medium text-ink">{c.empresa || c.nome}</p>
                       {c.canceladoEm && <StatusBadge status="cancelado" />}
                     </div>
-                    <p className="text-xs text-ink-dim">{c.cnpj || "CNPJ não informado"}</p>
+                    <p className="text-xs text-ink-dim">
+                      {c.empresa ? `${c.nome} · ` : ""}
+                      {c.cnpj || "CNPJ não informado"}
+                    </p>
                   </div>
                   <StatusBadge status={c.contrato.status} context="contrato" />
                   {resumo?.tipo === "boleto" && <StatusBadge status={resumo.boleto.status} />}

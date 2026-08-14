@@ -14,7 +14,7 @@ export default function Intensity({ clients, onMarkMessageSent, onOpenClient }) 
   const ativos = clients.filter((c) => c.intensidade.status === "ativo");
 
   const mensagensEnviadas = clients
-    .flatMap((c) => (c.intensidade.historico || []).map((h) => ({ ...h, cliente: c.nome })))
+    .flatMap((c) => (c.intensidade.historico || []).map((h) => ({ ...h, cliente: c.empresa || c.nome })))
     .filter((h) => h.mensagemEnviada)
     .sort((a, b) => new Date(b.data) - new Date(a.data));
 
@@ -37,7 +37,7 @@ export default function Intensity({ clients, onMarkMessageSent, onOpenClient }) 
               <div key={c.id} className="flex flex-col gap-3 border-b border-line/40 px-5 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
                 <button onClick={() => onOpenClient(c.id)} className="flex flex-1 items-center justify-between text-left">
                   <div>
-                    <p className="text-sm font-medium text-ink">{c.nome}</p>
+                    <p className="text-sm font-medium text-ink">{c.empresa || c.nome}</p>
                     <p className="text-xs text-ink-dim">
                       Última checagem: {formatDate(ultimaChecagem?.data || c.intensidade.atualizadoEm)} — {c.intensidade.observacao}
                     </p>
@@ -76,7 +76,7 @@ export default function Intensity({ clients, onMarkMessageSent, onOpenClient }) 
               className="flex w-full items-center justify-between border-b border-line/40 px-5 py-4 text-left last:border-b-0 hover:bg-surface-raised"
             >
               <div>
-                <p className="text-sm font-medium text-ink">{c.nome}</p>
+                <p className="text-sm font-medium text-ink">{c.empresa || c.nome}</p>
                 <p className="text-xs text-ink-dim">{c.intensidade.observacao}</p>
               </div>
               <StatusBadge status={c.intensidade.status} />

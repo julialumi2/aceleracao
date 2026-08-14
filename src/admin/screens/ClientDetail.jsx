@@ -39,8 +39,11 @@ export default function ClientDetail({ client, onBack, initialTab = "dados", ...
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">{client.nome}</h1>
-          <p className="mt-1 text-sm text-ink-dim">{client.cnpj || "CNPJ não informado"}</p>
+          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">{client.empresa || client.nome}</h1>
+          <p className="mt-1 text-sm text-ink-dim">
+            {client.empresa ? `${client.nome} (responsável) · ` : ""}
+            {client.cnpj || "CNPJ não informado"}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {client.canceladoEm && <StatusBadge status="cancelado" />}
@@ -146,7 +149,8 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
   return (
     <Panel>
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField label="Nome" value={client.nome} onChange={(v) => onUpdate(client.id, { nome: v })} />
+        <TextField label="Empresa" value={client.empresa} onChange={(v) => onUpdate(client.id, { empresa: v })} />
+        <TextField label="Nome do responsável" value={client.nome} onChange={(v) => onUpdate(client.id, { nome: v })} />
         <TextField label="CNPJ" value={client.cnpj} onChange={(v) => onUpdate(client.id, { cnpj: v })} />
         <TextField label="Telefone (WhatsApp)" value={client.telefone} onChange={(v) => onUpdate(client.id, { telefone: v })} />
         <TextField label="E-mail" value={client.email} onChange={(v) => onUpdate(client.id, { email: v })} />

@@ -47,6 +47,7 @@ function mapRestaurantRow(row) {
   return {
     id: row.id,
     nome: row.nome,
+    empresa: row.empresa || "",
     cnpj: row.cnpj || "",
     cep: row.cep || "",
     telefone: row.telefone || "",
@@ -111,6 +112,7 @@ function mapLeadRow(row) {
 
 const CLIENT_FIELD_MAP = {
   nome: "nome",
+  empresa: "empresa",
   cnpj: "cnpj",
   cep: "cep",
   telefone: "telefone",
@@ -300,10 +302,18 @@ export async function createLead({ nome, telefone, email, origem, temperatura })
 
 // Cadastro direto (sem passar por um lead) — cliente que fechou por
 // fora do formulário, indicação, etc.
-export async function createClient({ nome, cnpj, telefone, email, cep }) {
+export async function createClient({ nome, empresa, cnpj, telefone, email, cep }) {
   const { data: restaurant, error } = await supabase
     .from("restaurants")
-    .insert({ nome, cnpj: cnpj || null, telefone: telefone || null, email: email || null, cep: cep || null, saude: "laranja" })
+    .insert({
+      nome,
+      empresa: empresa || null,
+      cnpj: cnpj || null,
+      telefone: telefone || null,
+      email: email || null,
+      cep: cep || null,
+      saude: "laranja",
+    })
     .select()
     .single();
   if (error) throw error;
