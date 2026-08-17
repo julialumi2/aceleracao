@@ -38,7 +38,7 @@ export default {
       },
       fontFamily: {
         display: ["Anton", "sans-serif"],
-        body: ['"Baloo 2"', "sans-serif"],
+        body: ["Manrope", "sans-serif"],
         mono: ['"IBM Plex Mono"', "monospace"],
       },
       backgroundImage: {
