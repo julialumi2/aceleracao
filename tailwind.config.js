@@ -38,8 +38,8 @@ export default {
       },
       fontFamily: {
         display: ["Anton", "sans-serif"],
-        body: ["Baloo 2", "sans-serif"],
-        mono: ["IBM Plex Mono", "monospace"],
+        body: ['"Baloo 2"', "sans-serif"],
+        mono: ['"IBM Plex Mono"', "monospace"],
       },
       backgroundImage: {
         "ring-glow":
