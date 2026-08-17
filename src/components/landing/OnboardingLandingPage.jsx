@@ -13,7 +13,7 @@ export default function OnboardingLandingPage() {
   const [mostrarForm, setMostrarForm] = useState(false);
 
   if (mostrarForm) {
-    return <OnboardingFormPage />;
+    return <OnboardingFormPage onBack={() => setMostrarForm(false)} />;
   }
 
   return (

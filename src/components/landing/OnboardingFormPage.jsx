@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Flame, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { Flame, ArrowLeft, ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { maskCNPJ, maskCEP, maskPhone } from "../../lib/masks.js";
 import { submitPublicOnboarding } from "../../lib/publicOnboarding.js";
 
@@ -36,7 +36,7 @@ function Field({ label, value, onChange, placeholder, type = "text", className =
   );
 }
 
-export default function OnboardingFormPage() {
+export default function OnboardingFormPage({ onBack }) {
   const [campos, setCampos] = useState(CAMPOS_INICIAIS);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
@@ -70,15 +70,29 @@ export default function OnboardingFormPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-base">
+    <div className="onboarding-scroll relative h-screen overflow-y-auto bg-base">
+      <style>{`
+        .onboarding-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+        .onboarding-scroll::-webkit-scrollbar { display: none; }
+      `}</style>
       <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
 
       <div className="relative mx-auto flex max-w-xl flex-col px-6 py-12 md:py-20">
-        <div className="mb-8 flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
-            <Flame size={18} strokeWidth={2} />
-          </span>
-          <span className="font-display text-lg tracking-wide text-ink">Aceleração Delivery</span>
+        <div className="mb-8 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
+              <Flame size={18} strokeWidth={2} />
+            </span>
+            <span className="font-display text-lg tracking-wide text-ink">Aceleração Delivery</span>
+          </div>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
+            >
+              <ArrowLeft size={16} /> Voltar
+            </button>
+          )}
         </div>
 
         {enviado ? (
