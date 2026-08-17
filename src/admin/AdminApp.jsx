@@ -10,8 +10,8 @@ function sessionFromUser(user) {
 }
 
 // Mesmo padrão de navegação por estado usado no app do cliente (App.jsx).
-export default function AdminApp({ onExit }) {
-  const [screen, setScreen] = useState("landing"); // landing | login | app
+export default function AdminApp({ onExit, initialScreen = "landing" }) {
+  const [screen, setScreen] = useState(initialScreen); // landing | login | app
   const [session, setSession] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
