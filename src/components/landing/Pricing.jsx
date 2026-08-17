@@ -19,7 +19,7 @@ export default function Pricing() {
     <section id="planos" className="py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-xl text-center">
-          <h2 className="font-display text-3xl font-bold tracking-wide text-ink md:text-4xl">
+          <h2 className="font-display text-3xl tracking-wide text-ink md:text-4xl">
             Planos de mentoria
           </h2>
           <p className="mt-4 text-ink-muted">Uma parceria completa, da estratégia ao pedido.</p>
@@ -27,13 +27,13 @@ export default function Pricing() {
 
         <div className="mx-auto mt-14 max-w-3xl overflow-hidden rounded-2xl border border-emerald-brand bg-surface-raised shadow-xl shadow-emerald-brand/10 md:grid md:grid-cols-2">
           <div className="p-8 md:p-10">
-            <h3 className="font-display text-lg font-semibold tracking-wide text-ink">Aceleração de Delivery</h3>
+            <h3 className="font-display text-lg tracking-wide text-ink">Aceleração de Delivery</h3>
             <p className="mt-1 text-sm text-ink-muted">Acompanhamento próximo, não curso gravado.</p>
 
             <div className="mt-6 flex flex-wrap items-baseline gap-3">
               <span className="text-lg text-ink-dim line-through decoration-flame decoration-2">R$ 3.900</span>
               <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-4xl font-bold tracking-wide text-ink">R$ 2.500</span>
+                <span className="font-display text-4xl tracking-wide text-ink">R$ 2.500</span>
                 <span className="text-sm text-ink-dim">/ mês</span>
               </div>
             </div>

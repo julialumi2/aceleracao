@@ -27,7 +27,7 @@ export default function AdminSidebar({ active, onNavigate, session, onLogout }) 
           </span>
           {!collapsed && (
             <div className="min-w-0">
-              <span className="block truncate font-display text-base font-semibold leading-tight tracking-wide text-ink">
+              <span className="block truncate font-display text-base leading-tight tracking-wide text-ink">
                 Aceleração Delivery
               </span>
               <span className="block truncate text-[11px] leading-tight text-ink-dim">Painel interno</span>

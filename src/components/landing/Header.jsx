@@ -17,7 +17,7 @@ export default function Header({ onAdminAccess }) {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
             <Flame size={18} strokeWidth={2} />
           </span>
-          <span className="font-display text-lg font-semibold tracking-wide text-ink">
+          <span className="font-display text-lg tracking-wide text-ink">
             Aceleração Delivery
           </span>
         </a>

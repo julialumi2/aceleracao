@@ -55,7 +55,7 @@ export default function OnboardingForm({ section = "cadastrais" }) {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold tracking-wide text-ink">
+        <h1 className="font-display text-2xl tracking-wide text-ink">
           {section === "cadastrais" ? "Dados do Restaurante" : "Ajustes do Cardápio"}
         </h1>
         <p className="mt-1 text-sm text-ink-muted">

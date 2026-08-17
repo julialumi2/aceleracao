@@ -40,7 +40,7 @@ export default function ClientDetail({ client, onBack, initialTab = "dados", ...
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">{client.empresa || client.nome}</h1>
+          <h1 className="font-display text-2xl tracking-wide text-ink">{client.empresa || client.nome}</h1>
           <p className="mt-1 text-sm text-ink-dim">
             {client.empresa ? `${client.nome} (responsável) · ` : ""}
             {client.cnpj || "CNPJ não informado"}

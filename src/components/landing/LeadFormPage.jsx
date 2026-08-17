@@ -87,13 +87,13 @@ export default function LeadFormPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
             <Flame size={18} strokeWidth={2} />
           </span>
-          <span className="font-display text-lg font-semibold tracking-wide text-ink">Aceleração Delivery</span>
+          <span className="font-display text-lg tracking-wide text-ink">Aceleração Delivery</span>
         </a>
 
         {enviado ? (
           <div className="rounded-2xl border border-emerald-brand/40 bg-surface p-8 text-center">
             <CheckCircle2 size={36} className="mx-auto text-emerald-bright" />
-            <h1 className="mt-4 font-display text-2xl font-bold tracking-wide text-ink">Recebemos seu contato!</h1>
+            <h1 className="mt-4 font-display text-2xl tracking-wide text-ink">Recebemos seu contato!</h1>
             <p className="mt-3 text-sm text-ink-muted">
               Nossa equipe vai chamar você no WhatsApp em breve pra entender melhor o seu momento.
             </p>
@@ -107,7 +107,7 @@ export default function LeadFormPage() {
         ) : (
           <div className="rounded-2xl border border-line bg-surface p-6 md:p-8">
             <span className="text-xs font-semibold uppercase tracking-wide text-emerald-bright">Mentoria</span>
-            <h1 className="mt-1 text-balance font-display text-2xl font-bold leading-tight tracking-wide text-ink md:text-3xl">
+            <h1 className="mt-1 text-balance font-display text-2xl leading-tight tracking-wide text-ink md:text-3xl">
               Aceleração de Delivery
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-ink-muted">

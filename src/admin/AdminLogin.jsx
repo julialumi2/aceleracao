@@ -40,7 +40,7 @@ export default function AdminLogin({ onAuthenticated, onBack }) {
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
           <ShieldCheck size={20} />
         </span>
-        <h1 className="mt-6 font-display text-2xl font-bold tracking-wide text-ink">Entrar no painel</h1>
+        <h1 className="mt-6 font-display text-2xl tracking-wide text-ink">Entrar no painel</h1>
         <p className="mt-1.5 text-sm text-ink-muted">Use suas credenciais de acesso da equipe.</p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">

@@ -50,7 +50,7 @@ export default function Billing({ clients, onSetInvoiceStatus, onMarkInvoiceAler
     <div className="mx-auto max-w-4xl">
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Cobranças</h1>
+          <h1 className="font-display text-2xl tracking-wide text-ink">Cobranças</h1>
           <p className="mt-1 text-sm text-ink-muted">Visão consolidada dos boletos (Asaas) de todos os clientes.</p>
         </div>
 

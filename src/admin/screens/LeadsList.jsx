@@ -44,7 +44,7 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
     <div className="mx-auto max-w-4xl">
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Leads</h1>
+          <h1 className="font-display text-2xl tracking-wide text-ink">Leads</h1>
           <p className="mt-1 text-sm text-ink-muted">
             Respostas do formulário de captação, sincronizadas na tabela <code className="font-mono text-xs">leads</code>.
           </p>

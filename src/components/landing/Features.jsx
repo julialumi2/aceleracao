@@ -44,7 +44,7 @@ export default function Features() {
     <section id="recursos" className="border-t border-line/60 bg-surface/30 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-xl text-center">
-          <h2 className="font-display text-3xl font-bold tracking-wide text-ink md:text-4xl">
+          <h2 className="font-display text-3xl tracking-wide text-ink md:text-4xl">
             Uma parceria completa, da estratégia ao pedido
           </h2>
           <p className="mt-4 text-ink-muted">
@@ -61,7 +61,7 @@ export default function Features() {
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-brand/10 text-emerald-bright transition-colors group-hover:bg-emerald-brand/20">
                 <Icon size={20} strokeWidth={2} />
               </span>
-              <h3 className="mt-5 font-display text-lg font-semibold tracking-wide text-ink">{title}</h3>
+              <h3 className="mt-5 font-display text-lg tracking-wide text-ink">{title}</h3>
               <p className="mt-2.5 text-sm leading-relaxed text-ink-muted">{description}</p>
             </div>
           ))}

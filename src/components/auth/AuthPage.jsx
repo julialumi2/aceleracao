@@ -95,7 +95,7 @@ export default function AuthPage({ initialMode = "login", onAuthenticated, onBac
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
             <Flame size={22} />
           </span>
-          <h2 className="mt-8 max-w-sm text-balance font-display text-3xl font-bold leading-tight tracking-wide text-ink">
+          <h2 className="mt-8 max-w-sm text-balance font-display text-3xl leading-tight tracking-wide text-ink">
             Cada mesa cheia começa com um plano no papel.
           </h2>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink-muted">
@@ -139,7 +139,7 @@ export default function AuthPage({ initialMode = "login", onAuthenticated, onBac
             </button>
           </div>
 
-          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">
+          <h1 className="font-display text-2xl tracking-wide text-ink">
             {isLogin ? "Bem-vindo de volta" : "Crie sua conta"}
           </h1>
           <p className="mt-1.5 text-sm text-ink-muted">

@@ -65,7 +65,7 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
     <div className="mx-auto max-w-5xl">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Clientes (CRM)</h1>
+          <h1 className="font-display text-2xl tracking-wide text-ink">Clientes (CRM)</h1>
           <p className="mt-1 text-sm text-ink-muted">
             {verArquivados ? `${archivedClients.length} cliente(s) arquivado(s)` : `${filtered.length} de ${clients.length} clientes`}
           </p>

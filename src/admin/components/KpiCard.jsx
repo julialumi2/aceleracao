@@ -11,7 +11,7 @@ export default function KpiCard({ icon: Icon, label, value, tone = "default" }) 
         <Icon size={17} className="sm:hidden" />
         <Icon size={18} className="hidden sm:block" />
       </span>
-      <p className="mt-3 font-display text-xl font-bold tracking-wide text-ink sm:mt-4 sm:text-2xl">{value}</p>
+      <p className="mt-3 font-display text-xl tracking-wide text-ink sm:mt-4 sm:text-2xl">{value}</p>
       <p className="mt-1 text-xs text-ink-dim">{label}</p>
     </div>
   );

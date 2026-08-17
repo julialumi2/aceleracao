@@ -72,7 +72,7 @@ export default function AdminDashboard({ clients, leads, onNavigate, onOpenClien
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold tracking-wide text-ink">Visão geral</h1>
+        <h1 className="font-display text-2xl tracking-wide text-ink">Visão geral</h1>
         <p className="mt-1 text-sm text-ink-muted">Resumo do que precisa de atenção hoje.</p>
       </div>
 
@@ -135,7 +135,7 @@ export default function AdminDashboard({ clients, leads, onNavigate, onOpenClien
             return (
               <div key={cor} className="rounded-xl border border-line/60 bg-surface-raised p-4">
                 <StatusBadge status={`saude_${cor}`} />
-                <p className="mt-3 font-display text-xl font-bold tracking-wide text-ink">{clientesDaCor.length}</p>
+                <p className="mt-3 font-display text-xl tracking-wide text-ink">{clientesDaCor.length}</p>
                 <ul className="mt-2 space-y-1">
                   {clientesDaCor.slice(0, 4).map((c) => (
                     <li key={c.id} className="truncate text-xs text-ink-muted">
