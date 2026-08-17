@@ -32,7 +32,10 @@ export default function AdminApp({ onExit, initialScreen = "landing" }) {
   async function handleLogout() {
     await supabase.auth.signOut();
     setSession(null);
-    setScreen("landing");
+    // No portal (initialScreen="login"), sair sempre volta direto pro
+    // login — sem isso, caía na tela "Painel Interno" intermediária, e
+    // dali dava pra ir parar no site público por cima da URL do portal.
+    setScreen(initialScreen === "login" ? "login" : "landing");
   }
 
   if (checkingSession) {
