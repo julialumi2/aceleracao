@@ -70,11 +70,7 @@ export default function OnboardingFormPage({ onBack }) {
   }
 
   return (
-    <div className="onboarding-scroll relative h-screen overflow-y-auto bg-base">
-      <style>{`
-        .onboarding-scroll { scrollbar-width: none; -ms-overflow-style: none; }
-        .onboarding-scroll::-webkit-scrollbar { display: none; }
-      `}</style>
+    <div className="relative min-h-screen overflow-hidden bg-base">
       <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
 
       <div className="relative mx-auto flex max-w-xl flex-col px-6 py-12 md:py-20">
