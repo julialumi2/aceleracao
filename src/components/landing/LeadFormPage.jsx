@@ -1,6 +1,11 @@
 import { useState } from "react";
-import { Flame, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { Flame, ArrowLeft, ArrowUpRight, CheckCircle2, MessageCircle } from "lucide-react";
 import { submitPublicLead } from "../../lib/publicLeads.js";
+
+const WHATSAPP_COMERCIAL = "5515991933737";
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_COMERCIAL}?text=${encodeURIComponent(
+  "Olá! Vim pelo site e quero saber mais sobre a Aceleração de Delivery."
+)}`;
 
 const FATURAMENTO_OPTIONS = [
   "Até R$ 10 mil",
@@ -83,12 +88,16 @@ export default function LeadFormPage() {
       <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
 
       <div className="relative mx-auto flex max-w-xl flex-col px-6 py-12 md:py-20">
-        <a href="/" className="mb-8 flex items-center gap-2">
+        <a href="/" className="mb-6 flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-ink">
+          <ArrowLeft size={16} /> Voltar
+        </a>
+
+        <div className="mb-8 flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
             <Flame size={18} strokeWidth={2} />
           </span>
           <span className="font-display text-lg tracking-wide text-ink">Aceleração Delivery</span>
-        </a>
+        </div>
 
         {enviado ? (
           <div className="rounded-2xl border border-emerald-brand/40 bg-surface p-8 text-center">
@@ -197,6 +206,16 @@ export default function LeadFormPage() {
                   <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 )}
               </button>
+
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-line px-7 py-3.5 text-sm font-medium text-ink-muted transition-colors hover:border-emerald-brand/40 hover:text-ink"
+              >
+                <MessageCircle size={16} />
+                Prefere falar direto? Chama no WhatsApp
+              </a>
             </div>
           </div>
         )}
