@@ -6,7 +6,6 @@ export default function Header() {
 
   const links = [
     { label: "Recursos", href: "#recursos" },
-    { label: "Planos", href: "#planos" },
     { label: "Como funciona", href: "#como-funciona" },
   ];
 

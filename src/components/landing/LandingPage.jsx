@@ -1,7 +1,7 @@
 import Header from "./Header.jsx";
 import Hero from "./Hero.jsx";
 import Features from "./Features.jsx";
-import Pricing from "./Pricing.jsx";
+import ComoFunciona from "./ComoFunciona.jsx";
 import Footer from "./Footer.jsx";
 
 export default function LandingPage() {
@@ -11,7 +11,7 @@ export default function LandingPage() {
       <main>
         <Hero />
         <Features />
-        <Pricing />
+        <ComoFunciona />
       </main>
       <Footer />
     </div>
