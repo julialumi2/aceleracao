@@ -21,8 +21,8 @@ const PASSOS = [
   },
   {
     numero: "05",
-    titulo: "Execução e relatório mensal",
-    descricao: "Tráfego rodando, com ajustes semana a semana e relatório de resultado todo mês.",
+    titulo: "Execução e relatório semanal",
+    descricao: "Tráfego rodando, com ajustes semana a semana e relatório de resultado toda semana.",
   },
 ];
 
