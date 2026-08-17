@@ -1,7 +1,7 @@
 import { Flame, Menu, X } from "lucide-react";
 import { useState } from "react";
 
-export default function Header({ onAdminAccess }) {
+export default function Header() {
   const [open, setOpen] = useState(false);
 
   const links = [
@@ -32,9 +32,6 @@ export default function Header({ onAdminAccess }) {
               {l.label}
             </a>
           ))}
-          <button onClick={onAdminAccess} className="text-sm text-ink-muted transition-colors hover:text-ink">
-            Acesso da equipe
-          </button>
         </nav>
 
         <button
@@ -54,15 +51,6 @@ export default function Header({ onAdminAccess }) {
                 {l.label}
               </a>
             ))}
-            <button
-              onClick={() => {
-                setOpen(false);
-                onAdminAccess?.();
-              }}
-              className="text-left text-sm text-ink-muted"
-            >
-              Acesso da equipe
-            </button>
           </nav>
         </div>
       )}

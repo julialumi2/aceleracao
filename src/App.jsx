@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import LandingPage from "./components/landing/LandingPage.jsx";
 import LeadFormPage from "./components/landing/LeadFormPage.jsx";
-import OnboardingFormPage from "./components/landing/OnboardingFormPage.jsx";
+import OnboardingLandingPage from "./components/landing/OnboardingLandingPage.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
 import DashboardLayout from "./components/dashboard/DashboardLayout.jsx";
 import AdminApp from "./admin/AdminApp.jsx";
@@ -81,7 +81,7 @@ export default function App() {
   }
 
   if (screen === "onboarding") {
-    return <OnboardingFormPage />;
+    return <OnboardingLandingPage />;
   }
 
   if (screen === "portal") {
@@ -106,5 +106,5 @@ export default function App() {
     return <AdminApp onExit={() => setScreen("landing")} />;
   }
 
-  return <LandingPage onAdminAccess={() => setScreen("admin")} />;
+  return <LandingPage />;
 }

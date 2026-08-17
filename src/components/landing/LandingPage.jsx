@@ -4,10 +4,10 @@ import Features from "./Features.jsx";
 import Pricing from "./Pricing.jsx";
 import Footer from "./Footer.jsx";
 
-export default function LandingPage({ onAdminAccess }) {
+export default function LandingPage() {
   return (
     <div className="min-h-screen bg-base text-ink">
-      <Header onAdminAccess={onAdminAccess} />
+      <Header />
       <main>
         <Hero />
         <Features />

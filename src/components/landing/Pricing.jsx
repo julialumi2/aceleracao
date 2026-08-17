@@ -30,14 +30,6 @@ export default function Pricing() {
             <h3 className="font-display text-lg tracking-wide text-ink">Aceleração de Delivery</h3>
             <p className="mt-1 text-sm text-ink-muted">Acompanhamento próximo, não curso gravado.</p>
 
-            <div className="mt-6 flex flex-wrap items-baseline gap-3">
-              <span className="text-lg text-ink-dim line-through decoration-flame decoration-2">R$ 3.900</span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-4xl tracking-wide text-ink">R$ 2.500</span>
-                <span className="text-sm text-ink-dim">/ mês</span>
-              </div>
-            </div>
-
             <ul className="mt-6 space-y-3">
               {DELIVERABLES.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-sm text-ink-muted">

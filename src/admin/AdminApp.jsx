@@ -50,7 +50,6 @@ export default function AdminApp({ onExit, initialScreen = "landing" }) {
           setSession(user);
           setScreen("app");
         }}
-        onBack={() => setScreen("landing")}
       />
     );
   }

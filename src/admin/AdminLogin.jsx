@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ShieldCheck, ArrowLeft, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, Flame, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { signInWithEmail } from "../lib/supabase.js";
+import Sparks from "../components/shared/Sparks.jsx";
 
-export default function AdminLogin({ onAuthenticated, onBack }) {
+export default function AdminLogin({ onAuthenticated }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,50 +29,71 @@ export default function AdminLogin({ onAuthenticated, onBack }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-base px-6 text-ink">
-      <button
-        onClick={onBack}
-        className="absolute left-6 top-6 flex items-center gap-2 text-sm text-ink-muted transition-colors hover:text-ink"
-      >
-        <ArrowLeft size={16} /> Voltar
-      </button>
+    <div className="grid min-h-screen bg-base text-ink lg:grid-cols-2">
+      {/* Lado visual */}
+      <div className="relative hidden overflow-hidden border-r border-line/60 bg-surface/40 lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 animate-ring-pulse ring-motif" />
+        <Sparks />
 
-      <div className="w-full max-w-sm">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
-          <ShieldCheck size={20} />
-        </span>
-        <h1 className="mt-6 font-display text-2xl tracking-wide text-ink">Entrar no painel</h1>
-        <p className="mt-1.5 text-sm text-ink-muted">Use suas credenciais de acesso da equipe.</p>
+        <div className="relative z-10 flex items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
+            <Flame size={18} />
+          </span>
+          <span className="font-display text-lg tracking-wide text-ink">Aceleração Delivery</span>
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          <Field
-            icon={Mail}
-            label="E-mail"
-            type="email"
-            placeholder="equipe@salacheia.com.br"
-            value={form.email}
-            onChange={(v) => setForm((f) => ({ ...f, email: v }))}
-          />
-          <Field
-            icon={Lock}
-            label="Senha"
-            type="password"
-            placeholder="••••••••"
-            value={form.password}
-            onChange={(v) => setForm((f) => ({ ...f, password: v }))}
-          />
+        <div className="relative z-10">
+          <h2 className="max-w-sm text-balance font-display text-3xl leading-tight tracking-wide text-ink">
+            O painel interno da equipe.
+          </h2>
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink-muted">
+            Clientes, contratos, cobranças e intensidade de cada restaurante mentorado, em um só lugar.
+          </p>
+        </div>
 
-          {error && <p className="text-sm text-flame">{error}</p>}
+        <p className="relative z-10 text-xs text-ink-dim">Aceleração Delivery © {new Date().getFullYear()}</p>
+      </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-brand px-5 py-3.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
-          >
-            {loading && <Loader2 size={16} className="animate-spin" />}
-            Entrar
-          </button>
-        </form>
+      {/* Formulário */}
+      <div className="flex flex-col items-center justify-center px-6 py-16">
+        <div className="w-full max-w-sm">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright lg:hidden">
+            <ShieldCheck size={20} />
+          </span>
+          <h1 className="mt-6 font-display text-2xl tracking-wide text-ink lg:mt-0">Entrar no painel</h1>
+          <p className="mt-1.5 text-sm text-ink-muted">Use suas credenciais de acesso da equipe.</p>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            <Field
+              icon={Mail}
+              label="E-mail"
+              type="email"
+              placeholder="equipe@salacheia.com.br"
+              value={form.email}
+              onChange={(v) => setForm((f) => ({ ...f, email: v }))}
+            />
+            <Field
+              icon={Lock}
+              label="Senha"
+              type="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={(v) => setForm((f) => ({ ...f, password: v }))}
+            />
+
+            {error && <p className="text-sm text-flame">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-brand px-5 py-3.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+            >
+              {loading && <Loader2 size={16} className="animate-spin" />}
+              Entrar
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
