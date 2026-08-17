@@ -1,6 +1,5 @@
 import { ArrowUpRight, TrendingUp } from "lucide-react";
 import Sparks from "../shared/Sparks.jsx";
-import { FORM_URL } from "../../lib/links.js";
 
 export default function Hero() {
   return (
@@ -28,9 +27,7 @@ export default function Hero() {
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
           <a
-            href={FORM_URL}
-            target="_blank"
-            rel="noreferrer"
+            href="/comecar"
             className="group inline-flex items-center justify-center gap-2 rounded-full bg-emerald-brand px-7 py-3.5 text-sm font-semibold text-base shadow-lg shadow-emerald-brand/20 transition-transform hover:-translate-y-0.5 hover:bg-emerald-bright"
           >
             Quero Escalar meu Restaurante

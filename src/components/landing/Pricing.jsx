@@ -1,5 +1,4 @@
 import { Check, ArrowUpRight, ShieldCheck } from "lucide-react";
-import { FORM_URL } from "../../lib/links.js";
 
 const DELIVERABLES = [
   "Gestão de tráfego",
@@ -49,9 +48,7 @@ export default function Pricing() {
             </ul>
 
             <a
-              href={FORM_URL}
-              target="_blank"
-              rel="noreferrer"
+              href="/comecar"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-emerald-brand px-6 py-3 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright"
             >
               Quero Escalar meu Restaurante

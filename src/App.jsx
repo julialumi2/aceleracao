@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import LandingPage from "./components/landing/LandingPage.jsx";
+import LeadFormPage from "./components/landing/LeadFormPage.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
 import DashboardLayout from "./components/dashboard/DashboardLayout.jsx";
 import AdminApp from "./admin/AdminApp.jsx";
@@ -8,8 +9,13 @@ import { supabase } from "./lib/supabase.js";
 
 // Navegação simples via estado global (sem router) — troque por
 // react-router-dom quando o projeto sair do estágio de protótipo.
+const LEAD_FORM_PATH = "/comecar";
+
 export default function App() {
-  const [screen, setScreen] = useState("landing"); // landing | auth | dashboard | admin
+  // landing | leadform | auth | dashboard | admin
+  const [screen, setScreen] = useState(() =>
+    window.location.pathname === LEAD_FORM_PATH ? "leadform" : "landing"
+  );
   const [authMode, setAuthMode] = useState("login"); // login | signup
   const [session, setSession] = useState(null);
   const [checkingAdminSession, setCheckingAdminSession] = useState(true);
@@ -48,6 +54,10 @@ export default function App() {
         <Loader2 size={20} className="animate-spin text-emerald-bright" />
       </div>
     );
+  }
+
+  if (screen === "leadform") {
+    return <LeadFormPage />;
   }
 
   if (screen === "auth") {
