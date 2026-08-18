@@ -15,10 +15,10 @@ const FATURAMENTO_OPTIONS = [
 ];
 
 const GARGALO_OPTIONS = [
+  "Sinto que poderia escalar mais",
   "Cardápio pouco otimizado",
   "Pouca visibilidade nas redes sociais",
   "Operação do dia a dia (tempo, equipe)",
-  "Financeiro sem controle",
   "Não sei dizer ao certo",
 ];
 
