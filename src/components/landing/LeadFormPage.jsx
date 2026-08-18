@@ -234,6 +234,15 @@ export default function LeadFormPage() {
             >
               Voltar para o site
             </a>
+            <a
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-line px-7 py-3.5 text-sm font-medium text-ink-muted transition-colors hover:border-emerald-brand/40 hover:text-ink"
+            >
+              <MessageCircle size={16} />
+              Prefere falar direto? Chama no WhatsApp
+            </a>
           </div>
         ) : (
           <>
@@ -262,16 +271,6 @@ export default function LeadFormPage() {
               >
                 {passoAtual.campo}
               </StepShell>
-
-              <a
-                href={WHATSAPP_LINK}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-line px-7 py-3.5 text-sm font-medium text-ink-muted transition-colors hover:border-emerald-brand/40 hover:text-ink"
-              >
-                <MessageCircle size={16} />
-                Prefere falar direto? Chama no WhatsApp
-              </a>
             </div>
           </>
         )}
