@@ -30,7 +30,6 @@ import {
   updateLeadStatus,
   updateLeadTemperatura,
   createLead,
-  updateLead,
   deleteLead,
   convertLeadToClient,
   createClient,
@@ -247,11 +246,6 @@ export default function AdminLayout({ session, onLogout }) {
     setLeads((prev) => [novoLead, ...prev]);
   }
 
-  async function handleUpdateLead(lead, fields) {
-    setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, ...fields } : l)));
-    await updateLead(lead.id, fields).catch((err) => setLoadError(err.message));
-  }
-
   async function handleDeleteLead(lead) {
     setLeads((prev) => prev.filter((l) => l.id !== lead.id));
     await deleteLead(lead.id).catch((err) => setLoadError(err.message));
@@ -397,7 +391,6 @@ export default function AdminLayout({ session, onLogout }) {
                   onUpdateStatus={handleUpdateLeadStatus}
                   onUpdateTemperatura={handleUpdateLeadTemperatura}
                   onCreateLead={handleCreateLead}
-                  onUpdateLead={handleUpdateLead}
                   onDeleteLead={handleDeleteLead}
                   onConvert={convertLead}
                 />

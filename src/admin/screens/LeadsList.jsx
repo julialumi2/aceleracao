@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserPlus, MessageCircle, Search, Plus, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { UserPlus, MessageCircle, Search, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
 
@@ -21,81 +21,6 @@ function relativeDaysLabel(iso) {
 
 function textInputClass() {
   return "w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none";
-}
-
-function LeadEditForm({ lead, onSave, onCancel }) {
-  const [campos, setCampos] = useState({
-    nome: lead.nome,
-    telefone: lead.telefone,
-    email: lead.email,
-    nomeNegocio: lead.nomeNegocio,
-  });
-  const [salvando, setSalvando] = useState(false);
-
-  async function salvar() {
-    if (!campos.nome.trim() || salvando) return;
-    setSalvando(true);
-    try {
-      await onSave(campos);
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  return (
-    <div className="mt-4 border-t border-line/60 pt-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-ink-muted">Nome</span>
-          <input
-            value={campos.nome}
-            onChange={(e) => setCampos((c) => ({ ...c, nome: e.target.value }))}
-            className={textInputClass()}
-          />
-        </label>
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-ink-muted">Nome do negócio</span>
-          <input
-            value={campos.nomeNegocio}
-            onChange={(e) => setCampos((c) => ({ ...c, nomeNegocio: e.target.value }))}
-            className={textInputClass()}
-          />
-        </label>
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-ink-muted">Telefone (WhatsApp)</span>
-          <input
-            value={campos.telefone}
-            onChange={(e) => setCampos((c) => ({ ...c, telefone: e.target.value }))}
-            className={textInputClass()}
-          />
-        </label>
-        {/* O formulário público (/comecar) não pede e-mail — só aparece aqui
-            se o lead já tiver um (ex: cadastrado manualmente pela equipe). */}
-        {lead.email && (
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-medium text-ink-muted">E-mail</span>
-            <input
-              value={campos.email}
-              onChange={(e) => setCampos((c) => ({ ...c, email: e.target.value }))}
-              className={textInputClass()}
-            />
-          </label>
-        )}
-      </div>
-      <div className="mt-4 flex items-center gap-3">
-        <button
-          onClick={salvar}
-          disabled={!campos.nome.trim() || salvando}
-          className="rounded-xl bg-emerald-brand px-4 py-2 text-xs font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
-        >
-          Salvar
-        </button>
-        <button onClick={onCancel} className="text-xs text-ink-muted hover:text-ink">
-          Cancelar
-        </button>
-      </div>
-    </div>
-  );
 }
 
 function LeadRespostas({ lead }) {
@@ -123,12 +48,11 @@ function LeadRespostas({ lead }) {
   );
 }
 
-export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, onCreateLead, onUpdateLead, onDeleteLead, onConvert }) {
+export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, onCreateLead, onDeleteLead, onConvert }) {
   const [query, setQuery] = useState("");
   const [mostrarForm, setMostrarForm] = useState(false);
   const [novo, setNovo] = useState({ nome: "", telefone: "", email: "", origem: "indicacao_equipe", temperatura: "morno" });
   const [salvando, setSalvando] = useState(false);
-  const [editingId, setEditingId] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [excluindo, setExcluindo] = useState(false);
@@ -145,11 +69,6 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
     } finally {
       setSalvando(false);
     }
-  }
-
-  async function salvarEdicao(lead, campos) {
-    await onUpdateLead(lead, campos);
-    setEditingId(null);
   }
 
   async function confirmarExclusao(lead) {
@@ -276,14 +195,17 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
         {filtered.map((lead) => {
           const waLink = buildWhatsAppLink(lead.telefone, leadFirstContactMessage(lead));
           const recente = Math.floor((new Date() - new Date(lead.criadoEm)) / (1000 * 60 * 60 * 24)) <= 1;
-          const editando = editingId === lead.id;
           const expandido = expandedId === lead.id;
           const confirmandoExclusao = confirmDeleteId === lead.id;
 
           return (
             <div key={lead.id} className="rounded-2xl border border-line bg-surface p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(expandido ? null : lead.id)}
+                  className="group flex-1 text-left"
+                >
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-ink">{lead.nome}</p>
                     {recente && lead.status === "novo" && (
@@ -291,12 +213,17 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                         NOVO
                       </span>
                     )}
+                    {expandido ? (
+                      <ChevronUp size={13} className="text-ink-dim transition-colors group-hover:text-ink" />
+                    ) : (
+                      <ChevronDown size={13} className="text-ink-dim transition-colors group-hover:text-ink" />
+                    )}
                   </div>
                   <p className="text-xs text-ink-dim">
                     {lead.nomeNegocio ? `${lead.nomeNegocio} · ` : ""}
                     {lead.email || lead.telefone || "sem contato"} · {relativeDaysLabel(lead.criadoEm)}
                   </p>
-                </div>
+                </button>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <select
@@ -345,36 +272,15 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                       Converter em cliente
                     </button>
                   )}
+
+                  <button
+                    onClick={() => setConfirmDeleteId(lead.id)}
+                    className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-medium text-ink-dim transition-colors hover:border-flame/40 hover:text-flame"
+                    title="Excluir lead"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-end gap-4 border-t border-line/40 pt-3">
-                <button
-                  onClick={() => setExpandedId(expandido ? null : lead.id)}
-                  className="flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-ink"
-                >
-                  {expandido ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                  Respostas
-                </button>
-
-                <button
-                  onClick={() => {
-                    setEditingId(editando ? null : lead.id);
-                    setExpandedId(null);
-                  }}
-                  className="flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-ink"
-                >
-                  <Pencil size={12} />
-                  Editar
-                </button>
-
-                <button
-                  onClick={() => setConfirmDeleteId(lead.id)}
-                  className="flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-flame"
-                >
-                  <Trash2 size={12} />
-                  Excluir
-                </button>
               </div>
 
               {confirmandoExclusao && (
@@ -391,10 +297,6 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                     Cancelar
                   </button>
                 </div>
-              )}
-
-              {editando && (
-                <LeadEditForm lead={lead} onSave={(campos) => salvarEdicao(lead, campos)} onCancel={() => setEditingId(null)} />
               )}
 
               {expandido && <LeadRespostas lead={lead} />}

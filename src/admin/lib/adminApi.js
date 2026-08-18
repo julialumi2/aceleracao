@@ -315,14 +315,6 @@ export async function updateLeadTemperatura(leadId, temperatura) {
   if (error) throw error;
 }
 
-export async function updateLead(leadId, { nome, telefone, email, nomeNegocio }) {
-  const { error } = await supabase
-    .from("leads")
-    .update({ nome, telefone: telefone || null, email: email || null, nome_negocio: nomeNegocio || null })
-    .eq("id", leadId);
-  if (error) throw error;
-}
-
 export async function deleteLead(leadId) {
   const { error } = await supabase.from("leads").delete().eq("id", leadId);
   if (error) throw error;
