@@ -1,21 +1,14 @@
 import { ArrowUpRight, TrendingUp } from "lucide-react";
 import Sparks from "../shared/Sparks.jsx";
-import mentorPhoto from "../../assets/mentor-cutout.png";
 
 export default function Hero() {
   return (
     <section id="topo" className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/4 animate-ring-pulse ring-motif" />
       <Sparks className="h-[500px]" />
 
-      <img
-        src={mentorPhoto}
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 h-[85%] max-h-[640px] w-auto object-contain object-bottom opacity-40 md:right-[2%] lg:right-[10%] lg:opacity-45"
-      />
-
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center px-6 pb-24 pt-20 text-center md:pt-28 lg:-translate-x-10">
+      <div className="relative mx-auto flex max-w-4xl flex-col items-center px-6 pb-24 pt-20 text-center md:pt-28">
         <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-4 py-1.5 text-xs font-medium text-emerald-bright">
           <TrendingUp size={14} />
           Mentoria estruturada, do cardápio ao caixa
