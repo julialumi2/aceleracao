@@ -105,6 +105,11 @@ function mapLeadRow(row) {
     status: row.status,
     temperatura: row.temperatura || null,
     criadoEm: row.created_at.slice(0, 10),
+    nomeNegocio: row.nome_negocio || "",
+    faturamentoMensal: row.faturamento_mensal || "",
+    maiorGargalo: row.maior_gargalo || "",
+    gestorTrafego: row.gestor_trafego || "",
+    mensagem: row.mensagem || "",
   };
 }
 
@@ -310,6 +315,19 @@ export async function updateLeadTemperatura(leadId, temperatura) {
   if (error) throw error;
 }
 
+export async function updateLead(leadId, { nome, telefone, email, nomeNegocio }) {
+  const { error } = await supabase
+    .from("leads")
+    .update({ nome, telefone: telefone || null, email: email || null, nome_negocio: nomeNegocio || null })
+    .eq("id", leadId);
+  if (error) throw error;
+}
+
+export async function deleteLead(leadId) {
+  const { error } = await supabase.from("leads").delete().eq("id", leadId);
+  if (error) throw error;
+}
+
 // Lead que não fechou em call — indicado pela equipe ou vindo de um
 // formulário de tráfego frio, cadastrado na mão até termos sincronia
 // automática com o formulário.
@@ -441,7 +459,13 @@ export async function deleteTask(id) {
 export async function convertLeadToClient(lead) {
   const { data: restaurant, error } = await supabase
     .from("restaurants")
-    .insert({ nome: lead.nome, telefone: lead.telefone, email: lead.email, saude: "laranja" })
+    .insert({
+      nome: lead.nome,
+      empresa: lead.nomeNegocio || null,
+      telefone: lead.telefone,
+      email: lead.email,
+      saude: "laranja",
+    })
     .select()
     .single();
   if (error) throw error;
