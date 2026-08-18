@@ -20,6 +20,8 @@ export async function submitPublicOnboarding({
   diasFuncionamento,
   horarioAbertura,
   horarioFechamento,
+  horarioAberturaFds,
+  horarioFechamentoFds,
 }) {
   const { error } = await supabase.from("restaurants").insert({
     nome,
@@ -35,6 +37,8 @@ export async function submitPublicOnboarding({
     dias_funcionamento: diasFuncionamento && diasFuncionamento.length ? diasFuncionamento : null,
     horario_abertura: horarioAbertura || null,
     horario_fechamento: horarioFechamento || null,
+    horario_abertura_fds: horarioAberturaFds || null,
+    horario_fechamento_fds: horarioFechamentoFds || null,
     saude: "laranja",
   });
   if (error) throw error;

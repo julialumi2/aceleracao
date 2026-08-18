@@ -19,6 +19,8 @@ const CAMPOS_INICIAIS = {
   diasFuncionamento: ["Seg", "Ter", "Qua", "Qui", "Sex"],
   horarioAbertura: "18:00",
   horarioFechamento: "23:00",
+  horarioAberturaFds: "18:00",
+  horarioFechamentoFds: "23:00",
 };
 
 function Field({ label, value, onChange, placeholder, type = "text", className = "" }) {
@@ -38,6 +40,7 @@ function Field({ label, value, onChange, placeholder, type = "text", className =
 
 export default function OnboardingFormPage({ onBack }) {
   const [campos, setCampos] = useState(CAMPOS_INICIAIS);
+  const [horarioDiferenteFds, setHorarioDiferenteFds] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [enviado, setEnviado] = useState(false);
@@ -60,7 +63,11 @@ export default function OnboardingFormPage({ onBack }) {
     setErro("");
     setEnviando(true);
     try {
-      await submitPublicOnboarding(campos);
+      await submitPublicOnboarding({
+        ...campos,
+        horarioAberturaFds: horarioDiferenteFds ? campos.horarioAberturaFds : "",
+        horarioFechamentoFds: horarioDiferenteFds ? campos.horarioFechamentoFds : "",
+      });
       setEnviado(true);
     } catch (err) {
       setErro("Não foi possível enviar agora. Tenta de novo em instantes.");
@@ -166,6 +173,33 @@ export default function OnboardingFormPage({ onBack }) {
                 <Field label="Horário de abertura" type="time" value={campos.horarioAbertura} onChange={(v) => set("horarioAbertura", v)} />
                 <Field label="Horário de fechamento" type="time" value={campos.horarioFechamento} onChange={(v) => set("horarioFechamento", v)} />
               </div>
+
+              <label className="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  checked={horarioDiferenteFds}
+                  onChange={(e) => setHorarioDiferenteFds(e.target.checked)}
+                  className="h-4 w-4 rounded border-line bg-surface-raised accent-emerald-brand"
+                />
+                <span className="text-sm text-ink-muted">Funciona em horário diferente no fim de semana?</span>
+              </label>
+
+              {horarioDiferenteFds && (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Field
+                    label="Abertura (fim de semana)"
+                    type="time"
+                    value={campos.horarioAberturaFds}
+                    onChange={(v) => set("horarioAberturaFds", v)}
+                  />
+                  <Field
+                    label="Fechamento (fim de semana)"
+                    type="time"
+                    value={campos.horarioFechamentoFds}
+                    onChange={(v) => set("horarioFechamentoFds", v)}
+                  />
+                </div>
+              )}
 
               {erro && <p className="text-sm text-flame">{erro}</p>}
 
