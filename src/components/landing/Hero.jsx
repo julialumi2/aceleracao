@@ -1,6 +1,6 @@
 import { ArrowUpRight, TrendingUp } from "lucide-react";
 import Sparks from "../shared/Sparks.jsx";
-import mentorPhoto from "../../assets/mentor.jpg";
+import mentorPhoto from "../../assets/mentor-cutout.png";
 
 export default function Hero() {
   return (
@@ -38,12 +38,12 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-xs lg:max-w-none">
-          <div className="absolute inset-0 -z-10 rounded-[2rem] bg-emerald-brand/15 blur-2xl" />
+        <div className="relative mx-auto flex w-full max-w-xs items-end justify-center lg:max-w-none lg:h-[520px]">
+          <div className="absolute inset-x-8 bottom-0 -z-10 h-2/3 rounded-[3rem] bg-emerald-brand/20 blur-3xl" />
           <img
             src={mentorPhoto}
             alt="Mentor responsável pela Aceleração Delivery"
-            className="aspect-[3/4] w-full rounded-[2rem] border border-line/60 object-cover shadow-2xl shadow-black/40"
+            className="max-h-[420px] w-auto object-contain drop-shadow-2xl lg:max-h-[520px]"
           />
         </div>
       </div>
