@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Flame, ArrowLeft, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { Flame, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { maskCNPJ, maskCEP, maskPhone } from "../../lib/masks.js";
 import { submitPublicOnboarding } from "../../lib/publicOnboarding.js";
+import StepShell from "../shared/StepShell.jsx";
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -12,6 +13,7 @@ const CAMPOS_INICIAIS = {
   email: "",
   cnpj: "",
   endereco: "",
+  cidade: "",
   cep: "",
   banco: "",
   agencia: "",
@@ -23,10 +25,11 @@ const CAMPOS_INICIAIS = {
   horarioFechamentoFds: "23:00",
 };
 
-function Field({ label, value, onChange, placeholder, type = "text", className = "" }) {
+function Field({ label, helper, value, onChange, placeholder, type = "text", className = "" }) {
   return (
     <label className={`block ${className}`}>
       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">{label}</span>
+      {helper && <span className="mb-3 block text-xs text-ink-dim">{helper}</span>}
       <input
         type={type}
         value={value}
@@ -41,6 +44,7 @@ function Field({ label, value, onChange, placeholder, type = "text", className =
 export default function OnboardingFormPage({ onBack }) {
   const [campos, setCampos] = useState(CAMPOS_INICIAIS);
   const [horarioDiferenteFds, setHorarioDiferenteFds] = useState(false);
+  const [passo, setPasso] = useState(0);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [enviado, setEnviado] = useState(false);
@@ -59,7 +63,6 @@ export default function OnboardingFormPage({ onBack }) {
   }
 
   async function enviar() {
-    if (!campos.nome.trim() || !campos.empresa.trim() || enviando) return;
     setErro("");
     setEnviando(true);
     try {
@@ -73,6 +76,168 @@ export default function OnboardingFormPage({ onBack }) {
       setErro("Não foi possível enviar agora. Tenta de novo em instantes.");
     } finally {
       setEnviando(false);
+    }
+  }
+
+  const passos = [
+    {
+      categoria: "Responsável",
+      podeContinuar: campos.nome.trim().length > 0,
+      campo: <Field label="Nome do responsável" value={campos.nome} onChange={(v) => set("nome", v)} placeholder="Seu nome" />,
+    },
+    {
+      categoria: "Responsável",
+      podeContinuar: true,
+      campo: (
+        <Field
+          label="WhatsApp (com DDD)"
+          type="tel"
+          value={campos.telefone}
+          onChange={(v) => set("telefone", maskPhone(v))}
+          placeholder="(15) 99999-0000"
+        />
+      ),
+    },
+    {
+      categoria: "Responsável",
+      podeContinuar: true,
+      campo: <Field label="E-mail" type="email" value={campos.email} onChange={(v) => set("email", v)} placeholder="voce@email.com" />,
+    },
+    {
+      categoria: "Empresa",
+      podeContinuar: campos.empresa.trim().length > 0,
+      campo: <Field label="Nome da empresa" value={campos.empresa} onChange={(v) => set("empresa", v)} placeholder="Ex: Burger do João" />,
+    },
+    {
+      categoria: "Empresa",
+      podeContinuar: true,
+      campo: <Field label="CNPJ" value={campos.cnpj} onChange={(v) => set("cnpj", maskCNPJ(v))} placeholder="00.000.000/0000-00" />,
+    },
+    {
+      categoria: "Empresa",
+      podeContinuar: true,
+      campo: <Field label="Endereço" value={campos.endereco} onChange={(v) => set("endereco", v)} placeholder="Rua, número, bairro" />,
+    },
+    {
+      categoria: "Empresa",
+      podeContinuar: true,
+      campo: <Field label="Cidade" value={campos.cidade} onChange={(v) => set("cidade", v)} placeholder="Sua cidade" />,
+    },
+    {
+      categoria: "Empresa",
+      podeContinuar: true,
+      campo: <Field label="CEP" value={campos.cep} onChange={(v) => set("cep", maskCEP(v))} placeholder="00000-000" />,
+    },
+    {
+      categoria: "Dados bancários",
+      podeContinuar: true,
+      campo: <Field label="Banco" value={campos.banco} onChange={(v) => set("banco", v)} placeholder="Ex: Nubank" />,
+    },
+    {
+      categoria: "Dados bancários",
+      podeContinuar: true,
+      campo: <Field label="Agência" value={campos.agencia} onChange={(v) => set("agencia", v)} placeholder="0000" />,
+    },
+    {
+      categoria: "Dados bancários",
+      podeContinuar: true,
+      campo: (
+        <Field
+          label="Conta / Chave PIX"
+          value={campos.conta}
+          onChange={(v) => set("conta", v)}
+          placeholder="CPF, e-mail, telefone..."
+        />
+      ),
+    },
+    {
+      categoria: "Funcionamento",
+      podeContinuar: campos.diasFuncionamento.length > 0,
+      campo: (
+        <div>
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
+            Dias de funcionamento
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {WEEKDAYS.map((day) => {
+              const isActive = campos.diasFuncionamento.includes(day);
+              return (
+                <button
+                  type="button"
+                  key={day}
+                  onClick={() => toggleDay(day)}
+                  className={`h-10 w-12 rounded-lg text-sm font-medium transition-colors ${
+                    isActive ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:border-emerald-brand/50"
+                  }`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ),
+    },
+    {
+      categoria: "Funcionamento",
+      podeContinuar: true,
+      campo: (
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Horário de abertura" type="time" value={campos.horarioAbertura} onChange={(v) => set("horarioAbertura", v)} />
+          <Field label="Horário de fechamento" type="time" value={campos.horarioFechamento} onChange={(v) => set("horarioFechamento", v)} />
+        </div>
+      ),
+    },
+    {
+      categoria: "Funcionamento",
+      podeContinuar: true,
+      campo: (
+        <label className="flex items-center gap-2.5">
+          <input
+            type="checkbox"
+            checked={horarioDiferenteFds}
+            onChange={(e) => setHorarioDiferenteFds(e.target.checked)}
+            className="h-4 w-4 rounded border-line bg-surface-raised accent-emerald-brand"
+          />
+          <span className="text-sm text-ink-muted">Funciona em horário diferente no fim de semana?</span>
+        </label>
+      ),
+    },
+    ...(horarioDiferenteFds
+      ? [
+          {
+            categoria: "Funcionamento",
+            podeContinuar: true,
+            campo: (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field
+                  label="Abertura (fim de semana)"
+                  type="time"
+                  value={campos.horarioAberturaFds}
+                  onChange={(v) => set("horarioAberturaFds", v)}
+                />
+                <Field
+                  label="Fechamento (fim de semana)"
+                  type="time"
+                  value={campos.horarioFechamentoFds}
+                  onChange={(v) => set("horarioFechamentoFds", v)}
+                />
+              </div>
+            ),
+          },
+        ]
+      : []),
+  ];
+
+  const passoSeguro = Math.min(passo, passos.length - 1);
+  const passoAtual = passos[passoSeguro];
+  const noUltimoPasso = passoSeguro === passos.length - 1;
+
+  function continuar() {
+    if (noUltimoPasso) {
+      enviar();
+    } else {
+      setPasso((p) => p + 1);
     }
   }
 
@@ -107,114 +272,33 @@ export default function OnboardingFormPage({ onBack }) {
             </p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-line bg-surface p-6 md:p-8">
+          <>
             <span className="text-xs font-semibold uppercase tracking-wide text-emerald-bright">Bem-vindo(a)</span>
             <h1 className="mt-1 text-balance font-display text-2xl tracking-wide text-ink md:text-3xl">
               Vamos configurar sua conta
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-              Que bom ter você com a gente! Preencha os dados abaixo pra já deixarmos tudo pronto — contrato, cobrança
-              e o resto do acompanhamento.
+              Que bom ter você com a gente! Responda as perguntas abaixo pra já deixarmos tudo pronto — contrato,
+              cobrança e o resto do acompanhamento.
             </p>
 
-            <div className="mt-7 space-y-5">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Nome do responsável" value={campos.nome} onChange={(v) => set("nome", v)} placeholder="Seu nome" />
-                <Field label="Nome da empresa" value={campos.empresa} onChange={(v) => set("empresa", v)} placeholder="Ex: Burger do João" />
-              </div>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field
-                  label="WhatsApp (com DDD)"
-                  value={campos.telefone}
-                  onChange={(v) => set("telefone", maskPhone(v))}
-                  placeholder="(15) 99999-0000"
-                />
-                <Field label="E-mail" type="email" value={campos.email} onChange={(v) => set("email", v)} placeholder="voce@email.com" />
-              </div>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="CNPJ" value={campos.cnpj} onChange={(v) => set("cnpj", maskCNPJ(v))} placeholder="00.000.000/0000-00" />
-                <Field label="CEP" value={campos.cep} onChange={(v) => set("cep", maskCEP(v))} placeholder="00000-000" />
-              </div>
-
-              <Field label="Endereço" value={campos.endereco} onChange={(v) => set("endereco", v)} placeholder="Rua, número, bairro, cidade" />
-
-              <div className="grid gap-5 sm:grid-cols-3">
-                <Field label="Banco" value={campos.banco} onChange={(v) => set("banco", v)} placeholder="Ex: Nubank" />
-                <Field label="Agência" value={campos.agencia} onChange={(v) => set("agencia", v)} placeholder="0000" />
-                <Field label="Conta / Chave PIX" value={campos.conta} onChange={(v) => set("conta", v)} placeholder="CPF, e-mail, telefone..." />
-              </div>
-
-              <div>
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
-                  Dias de funcionamento
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {WEEKDAYS.map((day) => {
-                    const isActive = campos.diasFuncionamento.includes(day);
-                    return (
-                      <button
-                        type="button"
-                        key={day}
-                        onClick={() => toggleDay(day)}
-                        className={`h-10 w-12 rounded-lg text-sm font-medium transition-colors ${
-                          isActive ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:border-emerald-brand/50"
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Horário de abertura" type="time" value={campos.horarioAbertura} onChange={(v) => set("horarioAbertura", v)} />
-                <Field label="Horário de fechamento" type="time" value={campos.horarioFechamento} onChange={(v) => set("horarioFechamento", v)} />
-              </div>
-
-              <label className="flex items-center gap-2.5">
-                <input
-                  type="checkbox"
-                  checked={horarioDiferenteFds}
-                  onChange={(e) => setHorarioDiferenteFds(e.target.checked)}
-                  className="h-4 w-4 rounded border-line bg-surface-raised accent-emerald-brand"
-                />
-                <span className="text-sm text-ink-muted">Funciona em horário diferente no fim de semana?</span>
-              </label>
-
-              {horarioDiferenteFds && (
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Field
-                    label="Abertura (fim de semana)"
-                    type="time"
-                    value={campos.horarioAberturaFds}
-                    onChange={(v) => set("horarioAberturaFds", v)}
-                  />
-                  <Field
-                    label="Fechamento (fim de semana)"
-                    type="time"
-                    value={campos.horarioFechamentoFds}
-                    onChange={(v) => set("horarioFechamentoFds", v)}
-                  />
-                </div>
-              )}
-
-              {erro && <p className="text-sm text-flame">{erro}</p>}
-
-              <button
-                onClick={enviar}
-                disabled={!campos.nome.trim() || !campos.empresa.trim() || enviando}
-                className="group flex w-full items-center justify-center gap-2 rounded-full bg-emerald-brand px-7 py-3.5 text-sm font-semibold text-base shadow-lg shadow-emerald-brand/20 transition-transform hover:-translate-y-0.5 hover:bg-emerald-bright disabled:translate-y-0 disabled:opacity-60"
+            <div className="mt-7">
+              <StepShell
+                categoria={passoAtual.categoria}
+                passoAtual={passoSeguro + 1}
+                totalPassos={passos.length}
+                podeVoltar={passoSeguro > 0}
+                onVoltar={() => setPasso((p) => p - 1)}
+                podeContinuar={passoAtual.podeContinuar}
+                rotuloContinuar={noUltimoPasso ? "Concluir cadastro" : "Continuar"}
+                enviando={enviando}
+                erro={erro}
+                onSubmit={continuar}
               >
-                {enviando ? "Enviando..." : "Concluir cadastro"}
-                {!enviando && (
-                  <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                )}
-              </button>
+                {passoAtual.campo}
+              </StepShell>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

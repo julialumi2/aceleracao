@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Flame, ArrowLeft, ArrowUpRight, CheckCircle2, MessageCircle } from "lucide-react";
+import { Flame, ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
 import { submitPublicLead } from "../../lib/publicLeads.js";
+import StepShell from "../shared/StepShell.jsx";
 
 const WHATSAPP_COMERCIAL = "5515991933737";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_COMERCIAL}?text=${encodeURIComponent(
@@ -28,6 +29,8 @@ const GESTOR_TRAFEGO_OPTIONS = [
   "Tenho e estou satisfeito",
 ];
 
+const MENSAGEM_MAX = 300;
+
 const CAMPOS_INICIAIS = {
   nome: "",
   telefone: "",
@@ -37,6 +40,22 @@ const CAMPOS_INICIAIS = {
   gestorTrafego: "",
   mensagem: "",
 };
+
+function Field({ label, helper, value, onChange, placeholder, type = "text" }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">{label}</span>
+      {helper && <span className="mb-3 block text-xs text-ink-dim">{helper}</span>}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-3 text-sm text-ink placeholder:text-ink-dim focus:border-emerald-brand/60 focus:outline-none"
+      />
+    </label>
+  );
+}
 
 function Select({ label, value, onChange, options }) {
   return (
@@ -60,6 +79,7 @@ function Select({ label, value, onChange, options }) {
 
 export default function LeadFormPage() {
   const [campos, setCampos] = useState(CAMPOS_INICIAIS);
+  const [passo, setPasso] = useState(0);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [enviado, setEnviado] = useState(false);
@@ -69,7 +89,6 @@ export default function LeadFormPage() {
   }
 
   async function enviar() {
-    if (!campos.nome.trim() || !campos.telefone.trim() || enviando) return;
     setErro("");
     setEnviando(true);
     try {
@@ -80,6 +99,109 @@ export default function LeadFormPage() {
       setErro("Não foi possível enviar agora. Tenta de novo em instantes.");
     } finally {
       setEnviando(false);
+    }
+  }
+
+  const passos = [
+    {
+      categoria: "Sobre você",
+      podeContinuar: campos.nome.trim().length > 0,
+      campo: (
+        <Field label="Nome completo" value={campos.nome} onChange={(v) => set("nome", v)} placeholder="Seu nome" />
+      ),
+    },
+    {
+      categoria: "Sobre você",
+      podeContinuar: campos.telefone.trim().length > 0,
+      campo: (
+        <Field
+          label="WhatsApp"
+          helper="É por aqui que a gente entra em contato"
+          type="tel"
+          value={campos.telefone}
+          onChange={(v) => set("telefone", v)}
+          placeholder="(15) 99999-0000"
+        />
+      ),
+    },
+    {
+      categoria: "Seu negócio",
+      podeContinuar: true,
+      campo: (
+        <Field
+          label="Nome do negócio"
+          value={campos.nomeNegocio}
+          onChange={(v) => set("nomeNegocio", v)}
+          placeholder="Ex: Burger do João"
+        />
+      ),
+    },
+    {
+      categoria: "Seu negócio",
+      podeContinuar: true,
+      campo: (
+        <Select
+          label="Faturamento mensal atual"
+          value={campos.faturamentoMensal}
+          onChange={(v) => set("faturamentoMensal", v)}
+          options={FATURAMENTO_OPTIONS}
+        />
+      ),
+    },
+    {
+      categoria: "Seu negócio",
+      podeContinuar: true,
+      campo: (
+        <Select
+          label="Maior gargalo hoje"
+          value={campos.maiorGargalo}
+          onChange={(v) => set("maiorGargalo", v)}
+          options={GARGALO_OPTIONS}
+        />
+      ),
+    },
+    {
+      categoria: "Seu negócio",
+      podeContinuar: true,
+      campo: (
+        <Select
+          label="Já tem um gestor de tráfego? Está contente com o resultado?"
+          value={campos.gestorTrafego}
+          onChange={(v) => set("gestorTrafego", v)}
+          options={GESTOR_TRAFEGO_OPTIONS}
+        />
+      ),
+    },
+    {
+      categoria: "Mais detalhes",
+      podeContinuar: true,
+      campo: (
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
+            Mensagem (opcional)
+          </span>
+          <textarea
+            value={campos.mensagem}
+            onChange={(e) => set("mensagem", e.target.value.slice(0, MENSAGEM_MAX))}
+            rows={3}
+            className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-3 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+          />
+          <span className="mt-1.5 block text-right text-xs text-ink-dim">
+            {campos.mensagem.length}/{MENSAGEM_MAX}
+          </span>
+        </label>
+      ),
+    },
+  ];
+
+  const passoAtual = passos[passo];
+  const noUltimoPasso = passo === passos.length - 1;
+
+  function continuar() {
+    if (noUltimoPasso) {
+      enviar();
+    } else {
+      setPasso((p) => p + 1);
     }
   }
 
@@ -114,110 +236,44 @@ export default function LeadFormPage() {
             </a>
           </div>
         ) : (
-          <div className="rounded-2xl border border-line bg-surface p-6 md:p-8">
+          <>
             <span className="text-xs font-semibold uppercase tracking-wide text-emerald-bright">Mentoria</span>
             <h1 className="mt-1 text-balance font-display text-2xl leading-tight tracking-wide text-ink md:text-3xl">
               Aceleração de Delivery
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-ink-muted">
               Toda semana um dono de delivery some do próprio faturamento — trabalhando 14h por dia sem saber pra onde
-              vai o dinheiro. <span className="font-semibold text-ink">Preencha abaixo e entramos em contato pelo
-              WhatsApp</span> pra entender se a mentoria faz sentido pro seu momento.
+              vai o dinheiro. <span className="font-semibold text-ink">Responda algumas perguntas rápidas</span> e
+              entramos em contato pelo WhatsApp pra entender se a mentoria faz sentido pro seu momento.
             </p>
 
-            <div className="mt-7 space-y-5">
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
-                  Nome completo
-                </span>
-                <input
-                  value={campos.nome}
-                  onChange={(e) => set("nome", e.target.value)}
-                  placeholder="Seu nome"
-                  className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-3 text-sm text-ink placeholder:text-ink-dim focus:border-emerald-brand/60 focus:outline-none"
-                />
-              </label>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
-                    WhatsApp (com DDD)
-                  </span>
-                  <input
-                    value={campos.telefone}
-                    onChange={(e) => set("telefone", e.target.value)}
-                    placeholder="(15) 99999-0000"
-                    className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-3 text-sm text-ink placeholder:text-ink-dim focus:border-emerald-brand/60 focus:outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
-                    Nome do negócio
-                  </span>
-                  <input
-                    value={campos.nomeNegocio}
-                    onChange={(e) => set("nomeNegocio", e.target.value)}
-                    placeholder="Ex: Burger do João"
-                    className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-3 text-sm text-ink placeholder:text-ink-dim focus:border-emerald-brand/60 focus:outline-none"
-                  />
-                </label>
-              </div>
-
-              <Select
-                label="Faturamento mensal atual"
-                value={campos.faturamentoMensal}
-                onChange={(v) => set("faturamentoMensal", v)}
-                options={FATURAMENTO_OPTIONS}
-              />
-              <Select
-                label="Maior gargalo hoje"
-                value={campos.maiorGargalo}
-                onChange={(v) => set("maiorGargalo", v)}
-                options={GARGALO_OPTIONS}
-              />
-              <Select
-                label="Já tem um gestor de tráfego? Está contente com o resultado?"
-                value={campos.gestorTrafego}
-                onChange={(v) => set("gestorTrafego", v)}
-                options={GESTOR_TRAFEGO_OPTIONS}
-              />
-
-              <label className="block">
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
-                  Mensagem (opcional)
-                </span>
-                <textarea
-                  value={campos.mensagem}
-                  onChange={(e) => set("mensagem", e.target.value)}
-                  rows={3}
-                  className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-3 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
-                />
-              </label>
-
-              {erro && <p className="text-sm text-flame">{erro}</p>}
-
-              <button
-                onClick={enviar}
-                disabled={!campos.nome.trim() || !campos.telefone.trim() || enviando}
-                className="group flex w-full items-center justify-center gap-2 rounded-full bg-emerald-brand px-7 py-3.5 text-sm font-semibold text-base shadow-lg shadow-emerald-brand/20 transition-transform hover:-translate-y-0.5 hover:bg-emerald-bright disabled:translate-y-0 disabled:opacity-60"
+            <div className="mt-7">
+              <StepShell
+                categoria={passoAtual.categoria}
+                passoAtual={passo + 1}
+                totalPassos={passos.length}
+                podeVoltar={passo > 0}
+                onVoltar={() => setPasso((p) => p - 1)}
+                podeContinuar={passoAtual.podeContinuar}
+                rotuloContinuar={noUltimoPasso ? "Quero acelerar meu delivery" : "Continuar"}
+                enviando={enviando}
+                erro={erro}
+                onSubmit={continuar}
               >
-                {enviando ? "Enviando..." : "Quero acelerar meu delivery"}
-                {!enviando && (
-                  <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                )}
-              </button>
+                {passoAtual.campo}
+              </StepShell>
 
               <a
                 href={WHATSAPP_LINK}
                 target="_blank"
                 rel="noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-line px-7 py-3.5 text-sm font-medium text-ink-muted transition-colors hover:border-emerald-brand/40 hover:text-ink"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-line px-7 py-3.5 text-sm font-medium text-ink-muted transition-colors hover:border-emerald-brand/40 hover:text-ink"
               >
                 <MessageCircle size={16} />
                 Prefere falar direto? Chama no WhatsApp
               </a>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
