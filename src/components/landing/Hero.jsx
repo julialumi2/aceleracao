@@ -34,19 +34,6 @@ export default function Hero() {
             <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </a>
         </div>
-
-        <div className="mt-16 grid w-full max-w-xl grid-cols-3 gap-4 border-t border-line/60 pt-8">
-          {[
-            ["+38%", "ticket médio"],
-            ["120+", "restaurantes mentorados"],
-            ["4.9/5", "avaliação dos clientes"],
-          ].map(([value, label]) => (
-            <div key={label}>
-              <p className="font-display text-2xl tracking-wide text-ink md:text-3xl">{value}</p>
-              <p className="mt-1 text-xs text-ink-dim">{label}</p>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
