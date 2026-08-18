@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { UserPlus, MessageCircle, Search, Plus, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import StatusBadge from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
 
@@ -70,14 +69,18 @@ function LeadEditForm({ lead, onSave, onCancel }) {
             className={textInputClass()}
           />
         </label>
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-ink-muted">E-mail</span>
-          <input
-            value={campos.email}
-            onChange={(e) => setCampos((c) => ({ ...c, email: e.target.value }))}
-            className={textInputClass()}
-          />
-        </label>
+        {/* O formulário público (/comecar) não pede e-mail — só aparece aqui
+            se o lead já tiver um (ex: cadastrado manualmente pela equipe). */}
+        {lead.email && (
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-ink-muted">E-mail</span>
+            <input
+              value={campos.email}
+              onChange={(e) => setCampos((c) => ({ ...c, email: e.target.value }))}
+              className={textInputClass()}
+            />
+          </label>
+        )}
       </div>
       <div className="mt-4 flex items-center gap-3">
         <button
@@ -296,7 +299,6 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge status={lead.status} />
                   <select
                     value={lead.status}
                     onChange={(e) => onUpdateStatus(lead, e.target.value)}
@@ -309,7 +311,6 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                     ))}
                   </select>
 
-                  {lead.temperatura && <StatusBadge status={`temp_${lead.temperatura}`} />}
                   <select
                     value={lead.temperatura || ""}
                     onChange={(e) => onUpdateTemperatura(lead, e.target.value || null)}
@@ -344,34 +345,36 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                       Converter em cliente
                     </button>
                   )}
-
-                  <button
-                    onClick={() => setExpandedId(expandido ? null : lead.id)}
-                    className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
-                  >
-                    {expandido ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                    Respostas
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setEditingId(editando ? null : lead.id);
-                      setExpandedId(null);
-                    }}
-                    className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
-                  >
-                    <Pencil size={13} />
-                    Editar
-                  </button>
-
-                  <button
-                    onClick={() => setConfirmDeleteId(lead.id)}
-                    className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
-                  >
-                    <Trash2 size={13} />
-                    Excluir
-                  </button>
                 </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-end gap-4 border-t border-line/40 pt-3">
+                <button
+                  onClick={() => setExpandedId(expandido ? null : lead.id)}
+                  className="flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-ink"
+                >
+                  {expandido ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                  Respostas
+                </button>
+
+                <button
+                  onClick={() => {
+                    setEditingId(editando ? null : lead.id);
+                    setExpandedId(null);
+                  }}
+                  className="flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-ink"
+                >
+                  <Pencil size={12} />
+                  Editar
+                </button>
+
+                <button
+                  onClick={() => setConfirmDeleteId(lead.id)}
+                  className="flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-flame"
+                >
+                  <Trash2 size={12} />
+                  Excluir
+                </button>
               </div>
 
               {confirmandoExclusao && (
