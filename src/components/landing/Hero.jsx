@@ -12,10 +12,10 @@ export default function Hero() {
         src={mentorPhoto}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 h-[85%] max-h-[640px] w-auto object-contain object-bottom opacity-40 md:right-[2%] lg:opacity-45"
+        className="pointer-events-none absolute bottom-0 right-0 h-[85%] max-h-[640px] w-auto object-contain object-bottom opacity-40 md:right-[2%] lg:right-[10%] lg:opacity-45"
       />
 
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center px-6 pb-24 pt-20 text-center md:pt-28">
+      <div className="relative mx-auto flex max-w-4xl flex-col items-center px-6 pb-24 pt-20 text-center md:pt-28 lg:-translate-x-10">
         <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-4 py-1.5 text-xs font-medium text-emerald-bright">
           <TrendingUp size={14} />
           Mentoria estruturada, do cardápio ao caixa
