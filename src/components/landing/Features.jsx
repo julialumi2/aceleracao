@@ -52,11 +52,11 @@ export default function Features() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-2 -mx-6 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="group rounded-2xl border border-line bg-surface p-7 transition-colors hover:border-emerald-brand/50"
+              className="group w-[80%] shrink-0 snap-center rounded-2xl border border-line bg-surface p-7 transition-colors hover:border-emerald-brand/50 sm:w-auto sm:shrink"
             >
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-brand/10 text-emerald-bright transition-colors group-hover:bg-emerald-brand/20">
                 <Icon size={20} strokeWidth={2} />

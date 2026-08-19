@@ -35,11 +35,11 @@ export default function ComoFunciona() {
           <p className="mt-4 text-ink-muted">Da assinatura ao resultado, passo a passo — sem mistério.</p>
         </div>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-2 -mx-6 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
           {PASSOS.map(({ numero, titulo, descricao }) => (
             <div
               key={numero}
-              className="group rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-emerald-brand/50"
+              className="group w-[68%] shrink-0 snap-center rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-emerald-brand/50 sm:w-auto sm:shrink"
             >
               <span className="font-display text-3xl tracking-wide text-emerald-bright/70 transition-colors group-hover:text-emerald-bright">
                 {numero}

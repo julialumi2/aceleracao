@@ -30,6 +30,16 @@
     text-wrap: balance;
   }
 
+  /* Carrossel de cards no mobile (Features/ComoFunciona) — some com a barra
+     de rolagem mas mantém o scroll nativo por toque/swipe. */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Faísca individual — usada pelo componente <Sparks />. Posição/atraso
      vêm inline por instância; aqui só o visual do ponto e o brilho. */
   .spark-dot {
