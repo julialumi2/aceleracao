@@ -8,13 +8,14 @@ export default function Hero() {
       <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
       <Sparks className="h-[500px]" />
 
+      {/* Desktop: foto ancorada no canto, ao fundo do texto. Sem foto no mobile por enquanto. */}
       <img
         src={mentorPhoto}
         alt="Mentor responsável pela Aceleração Delivery"
-        className="pointer-events-none absolute -right-4 bottom-0 w-[105%] max-w-none object-contain opacity-65 md:right-0 md:w-[75%] lg:right-[1%] lg:w-[62%]"
+        className="pointer-events-none absolute bottom-0 right-[1%] hidden object-contain opacity-65 lg:block lg:w-[62%]"
       />
 
-      <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-20 md:pt-28 lg:pb-24">
+      <div className="relative mx-auto max-w-6xl px-6 pb-12 pt-20 md:pt-28 lg:pb-24">
         <div className="flex flex-col items-center text-center lg:max-w-md lg:items-start lg:text-left">
           <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-4 py-1.5 text-xs font-medium text-emerald-bright">
             <TrendingUp size={14} />
@@ -35,7 +36,7 @@ export default function Hero() {
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <a
               href="/comecar"
-              className="group inline-flex items-center justify-center gap-2 rounded-full bg-emerald-brand px-7 py-3.5 text-sm font-semibold text-base shadow-lg shadow-emerald-brand/20 transition-transform hover:-translate-y-0.5 hover:bg-emerald-bright"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-emerald-brand px-6 py-3.5 text-sm font-semibold text-base shadow-lg shadow-emerald-brand/20 transition-transform hover:-translate-y-0.5 hover:bg-emerald-bright"
             >
               Quero Escalar meu Restaurante
               <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
