@@ -11,7 +11,7 @@ export default function Hero() {
       <img
         src={mentorPhoto}
         alt="Mentor responsável pela Aceleração Delivery"
-        className="pointer-events-none absolute bottom-0 right-0 w-[85%] object-contain opacity-65 md:w-[75%] lg:right-[1%] lg:w-[62%]"
+        className="pointer-events-none absolute -right-4 bottom-0 w-[105%] max-w-none object-contain opacity-65 md:right-0 md:w-[75%] lg:right-[1%] lg:w-[62%]"
       />
 
       <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-20 md:pt-28 lg:pb-24">
