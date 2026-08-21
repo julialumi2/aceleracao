@@ -16,7 +16,7 @@ const TEAM = [
 
 const INTEGRATIONS = [
   { name: "Asaas", description: "Emissão e status de boletos", connected: true },
-  { name: "Clicksign", description: "Assinatura de contratos", connected: true },
+  { name: "Clicksign", description: "Assinatura de contratos (controle manual, sem integração via API)", connected: false },
   { name: "WhatsApp (Meta Cloud API)", description: "Envio automático de alertas", connected: false },
   { name: "Instagram Graph API", description: "Verificação automática de intensidade", connected: false },
 ];
