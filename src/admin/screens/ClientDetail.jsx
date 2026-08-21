@@ -5,6 +5,7 @@ import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
 import { sortByVencimento, alertStage, ALERT_STAGE_LABELS, billingSummary } from "../lib/invoices.js";
 import { calcularProximaCobranca, diaDoVencimento } from "../lib/recurringBilling.js";
+import { criarAssinaturaAsaas } from "../lib/asaasApi.js";
 
 const TABS = [
   { key: "dados", label: "Dados", icon: Building2 },
@@ -591,7 +592,15 @@ function RecurringBillingSetup({ client, onSetRecurringBilling, onClearRecurring
   const [confirmExcluir, setConfirmExcluir] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [modo, setModo] = useState("existente"); // "novo" | "existente"
-  const [formNovo, setFormNovo] = useState({ valor: "", jaPago: "sim", data: new Date().toISOString().slice(0, 10) });
+  const [formNovo, setFormNovo] = useState({
+    valor: "",
+    jaPago: "sim",
+    data: new Date().toISOString().slice(0, 10),
+    periodicidade: "mensal",
+    valor2: "",
+    jaPago2: "sim",
+    data2: new Date().toISOString().slice(0, 10),
+  });
   const [formExistente, setFormExistente] = useState({
     valor: "",
     diaVencimento: "",
@@ -608,19 +617,50 @@ function RecurringBillingSetup({ client, onSetRecurringBilling, onClearRecurring
 
   const configurado = client.cobrancaRecorrente?.valor != null;
   const preview = formNovo.data ? calcularProximaCobranca(formNovo.data, formNovo.jaPago === "sim") : null;
+  const preview2 = formNovo.data2 ? calcularProximaCobranca(formNovo.data2, formNovo.jaPago2 === "sim") : null;
 
   async function salvarNovo() {
-    if (!formNovo.valor || !formNovo.data || salvando) return;
+    const quinzenal = formNovo.periodicidade === "quinzenal";
+    const camposOk = formNovo.valor && formNovo.data && (!quinzenal || (formNovo.valor2 && formNovo.data2));
+    if (!camposOk || salvando) return;
     setErro("");
     setSalvando(true);
     try {
       const proximaCobrancaEm = calcularProximaCobranca(formNovo.data, formNovo.jaPago === "sim");
+      const proximaCobrancaEm2 = quinzenal ? calcularProximaCobranca(formNovo.data2, formNovo.jaPago2 === "sim") : undefined;
+
+      const asaas = await criarAssinaturaAsaas({
+        nome: client.nome,
+        cnpj: client.cnpj,
+        email: client.email,
+        telefone: client.telefone,
+        valor: Number(formNovo.valor) || 0,
+        proximaCobrancaEm,
+        periodicidade: formNovo.periodicidade,
+        valor2: quinzenal ? Number(formNovo.valor2) || 0 : undefined,
+        proximaCobrancaEm2,
+      });
+
       await onSetRecurringBilling(client, {
         valor: Number(formNovo.valor) || 0,
         diaVencimento: diaDoVencimento(formNovo.data),
         proximaCobrancaEm,
+        asaasCustomerId: asaas.asaasCustomerId,
+        asaasSubscriptionId: asaas.asaasSubscriptionId,
+        periodicidade: formNovo.periodicidade,
+        valor2: quinzenal ? Number(formNovo.valor2) || 0 : undefined,
+        diaVencimento2: quinzenal ? diaDoVencimento(formNovo.data2) : undefined,
+        proximaCobrancaEm2,
+        asaasSubscriptionId2: asaas.asaasSubscriptionId2,
       });
-      setAberto(false);
+
+      if (asaas.erroSegundaAssinatura) {
+        setErro(
+          `Cliente e 1ª assinatura criados no Asaas, mas a 2ª falhou: ${asaas.erroSegundaAssinatura}. Edite a configuração pra corrigir.`
+        );
+      } else {
+        setAberto(false);
+      }
     } catch (err) {
       setErro(err.message || "Não foi possível salvar. Tenta de novo.");
     } finally {
@@ -904,12 +944,81 @@ function RecurringBillingSetup({ client, onSetRecurringBilling, onClearRecurring
             </p>
           )}
 
+          <div className="mt-4">
+            <span className="mb-1.5 block text-xs font-medium text-ink-muted">Periodicidade</span>
+            <div className="flex gap-2">
+              {[
+                ["mensal", "Mensal"],
+                ["quinzenal", "Quinzenal (2 assinaturas)"],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFormNovo((f) => ({ ...f, periodicidade: value }))}
+                  className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors ${
+                    formNovo.periodicidade === value ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {formNovo.periodicidade === "quinzenal" && (
+            <div className="mt-4 rounded-xl border border-line/60 bg-surface-raised p-4">
+              <p className="mb-3 text-xs font-medium text-ink-muted">2ª assinatura (o outro dia de vencimento no mês)</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField label="Valor recorrente (R$)" value={formNovo.valor2} onChange={(v) => setFormNovo((f) => ({ ...f, valor2: v }))} />
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium text-ink-muted">Já pagou a 1ª parcela?</span>
+                  <div className="flex gap-2">
+                    {[
+                      ["sim", "Sim"],
+                      ["nao", "Não"],
+                    ].map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setFormNovo((f) => ({ ...f, jaPago2: value }))}
+                        className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors ${
+                          formNovo.jaPago2 === value ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </label>
+              </div>
+              <div className="mt-4">
+                <TextField
+                  label={formNovo.jaPago2 === "sim" ? "Data em que pagou" : "Data prevista pra pagar"}
+                  type="date"
+                  value={formNovo.data2}
+                  onChange={(v) => setFormNovo((f) => ({ ...f, data2: v }))}
+                />
+              </div>
+              {preview2 && (
+                <p className="mt-3 text-xs text-ink-dim">
+                  Próxima cobrança da 2ª assinatura: <span className="text-ink">{formatDate(preview2)}</span>, todo dia{" "}
+                  {diaDoVencimento(formNovo.data2)}
+                </p>
+              )}
+            </div>
+          )}
+
           {erro && <p className="mt-3 text-sm text-flame">{erro}</p>}
 
           <div className="mt-5 flex items-center gap-3">
             <button
               onClick={salvarNovo}
-              disabled={salvando || !formNovo.valor || !formNovo.data}
+              disabled={
+                salvando ||
+                !formNovo.valor ||
+                !formNovo.data ||
+                (formNovo.periodicidade === "quinzenal" && (!formNovo.valor2 || !formNovo.data2))
+              }
               className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
             >
               Salvar
