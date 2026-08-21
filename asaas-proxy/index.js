@@ -5,22 +5,18 @@ const PORT = process.env.PORT || 3000;
 const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Alerta de lead novo no WhatsApp — opcional. Sem essas variáveis
+// preenchidas, o endpoint /webhooks/novo-lead só responde 503 em vez de
+// derrubar o serviço inteiro (o webhook do Asaas não pode depender disso).
 const LEAD_WEBHOOK_TOKEN = process.env.LEAD_WEBHOOK_TOKEN;
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
 const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE;
 const ALERT_WHATSAPP_NUMBER = process.env.ALERT_WHATSAPP_NUMBER;
+const LEAD_ALERT_CONFIGURADO =
+  LEAD_WEBHOOK_TOKEN && EVOLUTION_API_URL && EVOLUTION_API_KEY && EVOLUTION_INSTANCE && ALERT_WHATSAPP_NUMBER;
 
-for (const [name, value] of Object.entries({
-  ASAAS_WEBHOOK_TOKEN,
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY,
-  LEAD_WEBHOOK_TOKEN,
-  EVOLUTION_API_URL,
-  EVOLUTION_API_KEY,
-  EVOLUTION_INSTANCE,
-  ALERT_WHATSAPP_NUMBER,
-})) {
+for (const [name, value] of Object.entries({ ASAAS_WEBHOOK_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY })) {
   if (!value) {
     console.error(`Variável de ambiente obrigatória ausente: ${name}`);
     process.exit(1);
@@ -125,6 +121,10 @@ app.post("/webhooks/asaas", async (req, res) => {
 // Formata os dados preenchidos e manda um alerta pro WhatsApp via
 // Evolution API.
 app.post("/webhooks/novo-lead", async (req, res) => {
+  if (!LEAD_ALERT_CONFIGURADO) {
+    return res.status(503).json({ error: "alerta de lead não configurado" });
+  }
+
   if (req.header("x-webhook-token") !== LEAD_WEBHOOK_TOKEN) {
     console.warn("Webhook de lead rejeitado: token inválido");
     return res.status(401).json({ error: "token inválido" });
