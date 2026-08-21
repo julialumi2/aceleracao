@@ -2,6 +2,7 @@ import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { gerarContratoDocx, gerarContratoHtml } from "./lib/contrato.js";
 import { htmlParaPdf } from "./lib/pdf.js";
+import { INSTAGRAM_CONFIGURADO, montarUrlAutorizacao, processarCallback, buscarMetricas } from "./lib/instagram.js";
 
 const PORT = process.env.PORT || 3000;
 const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN;
@@ -30,6 +31,11 @@ const ASAAS_BILLING_CONFIGURADO = Boolean(ASAAS_API_KEY);
 const CLICKSIGN_API_TOKEN = process.env.CLICKSIGN_API_TOKEN;
 const CLICKSIGN_API_URL = process.env.CLICKSIGN_API_URL || "https://sandbox.clicksign.com/api/v3";
 const CLICKSIGN_CONFIGURADO = Boolean(CLICKSIGN_API_TOKEN);
+
+// Conexão do Instagram de cada cliente (OAuth via Facebook) — mesma
+// lógica de opcional. FRONTEND_URL é pra onde mandamos o cliente de
+// volta depois do login com o Facebook.
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://aceleracao.artesanosburger.com.br";
 
 for (const [name, value] of Object.entries({ ASAAS_WEBHOOK_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY })) {
   if (!value) {
@@ -473,6 +479,106 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
     return res.status(200).json({ envelopeId });
   } catch (err) {
     console.error("Erro ao gerar/enviar contrato no Clicksign:", err.message);
+    return res.status(502).json({ error: err.message });
+  }
+});
+
+// Página pública que o cliente abre (link que a equipe manda por
+// WhatsApp) — confere que o cliente existe antes de mandar pro login do
+// Facebook, e manda pra uma tela de erro amigável se o link for inválido.
+app.get("/instagram/autorizar", async (req, res) => {
+  if (!INSTAGRAM_CONFIGURADO) {
+    return res.redirect(`${FRONTEND_URL}/conectar-instagram/erro?motivo=nao-configurado`);
+  }
+  const restaurantId = req.query.restaurantId;
+  if (!restaurantId) {
+    return res.redirect(`${FRONTEND_URL}/conectar-instagram/erro?motivo=link-invalido`);
+  }
+
+  const { data, error } = await supabase.from("restaurants").select("id").eq("id", restaurantId).maybeSingle();
+  if (error || !data) {
+    return res.redirect(`${FRONTEND_URL}/conectar-instagram/erro?motivo=link-invalido`);
+  }
+
+  return res.redirect(montarUrlAutorizacao(restaurantId));
+});
+
+// O Facebook chama aqui depois que o cliente autoriza (ou recusa) o
+// acesso. Troca o code por token, acha a conta do Instagram conectada à
+// Página, salva e manda o cliente pra tela de sucesso/erro.
+app.get("/instagram/callback", async (req, res) => {
+  const { code, state: restaurantId, error: erroFacebook } = req.query;
+
+  if (erroFacebook || !code || !restaurantId) {
+    return res.redirect(`${FRONTEND_URL}/conectar-instagram/erro?motivo=cancelado`);
+  }
+
+  try {
+    const conexao = await processarCallback(code);
+
+    const { error } = await supabase.from("instagram_connections").upsert(
+      {
+        restaurant_id: restaurantId,
+        instagram_user_id: conexao.instagramUserId,
+        instagram_username: conexao.instagramUsername,
+        page_id: conexao.pageId,
+        access_token: conexao.accessToken,
+        token_expires_at: conexao.tokenExpiresAt,
+        connected_at: new Date().toISOString(),
+      },
+      { onConflict: "restaurant_id" }
+    );
+    if (error) throw error;
+
+    return res.redirect(`${FRONTEND_URL}/conectar-instagram/sucesso`);
+  } catch (err) {
+    console.error("Erro ao processar callback do Instagram:", err.message);
+    return res.redirect(`${FRONTEND_URL}/conectar-instagram/erro?motivo=falha-conexao`);
+  }
+});
+
+// Chamado pelo painel admin — status da conexão (sem token, só o que é
+// seguro mostrar pra equipe).
+app.get("/instagram/status", async (req, res) => {
+  const usuario = await usuarioAutenticado(req);
+  if (!usuario) return res.status(401).json({ error: "não autenticado" });
+
+  const { restaurantId } = req.query;
+  if (!restaurantId) return res.status(400).json({ error: "restaurantId é obrigatório" });
+
+  const { data } = await supabase
+    .from("instagram_connections")
+    .select("instagram_username, connected_at")
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+
+  return res.status(200).json({ conectado: Boolean(data), username: data?.instagram_username || null, conectadoEm: data?.connected_at || null });
+});
+
+// Chamado pelo painel admin pra puxar os números atualizados — posts
+// nos últimos 7 dias + alcance da conta, direto da API do Instagram.
+app.get("/instagram/metricas", async (req, res) => {
+  const usuario = await usuarioAutenticado(req);
+  if (!usuario) return res.status(401).json({ error: "não autenticado" });
+
+  const { restaurantId } = req.query;
+  if (!restaurantId) return res.status(400).json({ error: "restaurantId é obrigatório" });
+
+  const { data: conexao } = await supabase
+    .from("instagram_connections")
+    .select("instagram_user_id, access_token")
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+
+  if (!conexao) {
+    return res.status(404).json({ error: "cliente não conectou o Instagram ainda" });
+  }
+
+  try {
+    const metricas = await buscarMetricas({ instagramUserId: conexao.instagram_user_id, accessToken: conexao.access_token });
+    return res.status(200).json(metricas);
+  } catch (err) {
+    console.error("Erro ao buscar métricas do Instagram:", err.message);
     return res.status(502).json({ error: err.message });
   }
 });

@@ -3,6 +3,12 @@ import { Loader2 } from "lucide-react";
 import LandingPage from "./components/landing/LandingPage.jsx";
 import LeadFormPage from "./components/landing/LeadFormPage.jsx";
 import OnboardingLandingPage from "./components/landing/OnboardingLandingPage.jsx";
+import PrivacyPolicyPage from "./components/legal/PrivacyPolicyPage.jsx";
+import TermsPage from "./components/legal/TermsPage.jsx";
+import DataDeletionPage from "./components/legal/DataDeletionPage.jsx";
+import ConectarInstagramPage from "./components/instagram/ConectarInstagramPage.jsx";
+import ConectarInstagramSucesso from "./components/instagram/ConectarInstagramSucesso.jsx";
+import ConectarInstagramErro from "./components/instagram/ConectarInstagramErro.jsx";
 import AuthPage from "./components/auth/AuthPage.jsx";
 import DashboardLayout from "./components/dashboard/DashboardLayout.jsx";
 import AdminApp from "./admin/AdminApp.jsx";
@@ -19,6 +25,12 @@ import { supabase } from "./lib/supabase.js";
 const LEAD_FORM_PATH = "/comecar";
 const ONBOARDING_PATH = "/cadastro";
 const PORTAL_PATH = "/painel";
+const PRIVACY_PATH = "/privacidade";
+const TERMS_PATH = "/termos";
+const DATA_DELETION_PATH = "/exclusao-de-dados";
+const CONECTAR_INSTAGRAM_PATH = "/conectar-instagram";
+const CONECTAR_INSTAGRAM_SUCESSO_PATH = "/conectar-instagram/sucesso";
+const CONECTAR_INSTAGRAM_ERRO_PATH = "/conectar-instagram/erro";
 
 function resolveEntrada() {
   const host = window.location.hostname;
@@ -26,6 +38,12 @@ function resolveEntrada() {
   if (host.startsWith("portal.") || path === PORTAL_PATH) return "portal";
   if (host.startsWith("cadastro.") || path === ONBOARDING_PATH) return "onboarding";
   if (path === LEAD_FORM_PATH) return "leadform";
+  if (path === PRIVACY_PATH) return "privacy";
+  if (path === TERMS_PATH) return "terms";
+  if (path === DATA_DELETION_PATH) return "data-deletion";
+  if (path === CONECTAR_INSTAGRAM_SUCESSO_PATH) return "conectar-instagram-sucesso";
+  if (path === CONECTAR_INSTAGRAM_ERRO_PATH) return "conectar-instagram-erro";
+  if (path === CONECTAR_INSTAGRAM_PATH) return "conectar-instagram";
   return "landing";
 }
 
@@ -82,6 +100,30 @@ export default function App() {
 
   if (screen === "onboarding") {
     return <OnboardingLandingPage />;
+  }
+
+  if (screen === "privacy") {
+    return <PrivacyPolicyPage />;
+  }
+
+  if (screen === "terms") {
+    return <TermsPage />;
+  }
+
+  if (screen === "data-deletion") {
+    return <DataDeletionPage />;
+  }
+
+  if (screen === "conectar-instagram") {
+    return <ConectarInstagramPage />;
+  }
+
+  if (screen === "conectar-instagram-sucesso") {
+    return <ConectarInstagramSucesso />;
+  }
+
+  if (screen === "conectar-instagram-erro") {
+    return <ConectarInstagramErro />;
   }
 
   if (screen === "portal") {

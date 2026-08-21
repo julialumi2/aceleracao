@@ -12,9 +12,9 @@ export default function Footer() {
         </a>
         <p className="text-xs text-ink-dim">© {new Date().getFullYear()} Aceleração Delivery. Todos os direitos reservados.</p>
         <div className="flex gap-6 text-xs text-ink-muted">
-          <a href="#" className="hover:text-ink">Termos</a>
-          <a href="#" className="hover:text-ink">Privacidade</a>
-          <a href="#" className="hover:text-ink">Contato</a>
+          <a href="/termos" className="hover:text-ink">Termos</a>
+          <a href="/privacidade" className="hover:text-ink">Privacidade</a>
+          <a href="/exclusao-de-dados" className="hover:text-ink">Exclusão de dados</a>
         </div>
       </div>
     </footer>

@@ -7,6 +7,7 @@ import { sortByVencimento, alertStage, ALERT_STAGE_LABELS, billingSummary } from
 import { calcularProximaCobranca, diaDoVencimento } from "../lib/recurringBilling.js";
 import { criarAssinaturaAsaas } from "../lib/asaasApi.js";
 import { gerarContratoClicksign, baixarRascunhoContrato, visualizarContratoHtml } from "../lib/clicksignApi.js";
+import { linkConexaoInstagram, statusInstagram, metricasInstagram } from "../lib/instagramApi.js";
 
 const TABS = [
   { key: "dados", label: "Dados", icon: Building2 },
@@ -1230,6 +1231,113 @@ function RecurringBillingSetup({ client, onSetRecurringBilling, onClearRecurring
   );
 }
 
+function InstagramMetricsPanel({ client }) {
+  const [status, setStatus] = useState(null);
+  const [metricas, setMetricas] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [atualizando, setAtualizando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [linkCopiado, setLinkCopiado] = useState(false);
+
+  useEffect(() => {
+    let cancelado = false;
+    statusInstagram(client.id)
+      .then((s) => {
+        if (!cancelado) setStatus(s);
+      })
+      .catch((err) => {
+        if (!cancelado) setErro(err.message);
+      })
+      .finally(() => {
+        if (!cancelado) setCarregando(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client.id]);
+
+  async function atualizarMetricas() {
+    if (atualizando) return;
+    setErro("");
+    setAtualizando(true);
+    try {
+      const m = await metricasInstagram(client.id);
+      setMetricas(m);
+    } catch (err) {
+      setErro(err.message || "Não foi possível buscar as métricas.");
+    } finally {
+      setAtualizando(false);
+    }
+  }
+
+  function copiarLink() {
+    navigator.clipboard.writeText(linkConexaoInstagram(client.id));
+    setLinkCopiado(true);
+    setTimeout(() => setLinkCopiado(false), 2000);
+  }
+
+  if (carregando) {
+    return (
+      <div className="mb-5 rounded-xl border border-line/60 bg-surface-raised p-4">
+        <p className="text-sm text-ink-dim">Verificando conexão com o Instagram...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-5 rounded-xl border border-line/60 bg-surface-raised p-4">
+      <p className="text-sm font-medium text-ink">Instagram</p>
+
+      {!status?.conectado ? (
+        <>
+          <p className="mt-1 text-xs text-ink-dim">
+            O cliente ainda não conectou o Instagram. Manda o link abaixo pra ele autorizar o acesso — depois disso
+            os números de posts e alcance aparecem aqui automaticamente.
+          </p>
+          <button
+            onClick={copiarLink}
+            className="mt-3 rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {linkCopiado ? "Link copiado!" : "Copiar link de conexão"}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="mt-1 text-xs text-ink-dim">
+            Conectado como <span className="text-ink">@{status.username}</span> em {formatDate(status.conectadoEm?.slice(0, 10))}.
+          </p>
+
+          {metricas && (
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-surface p-3">
+                <p className="text-xs text-ink-dim">Posts nos últimos {metricas.periodoDias} dias</p>
+                <p className="mt-1 font-display text-xl tracking-wide text-ink">{metricas.totalPosts}</p>
+              </div>
+              <div className="rounded-lg bg-surface p-3">
+                <p className="text-xs text-ink-dim">Alcance no período</p>
+                <p className="mt-1 font-display text-xl tracking-wide text-ink">
+                  {metricas.alcance != null ? metricas.alcance.toLocaleString("pt-BR") : "—"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={atualizarMetricas}
+            disabled={atualizando}
+            className="mt-3 rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-60"
+          >
+            {atualizando ? "Buscando..." : metricas ? "Atualizar números" : "Buscar números"}
+          </button>
+        </>
+      )}
+
+      {erro && <p className="mt-2 text-xs text-flame">{erro}</p>}
+    </div>
+  );
+}
+
 function IntensidadeTab({ client, onAddIntensityCheck, onMarkIntensityMessageSent }) {
   const [observacaoNova, setObservacaoNova] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -1249,9 +1357,9 @@ function IntensidadeTab({ client, onAddIntensityCheck, onMarkIntensityMessageSen
 
   return (
     <Panel>
-      <p className="text-xs text-ink-dim">
-        Verificação manual por enquanto — a análise automática via Instagram entra em uma fase futura.
-      </p>
+      <InstagramMetricsPanel client={client} />
+
+      <p className="text-xs text-ink-dim">Registro manual da equipe sobre o momento do cliente.</p>
 
       <div className="mt-4">
         <label className="block">
