@@ -30,3 +30,33 @@ export async function gerarContratoClicksign({ nome, cnpj, cidade, cep, email, t
 
   return data;
 }
+
+// Só preenche o modelo e baixa o .docx pra conferir — não fala com o
+// Clicksign, não manda nada pra ninguém.
+export async function baixarRascunhoContrato({ nome, cnpj, cidade, cep, email, valorMensal, diaVencimento, dataAssinatura }) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) throw new Error("Sessão expirada — faça login de novo.");
+
+  const response = await fetch(`${ASAAS_PROXY_URL}/clicksign/preview-contrato`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ nome, cnpj, cidade, cep, email, valorMensal, diaVencimento, dataAssinatura }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.error || "Não foi possível gerar o rascunho do contrato.");
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `contrato-${nome.replace(/[^\w]+/g, "-")}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

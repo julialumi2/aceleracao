@@ -315,6 +315,42 @@ async function clicksignFetch(method, path, body) {
 // cliente como signatário e ativa o envelope pra disparar o e-mail de
 // assinatura. Passo a passo da API v3: envelope -> documento -> signatário
 // -> requisitos (assinar + autenticação) -> ativar -> notificar.
+// Só preenche o template e devolve o .docx pra baixar — não fala com o
+// Clicksign, não manda nada pra ninguém. Serve pra equipe conferir o
+// texto antes de mandar de verdade pra assinatura.
+app.post("/clicksign/preview-contrato", async (req, res) => {
+  const usuario = await usuarioAutenticado(req);
+  if (!usuario) {
+    return res.status(401).json({ error: "não autenticado" });
+  }
+
+  const { nome, cnpj, cidade, cep, email, valorMensal, diaVencimento, dataAssinatura } = req.body || {};
+
+  if (!nome || !valorMensal || !diaVencimento) {
+    return res.status(400).json({ error: "nome, valorMensal e diaVencimento são obrigatórios" });
+  }
+
+  try {
+    const docxBuffer = gerarContratoDocx({
+      nome,
+      cnpj: cnpj || "",
+      cidade: cidade || "",
+      cep: cep || "",
+      email: email || "",
+      valorMensal,
+      diaVencimento,
+      dataAssinatura: dataAssinatura || new Date().toISOString().slice(0, 10),
+    });
+
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    res.setHeader("Content-Disposition", `attachment; filename="contrato-${nome.replace(/[^\w]+/g, "-")}.docx"`);
+    return res.status(200).send(docxBuffer);
+  } catch (err) {
+    console.error("Erro ao gerar rascunho do contrato:", err.message);
+    return res.status(500).json({ error: "não foi possível gerar o rascunho do contrato" });
+  }
+});
+
 app.post("/clicksign/gerar-contrato", async (req, res) => {
   if (!CLICKSIGN_CONFIGURADO) {
     return res.status(503).json({ error: "integração com o Clicksign não configurada" });

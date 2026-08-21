@@ -6,7 +6,7 @@ import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTempla
 import { sortByVencimento, alertStage, ALERT_STAGE_LABELS, billingSummary } from "../lib/invoices.js";
 import { calcularProximaCobranca, diaDoVencimento } from "../lib/recurringBilling.js";
 import { criarAssinaturaAsaas } from "../lib/asaasApi.js";
-import { gerarContratoClicksign } from "../lib/clicksignApi.js";
+import { gerarContratoClicksign, baixarRascunhoContrato } from "../lib/clicksignApi.js";
 
 const TABS = [
   { key: "dados", label: "Dados", icon: Building2 },
@@ -318,27 +318,30 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
 
 function GerarContratoButton({ client, onContratoGerado }) {
   const [gerando, setGerando] = useState(false);
+  const [baixando, setBaixando] = useState(false);
   const [erro, setErro] = useState("");
 
   const valorMensal = client.cobrancaRecorrente?.valor;
   const diaVencimento = client.cobrancaRecorrente?.diaVencimento;
-  const podeGerar = Boolean(client.email) && Boolean(valorMensal) && Boolean(diaVencimento);
+  const podeBaixar = Boolean(valorMensal) && Boolean(diaVencimento);
+  const podeGerar = podeBaixar && Boolean(client.email);
+
+  const dadosContrato = {
+    nome: client.nome,
+    cnpj: client.cnpj,
+    cidade: client.cidade,
+    cep: client.cep,
+    email: client.email,
+    valorMensal,
+    diaVencimento,
+  };
 
   async function gerar() {
     if (!podeGerar || gerando) return;
     setErro("");
     setGerando(true);
     try {
-      const { envelopeId } = await gerarContratoClicksign({
-        nome: client.nome,
-        cnpj: client.cnpj,
-        cidade: client.cidade,
-        cep: client.cep,
-        email: client.email,
-        telefone: client.telefone,
-        valorMensal,
-        diaVencimento,
-      });
+      const { envelopeId } = await gerarContratoClicksign({ ...dadosContrato, telefone: client.telefone });
       await onContratoGerado(client, envelopeId);
     } catch (err) {
       setErro(err.message || "Não foi possível gerar o contrato. Tenta de novo.");
@@ -347,25 +350,45 @@ function GerarContratoButton({ client, onContratoGerado }) {
     }
   }
 
+  async function baixarRascunho() {
+    if (!podeBaixar || baixando) return;
+    setErro("");
+    setBaixando(true);
+    try {
+      await baixarRascunhoContrato(dadosContrato);
+    } catch (err) {
+      setErro(err.message || "Não foi possível gerar o rascunho. Tenta de novo.");
+    } finally {
+      setBaixando(false);
+    }
+  }
+
   return (
     <div className="mb-5 rounded-xl border border-line/60 bg-surface-raised p-4">
-      <p className="text-sm font-medium text-ink">Gerar contrato e enviar pro cliente</p>
+      <p className="text-sm font-medium text-ink">Contrato (Clicksign)</p>
       <p className="mt-1 text-xs text-ink-dim">
-        Preenche o modelo com os dados do cliente e manda pro Clicksign colher a assinatura por e-mail.
+        Preenche o modelo com os dados do cliente. "Baixar rascunho" só gera o arquivo pra conferir, sem mandar nada
+        pra ninguém; "Gerar e enviar" já manda pro Clicksign colher a assinatura por e-mail.
       </p>
-      {!podeGerar && (
-        <p className="mt-2 text-xs text-flame">
-          Falta {!client.email ? "e-mail do cliente" : "configurar a cobrança recorrente"} antes de gerar o contrato.
-        </p>
-      )}
+      {!podeBaixar && <p className="mt-2 text-xs text-flame">Falta configurar a cobrança recorrente antes de gerar o contrato.</p>}
+      {podeBaixar && !podeGerar && <p className="mt-2 text-xs text-flame">Falta e-mail do cliente antes de enviar pra assinatura.</p>}
       {erro && <p className="mt-2 text-xs text-flame">{erro}</p>}
-      <button
-        onClick={gerar}
-        disabled={!podeGerar || gerando}
-        className="mt-3 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
-      >
-        {gerando ? "Gerando..." : "Gerar contrato e enviar"}
-      </button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          onClick={baixarRascunho}
+          disabled={!podeBaixar || baixando}
+          className="rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-60"
+        >
+          {baixando ? "Gerando..." : "Baixar rascunho"}
+        </button>
+        <button
+          onClick={gerar}
+          disabled={!podeGerar || gerando}
+          className="rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+        >
+          {gerando ? "Gerando..." : "Gerar e enviar pro cliente"}
+        </button>
+      </div>
     </div>
   );
 }
