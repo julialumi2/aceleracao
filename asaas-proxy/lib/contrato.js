@@ -61,10 +61,33 @@ export function gerarContratoDocx({ nome, cnpj, cidade, cep, email, valorMensal,
   return doc.getZip().generate({ type: "nodebuffer" });
 }
 
+// Mammoth não preserva alinhamento de parágrafo (centralizado vs
+// justificado) — só formatação "semântica" (negrito, itálico). No
+// template, o título, os títulos numerados de cláusula ("1. OBJETO...")
+// e o bloco de assinatura no final são centralizados no Word; o resto é
+// justificado. Reaplica isso aqui pra prévia bater com o .docx original.
+function centralizarTituloseAssinatura(html) {
+  const paragrafos = html.match(/<p[^>]*>.*?<\/p>/gs) || [];
+  let noBlocoDeAssinatura = false;
+
+  return paragrafos
+    .map((p, indice) => {
+      const texto = p.replace(/<[^>]+>/g, "").trim();
+      if (/^Local e data:/i.test(texto)) noBlocoDeAssinatura = true;
+
+      const ehTitulo = indice === 0;
+      const ehTituloDeClausula = /^\d{1,2}\.\s+\S/.test(texto) && texto.length < 90;
+      const deveCentralizar = ehTitulo || ehTituloDeClausula || noBlocoDeAssinatura;
+
+      return deveCentralizar ? p.replace(/^<p/, '<p style="text-align:center"') : p;
+    })
+    .join("");
+}
+
 // Mesma coisa, mas devolve HTML (pra prévia editável no painel) em vez
 // do .docx — usa o .docx preenchido como fonte e converte com mammoth.
 export async function gerarContratoHtml(dados) {
   const docxBuffer = gerarContratoDocx(dados);
   const { value: html } = await mammoth.convertToHtml({ buffer: docxBuffer });
-  return html;
+  return centralizarTituloseAssinatura(html);
 }

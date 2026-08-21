@@ -7,7 +7,7 @@ import puppeteer from "puppeteer-core";
 const EXECUTABLE_PATH = process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium-browser";
 
 const ESTILO = `
-  body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; line-height: 1.5; color: #111; padding: 0 8mm; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 12pt; line-height: 1.5; color: #111; padding: 0 8mm; }
   p { margin: 0 0 10pt; text-align: justify; }
   strong { font-weight: bold; }
 `;

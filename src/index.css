@@ -40,11 +40,15 @@
     display: none;
   }
 
-  /* Prévia do contrato (ContratoPreviewModal) — o HTML vem do mammoth,
-     só <p>/<strong> soltos, sem espaçamento próprio depois do reset do
-     Tailwind. */
+  /* Prévia do contrato (ContratoPreviewModal) — reproduz a formatação do
+     .docx original (fonte Arial, texto justificado, títulos e bloco de
+     assinatura centralizados via style inline vindo do backend). */
+  .prose-contrato {
+    font-family: Arial, Helvetica, sans-serif;
+  }
   .prose-contrato p {
     margin-bottom: 0.85em;
+    text-align: justify;
   }
   .prose-contrato strong {
     font-weight: 600;
