@@ -1,0 +1,67 @@
+# Evolution API (integração com WhatsApp) — usada pelo asaas-proxy pra
+# mandar alertas de WhatsApp (ex: novo lead no formulário de interesse).
+#
+# Deploy no Dokploy como um app do tipo "Docker Compose", apontando pra
+# esta pasta. Depois de subir, cria um domínio pra este app na aba
+# "Domains" do Dokploy, apontando pro serviço "api", porta 8080 —
+# é essa URL que vira EVOLUTION_API_URL no .env do asaas-proxy.
+#
+# Antes de subir:
+#   1. Copie .env.example para .env e preencha os valores.
+#   2. Depois que o container "api" estiver de pé e o domínio configurado,
+#      crie uma instância e conecte seu WhatsApp escaneando o QR code
+#      (ver instruções no fim do .env.example).
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: evolution
+    volumes:
+      - evolution-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "evolution"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - evolution-redis-data:/data
+
+  api:
+    image: atendai/evolution-api:v2.2.3
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      SERVER_URL: ${EVOLUTION_SERVER_URL}
+      AUTHENTICATION_API_KEY: ${AUTHENTICATION_API_KEY}
+      # Nome/telefone exibidos em Aparelhos conectados no WhatsApp do celular.
+      CONFIG_SESSION_PHONE_CLIENT: "Aceleracao Delivery"
+      CONFIG_SESSION_PHONE_NAME: "Chrome"
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgres://evolution:${POSTGRES_PASSWORD}@db:5432/evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/0
+      CACHE_LOCAL_ENABLED: "false"
+    volumes:
+      - evolution-instances:/evolution/instances
+    ports:
+      - "8080:8080" # aponte o domínio do Dokploy pra cá
+
+volumes:
+  evolution-db-data:
+  evolution-redis-data:
+  evolution-instances:
