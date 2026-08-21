@@ -56,7 +56,7 @@ export default function TasksBoard({ tasks, clients, leads, onCreateTask, onUpda
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="font-display text-2xl tracking-wide text-ink">Tarefas</h1>
-          <p className="mt-1 text-sm text-ink-muted">Quadro de tarefas da equipe, organizado por status.</p>
+          <p className="mt-1 text-sm text-ink-muted">Suas tarefas, organizadas por status — cada um vê só as próprias.</p>
         </div>
         <button
           onClick={() => setMostrarForm((v) => !v)}
