@@ -49,6 +49,7 @@ function mapRestaurantRow(row) {
     nome: row.nome,
     empresa: row.empresa || "",
     cnpj: row.cnpj || "",
+    cidade: row.cidade || "",
     cep: row.cep || "",
     telefone: row.telefone || "",
     email: row.email || "",
@@ -239,6 +240,23 @@ export async function setContractDocumentUrl(restaurantId, url) {
     .from("contracts")
     .upsert({ restaurant_id: restaurantId, clicksign_document_url: url }, { onConflict: "restaurant_id" });
   if (error) throw error;
+}
+
+// Grava o envelope do Clicksign depois que o contrato é gerado e enviado
+// automaticamente (ver clicksignApi.js/gerarContratoClicksign).
+export async function setContractEnvelope(restaurantId, envelopeId) {
+  const { error } = await supabase
+    .from("contracts")
+    .upsert({ restaurant_id: restaurantId, clicksign_envelope_id: envelopeId }, { onConflict: "restaurant_id" });
+  if (error) throw error;
+
+  const { data, error: eventError } = await supabase
+    .from("contract_events")
+    .insert({ restaurant_id: restaurantId, evento: "Contrato gerado e enviado pro Clicksign" })
+    .select()
+    .single();
+  if (eventError) throw eventError;
+  return { id: data.id, data: data.data, evento: data.evento };
 }
 
 // ---------- Cobrança ----------

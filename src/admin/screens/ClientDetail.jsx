@@ -6,6 +6,7 @@ import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTempla
 import { sortByVencimento, alertStage, ALERT_STAGE_LABELS, billingSummary } from "../lib/invoices.js";
 import { calcularProximaCobranca, diaDoVencimento } from "../lib/recurringBilling.js";
 import { criarAssinaturaAsaas } from "../lib/asaasApi.js";
+import { gerarContratoClicksign } from "../lib/clicksignApi.js";
 
 const TABS = [
   { key: "dados", label: "Dados", icon: Building2 },
@@ -315,7 +316,61 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
   );
 }
 
-function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) {
+function GerarContratoButton({ client, onContratoGerado }) {
+  const [gerando, setGerando] = useState(false);
+  const [erro, setErro] = useState("");
+
+  const valorMensal = client.cobrancaRecorrente?.valor;
+  const diaVencimento = client.cobrancaRecorrente?.diaVencimento;
+  const podeGerar = Boolean(client.email) && Boolean(valorMensal) && Boolean(diaVencimento);
+
+  async function gerar() {
+    if (!podeGerar || gerando) return;
+    setErro("");
+    setGerando(true);
+    try {
+      const { envelopeId } = await gerarContratoClicksign({
+        nome: client.nome,
+        cnpj: client.cnpj,
+        cidade: client.cidade,
+        cep: client.cep,
+        email: client.email,
+        telefone: client.telefone,
+        valorMensal,
+        diaVencimento,
+      });
+      await onContratoGerado(client, envelopeId);
+    } catch (err) {
+      setErro(err.message || "Não foi possível gerar o contrato. Tenta de novo.");
+    } finally {
+      setGerando(false);
+    }
+  }
+
+  return (
+    <div className="mb-5 rounded-xl border border-line/60 bg-surface-raised p-4">
+      <p className="text-sm font-medium text-ink">Gerar contrato e enviar pro cliente</p>
+      <p className="mt-1 text-xs text-ink-dim">
+        Preenche o modelo com os dados do cliente e manda pro Clicksign colher a assinatura por e-mail.
+      </p>
+      {!podeGerar && (
+        <p className="mt-2 text-xs text-flame">
+          Falta {!client.email ? "e-mail do cliente" : "configurar a cobrança recorrente"} antes de gerar o contrato.
+        </p>
+      )}
+      {erro && <p className="mt-2 text-xs text-flame">{erro}</p>}
+      <button
+        onClick={gerar}
+        disabled={!podeGerar || gerando}
+        className="mt-3 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+      >
+        {gerando ? "Gerando..." : "Gerar contrato e enviar"}
+      </button>
+    </div>
+  );
+}
+
+function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl, onContratoGerado }) {
   return (
     <Panel>
       <div className="flex items-center justify-between">
@@ -328,7 +383,11 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl }) 
         <StatusBadge status={client.contrato.status} context="contrato" />
       </div>
 
-      <div className="mt-5 flex gap-2">
+      <div className="mt-5">
+        <GerarContratoButton client={client} onContratoGerado={onContratoGerado} />
+      </div>
+
+      <div className="flex gap-2">
         <button
           onClick={() => onSetContractStatus(client, "pendente")}
           className={`flex-1 rounded-full py-2.5 text-sm font-medium transition-colors ${

@@ -1,5 +1,6 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
+import { gerarContratoDocx } from "./lib/contrato.js";
 
 const PORT = process.env.PORT || 3000;
 const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN;
@@ -22,6 +23,12 @@ const LEAD_ALERT_CONFIGURADO =
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
 const ASAAS_API_URL = process.env.ASAAS_API_URL || "https://api.asaas.com/v3";
 const ASAAS_BILLING_CONFIGURADO = Boolean(ASAAS_API_KEY);
+
+// Geração e envio de contrato pro Clicksign — mesma lógica de opcional.
+// Aponta pro sandbox por padrão (nunca produção sem querer).
+const CLICKSIGN_API_TOKEN = process.env.CLICKSIGN_API_TOKEN;
+const CLICKSIGN_API_URL = process.env.CLICKSIGN_API_URL || "https://sandbox.clicksign.com/api/v3";
+const CLICKSIGN_CONFIGURADO = Boolean(CLICKSIGN_API_TOKEN);
 
 for (const [name, value] of Object.entries({ ASAAS_WEBHOOK_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY })) {
   if (!value) {
@@ -281,6 +288,110 @@ app.post("/asaas/assinatura-recorrente", async (req, res) => {
     return res.status(200).json(resultado);
   } catch (err) {
     console.error("Erro ao criar cliente/assinatura no Asaas:", err.message);
+    return res.status(502).json({ error: err.message });
+  }
+});
+
+async function clicksignFetch(method, path, body) {
+  const response = await fetch(`${CLICKSIGN_API_URL}${path}`, {
+    method,
+    headers: {
+      "Content-Type": "application/vnd.api+json",
+      Accept: "application/vnd.api+json",
+      Authorization: CLICKSIGN_API_TOKEN,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const motivo = payload?.errors?.[0]?.detail || payload?.errors?.[0]?.title || `Clicksign respondeu ${response.status}`;
+    throw new Error(motivo);
+  }
+  return payload;
+}
+
+// Chamado pelo painel admin (aba Contrato) — preenche o template do
+// contrato com os dados do cliente, sobe pro Clicksign, cadastra o
+// cliente como signatário e ativa o envelope pra disparar o e-mail de
+// assinatura. Passo a passo da API v3: envelope -> documento -> signatário
+// -> requisitos (assinar + autenticação) -> ativar -> notificar.
+app.post("/clicksign/gerar-contrato", async (req, res) => {
+  if (!CLICKSIGN_CONFIGURADO) {
+    return res.status(503).json({ error: "integração com o Clicksign não configurada" });
+  }
+
+  const usuario = await usuarioAutenticado(req);
+  if (!usuario) {
+    return res.status(401).json({ error: "não autenticado" });
+  }
+
+  const { nome, cnpj, cidade, cep, email, telefone, valorMensal, diaVencimento, dataAssinatura } = req.body || {};
+
+  if (!nome || !email || !valorMensal || !diaVencimento) {
+    return res.status(400).json({ error: "nome, email, valorMensal e diaVencimento são obrigatórios" });
+  }
+
+  try {
+    const docxBuffer = gerarContratoDocx({
+      nome,
+      cnpj: cnpj || "",
+      cidade: cidade || "",
+      cep: cep || "",
+      email,
+      valorMensal,
+      diaVencimento,
+      dataAssinatura: dataAssinatura || new Date().toISOString().slice(0, 10),
+    });
+
+    const envelope = await clicksignFetch("POST", "/envelopes", {
+      data: { type: "envelopes", attributes: { name: `Contrato — ${nome}` } },
+    });
+    const envelopeId = envelope.data.id;
+
+    const documento = await clicksignFetch("POST", `/envelopes/${envelopeId}/documents`, {
+      data: {
+        type: "documents",
+        attributes: { filename: "contrato-mentoria.docx", content_base64: docxBuffer.toString("base64") },
+      },
+    });
+    const documentoId = documento.data.id;
+
+    const signatario = await clicksignFetch("POST", `/envelopes/${envelopeId}/signers`, {
+      data: {
+        type: "signers",
+        attributes: {
+          name: nome,
+          email,
+          phone_number: (telefone || "").replace(/\D/g, "") || undefined,
+          has_documentation: false,
+          communicate_events: { signature_request: "email", signature_reminder: "email", document_signed: "email" },
+        },
+      },
+    });
+    const signatarioId = signatario.data.id;
+
+    const relationships = {
+      document: { data: { type: "documents", id: documentoId } },
+      signer: { data: { type: "signers", id: signatarioId } },
+    };
+
+    await clicksignFetch("POST", `/envelopes/${envelopeId}/requirements`, {
+      data: { type: "requirements", attributes: { action: "agree", role: "sign" }, relationships },
+    });
+    await clicksignFetch("POST", `/envelopes/${envelopeId}/requirements`, {
+      data: { type: "requirements", attributes: { action: "provide_evidence", auth: "email" }, relationships },
+    });
+
+    await clicksignFetch("PATCH", `/envelopes/${envelopeId}`, {
+      data: { id: envelopeId, type: "envelopes", attributes: { status: "running" } },
+    });
+    await clicksignFetch("POST", `/envelopes/${envelopeId}/notifications`, {
+      data: { type: "notifications", attributes: {} },
+    });
+
+    return res.status(200).json({ envelopeId });
+  } catch (err) {
+    console.error("Erro ao gerar/enviar contrato no Clicksign:", err.message);
     return res.status(502).json({ error: err.message });
   }
 });

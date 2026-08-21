@@ -20,6 +20,7 @@ import {
   clearRecurringBilling,
   setContractStatus,
   setContractDocumentUrl,
+  setContractEnvelope,
   addInvoice,
   setInvoiceStatus,
   updateInvoice,
@@ -160,6 +161,16 @@ export default function AdminLayout({ session, onLogout }) {
   async function handleSetContractDocumentUrl(client, url) {
     patchClientLocal(client.id, { contrato: { ...client.contrato, documentoUrl: url } });
     await setContractDocumentUrl(client.id, url).catch((err) => setLoadError(err.message));
+  }
+
+  // Chamado depois que o contrato já foi gerado e enviado pro Clicksign
+  // com sucesso (a chamada em si acontece em ContratoTab, que fala
+  // direto com o asaas-proxy) — só registra o envelope e o evento aqui.
+  async function handleContratoGerado(client, envelopeId) {
+    const evento = await setContractEnvelope(client.id, envelopeId);
+    patchClientLocal(client.id, {
+      contrato: { ...client.contrato, historico: [...client.contrato.historico, evento] },
+    });
   }
 
   async function handleAddInvoice(client, { valor, vencimento, asaasId, status }) {
@@ -323,6 +334,7 @@ export default function AdminLayout({ session, onLogout }) {
     onClearRecurringBilling: handleClearRecurringBilling,
     onSetContractStatus: handleSetContractStatus,
     onSetContractDocumentUrl: handleSetContractDocumentUrl,
+    onContratoGerado: handleContratoGerado,
     onAddInvoice: handleAddInvoice,
     onSetInvoiceStatus: handleSetInvoiceStatus,
     onUpdateInvoice: handleUpdateInvoice,
