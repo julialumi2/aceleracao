@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import extenso from "extenso";
+import mammoth from "mammoth";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_PATH = path.join(__dirname, "..", "templates", "contrato-mentoria.docx");
@@ -58,4 +59,12 @@ export function gerarContratoDocx({ nome, cnpj, cidade, cep, email, valorMensal,
   });
 
   return doc.getZip().generate({ type: "nodebuffer" });
+}
+
+// Mesma coisa, mas devolve HTML (pra prévia editável no painel) em vez
+// do .docx — usa o .docx preenchido como fonte e converte com mammoth.
+export async function gerarContratoHtml(dados) {
+  const docxBuffer = gerarContratoDocx(dados);
+  const { value: html } = await mammoth.convertToHtml({ buffer: docxBuffer });
+  return html;
 }

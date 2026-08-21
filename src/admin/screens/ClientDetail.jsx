@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive, Pencil, Trash2, Ban, RotateCcw } from "lucide-react";
 import StatusBadge, { NextBillingBadge } from "../components/StatusBadge.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
@@ -6,7 +6,7 @@ import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTempla
 import { sortByVencimento, alertStage, ALERT_STAGE_LABELS, billingSummary } from "../lib/invoices.js";
 import { calcularProximaCobranca, diaDoVencimento } from "../lib/recurringBilling.js";
 import { criarAssinaturaAsaas } from "../lib/asaasApi.js";
-import { gerarContratoClicksign, baixarRascunhoContrato } from "../lib/clicksignApi.js";
+import { gerarContratoClicksign, baixarRascunhoContrato, visualizarContratoHtml } from "../lib/clicksignApi.js";
 
 const TABS = [
   { key: "dados", label: "Dados", icon: Building2 },
@@ -316,9 +316,124 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
   );
 }
 
+function ContratoPreviewModal({ dadosContrato, onClose, onEnviado }) {
+  const [html, setHtml] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [editando, setEditando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState("");
+  const editorRef = useRef(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    visualizarContratoHtml(dadosContrato)
+      .then((h) => {
+        if (!cancelado) setHtml(h);
+      })
+      .catch((err) => {
+        if (!cancelado) setErro(err.message || "Não foi possível carregar a prévia.");
+      })
+      .finally(() => {
+        if (!cancelado) setCarregando(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function comecarEdicao() {
+    setEditando(true);
+    // Preenche o editor uma única vez ao entrar em modo edição — depois
+    // disso o próprio contentEditable cuida do DOM, sem o React re-renderizar
+    // o conteúdo a cada tecla.
+    requestAnimationFrame(() => {
+      if (editorRef.current) editorRef.current.innerHTML = html;
+    });
+  }
+
+  function salvarEdicao() {
+    if (editorRef.current) setHtml(editorRef.current.innerHTML);
+    setEditando(false);
+  }
+
+  async function enviar() {
+    if (enviando || editando) return;
+    setErro("");
+    setEnviando(true);
+    try {
+      const { envelopeId } = await gerarContratoClicksign({ ...dadosContrato, html });
+      await onEnviado(envelopeId);
+    } catch (err) {
+      setErro(err.message || "Não foi possível enviar o contrato. Tenta de novo.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl border border-line bg-surface">
+        <div className="flex items-center justify-between border-b border-line/60 px-6 py-4">
+          <p className="font-display text-base tracking-wide text-ink">Revisar contrato</p>
+          <button onClick={onClose} className="text-sm text-ink-muted hover:text-ink">
+            Fechar
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          {carregando && <p className="text-sm text-ink-dim">Gerando prévia...</p>}
+          {!carregando && html !== null && (
+            <div
+              ref={editorRef}
+              contentEditable={editando}
+              suppressContentEditableWarning
+              dangerouslySetInnerHTML={editando ? undefined : { __html: html }}
+              className={`prose-contrato text-sm leading-relaxed text-ink ${
+                editando ? "rounded-xl border border-emerald-brand/50 bg-surface-raised p-4 outline-none" : ""
+              }`}
+            />
+          )}
+        </div>
+
+        <div className="border-t border-line/60 px-6 py-4">
+          {erro && <p className="mb-3 text-sm text-flame">{erro}</p>}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              {!editando ? (
+                <button
+                  onClick={comecarEdicao}
+                  disabled={carregando}
+                  className="rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-60"
+                >
+                  Editar
+                </button>
+              ) : (
+                <button
+                  onClick={salvarEdicao}
+                  className="rounded-xl border border-emerald-brand/50 px-4 py-2.5 text-sm font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
+                >
+                  Salvar edição
+                </button>
+              )}
+            </div>
+            <button
+              onClick={enviar}
+              disabled={carregando || editando || enviando}
+              className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+            >
+              {enviando ? "Enviando..." : "Gerar e enviar pro cliente"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GerarContratoButton({ client, onContratoGerado }) {
-  const [gerando, setGerando] = useState(false);
   const [baixando, setBaixando] = useState(false);
+  const [mostrarModal, setMostrarModal] = useState(false);
   const [erro, setErro] = useState("");
 
   const valorMensal = client.cobrancaRecorrente?.valor;
@@ -332,23 +447,10 @@ function GerarContratoButton({ client, onContratoGerado }) {
     cidade: client.cidade,
     cep: client.cep,
     email: client.email,
+    telefone: client.telefone,
     valorMensal,
     diaVencimento,
   };
-
-  async function gerar() {
-    if (!podeGerar || gerando) return;
-    setErro("");
-    setGerando(true);
-    try {
-      const { envelopeId } = await gerarContratoClicksign({ ...dadosContrato, telefone: client.telefone });
-      await onContratoGerado(client, envelopeId);
-    } catch (err) {
-      setErro(err.message || "Não foi possível gerar o contrato. Tenta de novo.");
-    } finally {
-      setGerando(false);
-    }
-  }
 
   async function baixarRascunho() {
     if (!podeBaixar || baixando) return;
@@ -367,8 +469,8 @@ function GerarContratoButton({ client, onContratoGerado }) {
     <div className="mb-5 rounded-xl border border-line/60 bg-surface-raised p-4">
       <p className="text-sm font-medium text-ink">Contrato (Clicksign)</p>
       <p className="mt-1 text-xs text-ink-dim">
-        Preenche o modelo com os dados do cliente. "Baixar rascunho" só gera o arquivo pra conferir, sem mandar nada
-        pra ninguém; "Gerar e enviar" já manda pro Clicksign colher a assinatura por e-mail.
+        "Baixar rascunho" gera o arquivo pra conferir rápido, sem mandar nada pra ninguém. "Visualizar e revisar" abre
+        o contrato pra você editar o texto se precisar, antes de mandar pro Clicksign colher a assinatura.
       </p>
       {!podeBaixar && <p className="mt-2 text-xs text-flame">Falta configurar a cobrança recorrente antes de gerar o contrato.</p>}
       {podeBaixar && !podeGerar && <p className="mt-2 text-xs text-flame">Falta e-mail do cliente antes de enviar pra assinatura.</p>}
@@ -382,13 +484,24 @@ function GerarContratoButton({ client, onContratoGerado }) {
           {baixando ? "Gerando..." : "Baixar rascunho"}
         </button>
         <button
-          onClick={gerar}
-          disabled={!podeGerar || gerando}
+          onClick={() => setMostrarModal(true)}
+          disabled={!podeGerar}
           className="rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
         >
-          {gerando ? "Gerando..." : "Gerar e enviar pro cliente"}
+          Visualizar e revisar
         </button>
       </div>
+
+      {mostrarModal && (
+        <ContratoPreviewModal
+          dadosContrato={dadosContrato}
+          onClose={() => setMostrarModal(false)}
+          onEnviado={async (envelopeId) => {
+            await onContratoGerado(client, envelopeId);
+            setMostrarModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

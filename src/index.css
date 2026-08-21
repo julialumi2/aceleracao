@@ -40,6 +40,17 @@
     display: none;
   }
 
+  /* Prévia do contrato (ContratoPreviewModal) — o HTML vem do mammoth,
+     só <p>/<strong> soltos, sem espaçamento próprio depois do reset do
+     Tailwind. */
+  .prose-contrato p {
+    margin-bottom: 0.85em;
+  }
+  .prose-contrato strong {
+    font-weight: 600;
+    color: theme("colors.ink.DEFAULT");
+  }
+
   /* Faísca individual — usada pelo componente <Sparks />. Posição/atraso
      vêm inline por instância; aqui só o visual do ponto e o brilho. */
   .spark-dot {

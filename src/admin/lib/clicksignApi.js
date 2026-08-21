@@ -7,7 +7,7 @@ const ASAAS_PROXY_URL = import.meta.env.VITE_ASAAS_PROXY_URL || "http://localhos
 // Preenche o template do contrato com os dados do cliente e envia pro
 // Clicksign pra assinatura, via asaas-proxy (a chave de API não pode
 // ficar no navegador). Lança erro com mensagem legível em caso de falha.
-export async function gerarContratoClicksign({ nome, cnpj, cidade, cep, email, telefone, valorMensal, diaVencimento, dataAssinatura }) {
+export async function gerarContratoClicksign({ nome, cnpj, cidade, cep, email, telefone, valorMensal, diaVencimento, dataAssinatura, html }) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -16,7 +16,7 @@ export async function gerarContratoClicksign({ nome, cnpj, cidade, cep, email, t
   const response = await fetch(`${ASAAS_PROXY_URL}/clicksign/gerar-contrato`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-    body: JSON.stringify({ nome, cnpj, cidade, cep, email, telefone, valorMensal, diaVencimento, dataAssinatura }),
+    body: JSON.stringify({ nome, cnpj, cidade, cep, email, telefone, valorMensal, diaVencimento, dataAssinatura, html }),
   });
 
   const data = await response.json().catch(() => null);
@@ -59,4 +59,25 @@ export async function baixarRascunhoContrato({ nome, cnpj, cidade, cep, email, v
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+// Preenche o modelo e devolve o texto em HTML pra revisar/editar no
+// modal antes de mandar de verdade — não fala com o Clicksign.
+export async function visualizarContratoHtml({ nome, cnpj, cidade, cep, email, valorMensal, diaVencimento, dataAssinatura }) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) throw new Error("Sessão expirada — faça login de novo.");
+
+  const response = await fetch(`${ASAAS_PROXY_URL}/clicksign/preview-html`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ nome, cnpj, cidade, cep, email, valorMensal, diaVencimento, dataAssinatura }),
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.error || "Não foi possível gerar a prévia do contrato.");
+  }
+  return data.html;
 }

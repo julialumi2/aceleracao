@@ -11,6 +11,8 @@
     "docxtemplater": "^3.69.3",
     "express": "^4.19.2",
     "extenso": "^3.0.0",
-    "pizzip": "^3.2.0"
+    "mammoth": "^1.12.1",
+    "pizzip": "^3.2.0",
+    "puppeteer-core": "^25.8.0"
   }
 }

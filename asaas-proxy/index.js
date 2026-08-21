@@ -1,6 +1,7 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import { gerarContratoDocx } from "./lib/contrato.js";
+import { gerarContratoDocx, gerarContratoHtml } from "./lib/contrato.js";
+import { htmlParaPdf } from "./lib/pdf.js";
 
 const PORT = process.env.PORT || 3000;
 const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN;
@@ -351,6 +352,39 @@ app.post("/clicksign/preview-contrato", async (req, res) => {
   }
 });
 
+// Gera a prévia em HTML (não fala com o Clicksign) — usada pelo modal
+// de revisão no painel, onde a equipe pode editar o texto livremente
+// antes de mandar de verdade.
+app.post("/clicksign/preview-html", async (req, res) => {
+  const usuario = await usuarioAutenticado(req);
+  if (!usuario) {
+    return res.status(401).json({ error: "não autenticado" });
+  }
+
+  const { nome, cnpj, cidade, cep, email, valorMensal, diaVencimento, dataAssinatura } = req.body || {};
+
+  if (!nome || !valorMensal || !diaVencimento) {
+    return res.status(400).json({ error: "nome, valorMensal e diaVencimento são obrigatórios" });
+  }
+
+  try {
+    const html = await gerarContratoHtml({
+      nome,
+      cnpj: cnpj || "",
+      cidade: cidade || "",
+      cep: cep || "",
+      email: email || "",
+      valorMensal,
+      diaVencimento,
+      dataAssinatura: dataAssinatura || new Date().toISOString().slice(0, 10),
+    });
+    return res.status(200).json({ html });
+  } catch (err) {
+    console.error("Erro ao gerar prévia do contrato:", err.message);
+    return res.status(500).json({ error: "não foi possível gerar a prévia do contrato" });
+  }
+});
+
 app.post("/clicksign/gerar-contrato", async (req, res) => {
   if (!CLICKSIGN_CONFIGURADO) {
     return res.status(503).json({ error: "integração com o Clicksign não configurada" });
@@ -361,23 +395,34 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
     return res.status(401).json({ error: "não autenticado" });
   }
 
-  const { nome, cnpj, cidade, cep, email, telefone, valorMensal, diaVencimento, dataAssinatura } = req.body || {};
+  const { nome, cnpj, cidade, cep, email, telefone, valorMensal, diaVencimento, dataAssinatura, html } = req.body || {};
 
   if (!nome || !email || !valorMensal || !diaVencimento) {
     return res.status(400).json({ error: "nome, email, valorMensal e diaVencimento são obrigatórios" });
   }
 
   try {
-    const docxBuffer = gerarContratoDocx({
-      nome,
-      cnpj: cnpj || "",
-      cidade: cidade || "",
-      cep: cep || "",
-      email,
-      valorMensal,
-      diaVencimento,
-      dataAssinatura: dataAssinatura || new Date().toISOString().slice(0, 10),
-    });
+    // Se veio HTML (a equipe revisou/editou no modal), manda esse texto
+    // final em PDF. Sem HTML, preenche o modelo original e manda em docx
+    // — atalho ainda disponível pra quem quer pular a revisão.
+    let fileBuffer;
+    let filename;
+    if (html) {
+      fileBuffer = await htmlParaPdf(html);
+      filename = "contrato-mentoria.pdf";
+    } else {
+      fileBuffer = gerarContratoDocx({
+        nome,
+        cnpj: cnpj || "",
+        cidade: cidade || "",
+        cep: cep || "",
+        email,
+        valorMensal,
+        diaVencimento,
+        dataAssinatura: dataAssinatura || new Date().toISOString().slice(0, 10),
+      });
+      filename = "contrato-mentoria.docx";
+    }
 
     const envelope = await clicksignFetch("POST", "/envelopes", {
       data: { type: "envelopes", attributes: { name: `Contrato — ${nome}` } },
@@ -387,7 +432,7 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
     const documento = await clicksignFetch("POST", `/envelopes/${envelopeId}/documents`, {
       data: {
         type: "documents",
-        attributes: { filename: "contrato-mentoria.docx", content_base64: docxBuffer.toString("base64") },
+        attributes: { filename, content_base64: fileBuffer.toString("base64") },
       },
     });
     const documentoId = documento.data.id;
