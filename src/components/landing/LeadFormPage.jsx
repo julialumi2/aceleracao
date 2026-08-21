@@ -29,12 +29,44 @@ const GESTOR_TRAFEGO_OPTIONS = [
   "Tenho e estou satisfeito",
 ];
 
+const ESTADO_OPTIONS = [
+  "Acre",
+  "Alagoas",
+  "Amapá",
+  "Amazonas",
+  "Bahia",
+  "Ceará",
+  "Distrito Federal",
+  "Espírito Santo",
+  "Goiás",
+  "Maranhão",
+  "Mato Grosso",
+  "Mato Grosso do Sul",
+  "Minas Gerais",
+  "Pará",
+  "Paraíba",
+  "Paraná",
+  "Pernambuco",
+  "Piauí",
+  "Rio de Janeiro",
+  "Rio Grande do Norte",
+  "Rio Grande do Sul",
+  "Rondônia",
+  "Roraima",
+  "Santa Catarina",
+  "São Paulo",
+  "Sergipe",
+  "Tocantins",
+];
+
 const MENSAGEM_MAX = 300;
 
 const CAMPOS_INICIAIS = {
   nome: "",
   telefone: "",
   nomeNegocio: "",
+  cidade: "",
+  estado: "",
   faturamentoMensal: "",
   maiorGargalo: "",
   gestorTrafego: "",
@@ -134,6 +166,23 @@ export default function LeadFormPage() {
           onChange={(v) => set("nomeNegocio", v)}
           placeholder="Ex: Burger do João"
         />
+      ),
+    },
+    {
+      categoria: "Seu negócio",
+      podeContinuar: campos.cidade.trim().length > 0 && campos.estado.trim().length > 0,
+      campo: (
+        <>
+          <Field
+            label="Cidade do seu negócio"
+            value={campos.cidade}
+            onChange={(v) => set("cidade", v)}
+            placeholder="Ex: Sorocaba"
+          />
+          <div className="mt-4">
+            <Select label="Estado" value={campos.estado} onChange={(v) => set("estado", v)} options={ESTADO_OPTIONS} />
+          </div>
+        </>
       ),
     },
     {

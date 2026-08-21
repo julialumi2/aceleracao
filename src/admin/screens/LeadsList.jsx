@@ -26,6 +26,7 @@ function textInputClass() {
 function LeadRespostas({ lead }) {
   const itens = [
     ["Nome do negócio", lead.nomeNegocio],
+    ["Cidade", lead.cidade && lead.estado ? `${lead.cidade} - ${lead.estado}` : lead.cidade || lead.estado],
     ["Faturamento mensal", lead.faturamentoMensal],
     ["Maior gargalo", lead.maiorGargalo],
     ["Gestor de tráfego", lead.gestorTrafego],
@@ -221,6 +222,7 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                   </div>
                   <p className="text-xs text-ink-dim">
                     {lead.nomeNegocio ? `${lead.nomeNegocio} · ` : ""}
+                    {lead.cidade ? `${lead.cidade}${lead.estado ? `/${lead.estado}` : ""} · ` : ""}
                     {lead.email || lead.telefone || "sem contato"} · {relativeDaysLabel(lead.criadoEm)}
                   </p>
                 </button>

@@ -106,6 +106,8 @@ function mapLeadRow(row) {
     temperatura: row.temperatura || null,
     criadoEm: row.created_at.slice(0, 10),
     nomeNegocio: row.nome_negocio || "",
+    cidade: row.cidade || "",
+    estado: row.estado || "",
     faturamentoMensal: row.faturamento_mensal || "",
     maiorGargalo: row.maior_gargalo || "",
     gestorTrafego: row.gestor_trafego || "",
@@ -454,6 +456,7 @@ export async function convertLeadToClient(lead) {
     .insert({
       nome: lead.nome,
       empresa: lead.nomeNegocio || null,
+      cidade: lead.cidade || null,
       telefone: lead.telefone,
       email: lead.email,
       saude: "laranja",
