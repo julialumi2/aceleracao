@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { MessageSquareText, Users, Plug, Check, KeyRound, Eye, EyeOff } from "lucide-react";
+import { MessageSquareText, Users, Plug, Check, KeyRound, Eye, EyeOff, UserPlus, X, Copy } from "lucide-react";
 import { signInWithEmail, updatePassword } from "../../lib/supabase.js";
+import { criarMembroEquipe } from "../lib/teamApi.js";
 
 const DEFAULT_TEMPLATES = {
   boleto: "Olá, {nome}! Notamos que o boleto no valor de R$ {valor}, com vencimento em {vencimento}, ainda está em aberto. Pode verificar e regularizar quando possível? Qualquer dúvida, estamos à disposição 🙏",
@@ -84,23 +85,7 @@ export default function Settings({ session }) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-line bg-surface p-6">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-          <Users size={15} className="text-emerald-bright" />
-          Equipe
-        </h2>
-        <ul className="mt-4 space-y-3">
-          {TEAM.map((member) => (
-            <li key={member.email} className="flex items-center justify-between text-sm">
-              <div>
-                <p className="text-ink">{member.name}</p>
-                <p className="text-xs text-ink-dim">{member.email}</p>
-              </div>
-              <span className="rounded-full border border-line px-2.5 py-1 text-[11px] text-ink-muted">{member.role}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <TeamSection />
 
       <section className="rounded-2xl border border-line bg-surface p-6">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
@@ -128,6 +113,137 @@ export default function Settings({ session }) {
         </ul>
       </section>
     </div>
+  );
+}
+
+function TeamSection() {
+  const [team, setTeam] = useState(TEAM);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ nome: "", email: "", cargo: "" });
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [criado, setCriado] = useState(null);
+
+  function fecharForm() {
+    setShowForm(false);
+    setForm({ nome: "", email: "", cargo: "" });
+    setErro("");
+  }
+
+  async function adicionarMembro(e) {
+    e.preventDefault();
+    setErro("");
+    if (!form.nome.trim() || !form.email.trim()) return;
+
+    setSalvando(true);
+    try {
+      const resultado = await criarMembroEquipe({ nome: form.nome.trim(), email: form.email.trim() });
+      setTeam((t) => [...t, { name: form.nome.trim(), email: resultado.email, role: form.cargo.trim() || "Equipe" }]);
+      setCriado({ email: resultado.email, senha: resultado.senhaTemporaria });
+      fecharForm();
+    } catch (err) {
+      setErro(err.message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-line bg-surface p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <Users size={15} className="text-emerald-bright" />
+          Equipe
+        </h2>
+        {!showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-emerald-brand/60 hover:text-ink"
+          >
+            <UserPlus size={13} /> Adicionar membro
+          </button>
+        )}
+      </div>
+
+      {criado && (
+        <div className="mt-4 rounded-xl border border-emerald-brand/30 bg-emerald-brand/10 p-4 text-sm">
+          <p className="flex items-center gap-1.5 font-medium text-emerald-bright">
+            <Check size={15} /> Acesso criado para {criado.email}
+          </p>
+          <p className="mt-2 text-xs text-ink-dim">
+            Senha temporária (mostrada só agora — copie e repasse por um canal seguro). A pessoa pode trocá-la depois em "Trocar senha".
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <code className="flex-1 rounded-lg border border-line bg-surface-raised px-3 py-2 text-xs text-ink">{criado.senha}</code>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard?.writeText(criado.senha)}
+              className="shrink-0 rounded-lg border border-line p-2 text-ink-dim transition-colors hover:text-ink"
+              aria-label="Copiar senha"
+            >
+              <Copy size={14} />
+            </button>
+          </div>
+          <button onClick={() => setCriado(null)} className="mt-3 text-xs font-medium text-ink-muted hover:text-ink">
+            Fechar
+          </button>
+        </div>
+      )}
+
+      {showForm && (
+        <form onSubmit={adicionarMembro} className="mt-4 space-y-3 rounded-xl border border-line bg-surface-raised p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-ink-muted">Novo integrante</p>
+            <button type="button" onClick={fecharForm} className="text-ink-dim hover:text-ink" aria-label="Cancelar">
+              <X size={14} />
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <input
+              required
+              placeholder="Nome"
+              value={form.nome}
+              onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+            />
+            <input
+              required
+              type="email"
+              placeholder="E-mail"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+            />
+            <input
+              placeholder="Cargo (opcional)"
+              value={form.cargo}
+              onChange={(e) => setForm((f) => ({ ...f, cargo: e.target.value }))}
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+            />
+          </div>
+          {erro && <p className="text-sm text-flame">{erro}</p>}
+          <button
+            type="submit"
+            disabled={salvando}
+            className="rounded-full bg-emerald-brand px-5 py-2 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+          >
+            {salvando ? "Criando..." : "Criar acesso"}
+          </button>
+        </form>
+      )}
+
+      <ul className="mt-4 space-y-3">
+        {team.map((member) => (
+          <li key={member.email} className="flex items-center justify-between text-sm">
+            <div>
+              <p className="text-ink">{member.name}</p>
+              <p className="text-xs text-ink-dim">{member.email}</p>
+            </div>
+            <span className="rounded-full border border-line px-2.5 py-1 text-[11px] text-ink-muted">{member.role}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { gerarContratoDocx, gerarContratoHtml } from "./lib/contrato.js";
@@ -297,6 +298,45 @@ app.post("/asaas/assinatura-recorrente", async (req, res) => {
     console.error("Erro ao criar cliente/assinatura no Asaas:", err.message);
     return res.status(502).json({ error: err.message });
   }
+});
+
+// Chamado pelo painel admin (Configurações → Equipe) pra dar acesso ao
+// painel pra um novo integrante. Cria o usuário direto no Supabase Auth
+// com uma senha temporária já confirmada — o self-host ainda não tem SMTP
+// configurado (GOTRUE_MAILER_AUTOCONFIRM no docker-compose), então um
+// convite por e-mail não chegaria a lugar nenhum. A senha volta na
+// resposta pra equipe repassar por um canal seguro (WhatsApp, etc.); a
+// pessoa troca por uma senha própria em Configurações → Trocar senha.
+// Ainda não existe distinção de papel (ver comentário em AdminLogin.jsx
+// sobre a tabela `staff_members` pendente) — qualquer conta logada no
+// painel pode criar outra, mesmo nível de acesso do resto do admin.
+app.post("/admin/membros", async (req, res) => {
+  const usuario = await usuarioAutenticado(req);
+  if (!usuario) {
+    return res.status(401).json({ error: "não autenticado" });
+  }
+
+  const { nome, email } = req.body || {};
+  if (!nome || !email) {
+    return res.status(400).json({ error: "nome e email são obrigatórios" });
+  }
+
+  const senhaTemporaria = crypto.randomBytes(9).toString("base64url");
+
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password: senhaTemporaria,
+    email_confirm: true,
+    user_metadata: { nome },
+  });
+
+  if (error) {
+    const jaExiste = error.status === 422 || /already.*registered/i.test(error.message);
+    console.error("Erro ao criar acesso de equipe:", error.message);
+    return res.status(jaExiste ? 409 : 502).json({ error: jaExiste ? "já existe uma conta com esse e-mail" : error.message });
+  }
+
+  return res.status(200).json({ email: data.user.email, senhaTemporaria });
 });
 
 async function clicksignFetch(method, path, body) {
