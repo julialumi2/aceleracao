@@ -28,9 +28,12 @@ export default function SocialProof() {
           <p className="mt-4 text-ink-muted">Confira alguns resultados:</p>
         </div>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="-mx-6 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto scrollbar-hide px-6 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {PRINTS.map((p) => (
-            <figure key={p.src} className="overflow-hidden rounded-2xl border border-line bg-white shadow-lg shadow-black/20">
+            <figure
+              key={p.src}
+              className="w-[82%] shrink-0 snap-center overflow-hidden rounded-2xl border border-line bg-white shadow-lg shadow-black/20 sm:w-auto sm:shrink"
+            >
               <img src={p.src} alt={p.alt} className="w-full" />
             </figure>
           ))}

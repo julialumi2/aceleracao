@@ -18,7 +18,7 @@ export default function Footer() {
         </div>
 
         <p className="text-sm leading-relaxed text-ink-dim">
-          Artesanos Burger LTDA | CNPJ 65.200.736/0001-59
+          GSA Consultoria em Vendas LTDA | CNPJ 65.200.736/0001-59
           <br />
           Sorocaba/SP
         </p>

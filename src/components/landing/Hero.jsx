@@ -8,7 +8,7 @@ export default function Hero() {
       <div className="pointer-events-none absolute inset-0 bg-ember-glow" />
       <Sparks className="h-[560px]" />
 
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pb-16 pt-14 md:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-10 lg:pb-24">
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-6 pb-16 pt-14 md:pt-20 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-14 lg:pb-24">
         <div className="text-center lg:text-left">
           <div className="font-display text-2xl uppercase leading-[0.92] tracking-wide text-ink md:text-3xl">
             <span className="block">Aceleração</span>

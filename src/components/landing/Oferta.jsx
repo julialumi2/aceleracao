@@ -21,10 +21,10 @@ export default function Oferta() {
         </div>
 
         <div className="mx-auto mt-12 flex max-w-xl flex-col items-center gap-5 rounded-2xl border-2 border-emerald-brand bg-gradient-to-b from-surface-raised to-surface p-8 text-center shadow-2xl shadow-emerald-brand/20 sm:p-11">
-          <h3 className="font-display text-lg font-extrabold uppercase tracking-wide text-ink">
+          <h3 className="font-display text-lg uppercase tracking-wide text-ink">
             Concorra a um diagnóstico individual
           </h3>
-          <p className="font-display text-5xl font-black uppercase tracking-tighter text-emerald-bright md:text-6xl">
+          <p className="font-display text-5xl uppercase tracking-tight text-emerald-bright md:text-6xl">
             Sem custo
           </p>
           <div className="flex flex-col gap-2.5">

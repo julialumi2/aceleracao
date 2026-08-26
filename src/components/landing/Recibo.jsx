@@ -35,10 +35,10 @@ export default function Recibo() {
             <span className="absolute -left-[27px] -top-[13px] h-6 w-6 rounded-full border border-line bg-base sm:-left-[35px]" />
             <span className="absolute -right-[27px] -top-[13px] h-6 w-6 rounded-full border border-line bg-base sm:-right-[35px]" />
             <div className="flex items-center justify-between rounded-lg border border-emerald-brand/32 bg-base p-5">
-              <span className="font-display text-2xl font-black tracking-tight text-emerald-bright md:text-3xl">
+              <span className="font-display text-2xl tracking-tight text-emerald-bright md:text-3xl">
                 R$ 10.000,00
               </span>
-              <span className="font-display text-xs font-extrabold uppercase tracking-wide text-ink">Total por mês</span>
+              <span className="font-display text-xs uppercase tracking-wide text-ink">Total por mês</span>
             </div>
           </div>
 

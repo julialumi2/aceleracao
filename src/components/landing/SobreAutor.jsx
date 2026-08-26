@@ -38,10 +38,10 @@ export default function SobreAutor() {
           </ul>
 
           <div className="flex flex-col items-center gap-4 rounded-2xl border-2 border-emerald-brand bg-surface p-7 text-center">
-            <h3 className="font-display text-sm font-extrabold uppercase tracking-wide text-ink">
+            <h3 className="font-display text-sm uppercase tracking-wide text-ink">
               Concorra a um diagnóstico individual
             </h3>
-            <p className="font-display text-4xl font-black uppercase tracking-tighter text-emerald-bright">Sem custo</p>
+            <p className="font-display text-4xl uppercase tracking-tight text-emerald-bright">Sem custo</p>
             <div className="flex flex-col gap-2">
               <p className="text-sm leading-relaxed text-ink-muted">
                 Responda o formulário e a gente analisa a sua operação. Se ela tiver perfil, você é chamado para o

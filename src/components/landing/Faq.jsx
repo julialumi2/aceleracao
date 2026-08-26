@@ -43,7 +43,7 @@ export default function Faq() {
         <div className="mt-10 flex flex-col gap-2.5">
           {PERGUNTAS.map((f) => (
             <details key={f.pergunta} className="group overflow-hidden rounded-lg border border-line bg-surface-raised">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 font-display text-base font-semibold tracking-wide text-ink [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 font-display text-base tracking-wide text-ink [&::-webkit-details-marker]:hidden">
                 {f.pergunta}
                 <ChevronDown size={14} className="shrink-0 text-emerald-bright transition-transform group-open:rotate-180" />
               </summary>
