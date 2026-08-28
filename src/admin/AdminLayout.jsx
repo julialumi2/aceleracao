@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase.js";
 import AdminSidebar from "./AdminSidebar.jsx";
 import AdminDashboard from "./screens/AdminDashboard.jsx";
 import ClientsList from "./screens/ClientsList.jsx";
@@ -65,10 +66,22 @@ export default function AdminLayout({ session, onLogout }) {
 
   useEffect(() => {
     loadAll();
+
+    // O navegador congela o timer de renovação automática do token
+    // quando a aba fica em segundo plano por muito tempo — ao voltar pra
+    // ela, o token já expirou. Renova e recarrega sozinho nesse
+    // momento, em vez de deixar a pessoa vendo um erro cru de sessão.
+    // Silencioso (sem spinner de tela cheia) pra não piscar o painel
+    // toda vez que a pessoa só troca de aba e volta.
+    function aoVoltarParaAba() {
+      if (document.visibilityState === "visible") loadAll({ silencioso: true });
+    }
+    document.addEventListener("visibilitychange", aoVoltarParaAba);
+    return () => document.removeEventListener("visibilitychange", aoVoltarParaAba);
   }, []);
 
-  async function loadAll() {
-    setLoading(true);
+  async function loadAll({ jaTentouRenovar = false, silencioso = false } = {}) {
+    if (!silencioso) setLoading(true);
     setLoadError("");
     try {
       const [clientsData, leadsData, tasksData] = await Promise.all([fetchClients(), fetchLeads(), fetchTasks()]);
@@ -76,9 +89,21 @@ export default function AdminLayout({ session, onLogout }) {
       setLeads(leadsData);
       setTasks(tasksData);
     } catch (err) {
-      setLoadError(err.message || "Não foi possível carregar os dados do Supabase.");
+      const sessaoExpirada = /jwt|token/i.test(err.message || "");
+      if (sessaoExpirada && !jaTentouRenovar) {
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError) return loadAll({ jaTentouRenovar: true, silencioso });
+      }
+      // Numa renovação silenciosa a pessoa nem viu nada quebrar — só
+      // mostra o aviso se a tentativa de recarregar em segundo plano
+      // também falhou.
+      setLoadError(
+        sessaoExpirada
+          ? "Sua sessão expirou. Atualize a página (F5) — se continuar pedindo, saia e entre de novo."
+          : err.message || "Não foi possível carregar os dados do Supabase."
+      );
     } finally {
-      setLoading(false);
+      if (!silencioso) setLoading(false);
     }
   }
 
@@ -366,9 +391,7 @@ export default function AdminLayout({ session, onLogout }) {
           )}
 
           {!loading && loadError && (
-            <div className="mb-6 rounded-xl border border-flame/30 bg-flame/5 px-4 py-3 text-sm text-flame">
-              {loadError} — conferindo com dados já carregados nesta sessão.
-            </div>
+            <div className="mb-6 rounded-xl border border-flame/30 bg-flame/5 px-4 py-3 text-sm text-flame">{loadError}</div>
           )}
 
           {!loading && (
