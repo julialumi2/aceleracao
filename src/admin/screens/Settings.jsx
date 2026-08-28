@@ -1,19 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageSquareText, Users, Plug, Check, KeyRound, Eye, EyeOff, UserPlus, X, Copy } from "lucide-react";
 import { signInWithEmail, updatePassword } from "../../lib/supabase.js";
-import { criarMembroEquipe } from "../lib/teamApi.js";
+import { criarMembroEquipe, fetchMembrosEquipe } from "../lib/teamApi.js";
 
 const DEFAULT_TEMPLATES = {
   boleto: "Olá, {nome}! Notamos que o boleto no valor de R$ {valor}, com vencimento em {vencimento}, ainda está em aberto. Pode verificar e regularizar quando possível? Qualquer dúvida, estamos à disposição 🙏",
   intensidade: "Olá, {nome}! Passando para saber como está o movimento da loja essa semana. Nosso time notou uma queda no engajamento das redes sociais — vamos marcar uma call rápida para ajustar a estratégia juntos?",
 };
-
-const TEAM = [
-  { name: "Guilherme Araújo", email: "guilherme.araujo@artesanos.adm.br", role: "Admin" },
-  { name: "Kevyn", email: "kevynadm02artesanos@gmail.com", role: "Adm" },
-  { name: "Kethllyn", email: "kethllynadmartesanos@outlook.com", role: "Adm" },
-  { name: "Julia", email: "julia.suzuki@artesanos.adm.br", role: "TI" },
-];
 
 const INTEGRATIONS = [
   { name: "Asaas", description: "Emissão e status de boletos", connected: true },
@@ -117,12 +110,20 @@ export default function Settings({ session }) {
 }
 
 function TeamSection() {
-  const [team, setTeam] = useState(TEAM);
+  const [team, setTeam] = useState([]);
+  const [carregandoTeam, setCarregandoTeam] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", cargo: "" });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [criado, setCriado] = useState(null);
+
+  useEffect(() => {
+    fetchMembrosEquipe()
+      .then(setTeam)
+      .catch((err) => setErro(err.message))
+      .finally(() => setCarregandoTeam(false));
+  }, []);
 
   function fecharForm() {
     setShowForm(false);
@@ -137,7 +138,11 @@ function TeamSection() {
 
     setSalvando(true);
     try {
-      const resultado = await criarMembroEquipe({ nome: form.nome.trim(), email: form.email.trim() });
+      const resultado = await criarMembroEquipe({
+        nome: form.nome.trim(),
+        email: form.email.trim(),
+        cargo: form.cargo.trim() || undefined,
+      });
       setTeam((t) => [...t, { name: form.nome.trim(), email: resultado.email, role: form.cargo.trim() || "Equipe" }]);
       setCriado({ email: resultado.email, senha: resultado.senhaTemporaria });
       fecharForm();
@@ -231,6 +236,8 @@ function TeamSection() {
           </button>
         </form>
       )}
+
+      {carregandoTeam && <p className="mt-4 text-xs text-ink-dim">Carregando equipe...</p>}
 
       <ul className="mt-4 space-y-3">
         {team.map((member) => (

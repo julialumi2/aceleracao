@@ -8,7 +8,7 @@ const ASAAS_PROXY_URL = import.meta.env.VITE_ASAAS_PROXY_URL || "http://localhos
 // verdade (via asaas-proxy). Devolve a senha temporária gerada pro
 // servidor — repasse pra pessoa por um canal seguro, ela troca depois em
 // Configurações → Trocar senha.
-export async function criarMembroEquipe({ nome, email }) {
+export async function criarMembroEquipe({ nome, email, cargo }) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -17,7 +17,7 @@ export async function criarMembroEquipe({ nome, email }) {
   const response = await fetch(`${ASAAS_PROXY_URL}/admin/membros`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-    body: JSON.stringify({ nome, email }),
+    body: JSON.stringify({ nome, email, cargo }),
   });
 
   const data = await response.json().catch(() => null);
@@ -27,4 +27,12 @@ export async function criarMembroEquipe({ nome, email }) {
   }
 
   return data;
+}
+
+// Lista real da equipe (tabela staff_members), pra não depender mais de
+// um array fixo no código que "esquecia" quem era criado depois.
+export async function fetchMembrosEquipe() {
+  const { data, error } = await supabase.from("staff_members").select("nome, email, cargo").order("created_at");
+  if (error) throw error;
+  return (data || []).map((m) => ({ name: m.nome, email: m.email, role: m.cargo || "Equipe" }));
 }

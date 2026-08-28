@@ -317,7 +317,7 @@ app.post("/admin/membros", async (req, res) => {
     return res.status(401).json({ error: "não autenticado" });
   }
 
-  const { nome, email } = req.body || {};
+  const { nome, email, cargo } = req.body || {};
   if (!nome || !email) {
     return res.status(400).json({ error: "nome e email são obrigatórios" });
   }
@@ -335,6 +335,15 @@ app.post("/admin/membros", async (req, res) => {
     const jaExiste = error.status === 422 || /already.*registered/i.test(error.message);
     console.error("Erro ao criar acesso de equipe:", error.message);
     return res.status(jaExiste ? 409 : 502).json({ error: jaExiste ? "já existe uma conta com esse e-mail" : error.message });
+  }
+
+  const { error: staffError } = await supabase
+    .from("staff_members")
+    .insert({ user_id: data.user.id, nome, email: data.user.email, cargo: cargo || "Equipe" });
+  if (staffError) {
+    // A conta já foi criada no Auth — não desfaz isso, só avisa que a
+    // lista da equipe não vai mostrar essa pessoa até alguém investigar.
+    console.error("Conta criada, mas falhou ao registrar em staff_members:", staffError.message);
   }
 
   return res.status(200).json({ email: data.user.email, senhaTemporaria });
