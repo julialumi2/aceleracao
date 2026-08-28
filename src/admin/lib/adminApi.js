@@ -344,6 +344,34 @@ export async function deleteLead(leadId) {
   if (error) throw error;
 }
 
+function normalizarTelefone(telefone) {
+  return (telefone || "").replace(/\D/g, "");
+}
+
+// Quando alguém responde o formulário de lead mais de uma vez, cada
+// resposta vira um registro separado em `leads`. Ao converter um deles
+// em cliente, os outros com o mesmo telefone ficariam esquecidos como
+// "lead" pra sempre — marca todos como convertidos também.
+async function marcarLeadsDuplicadosComoConvertidos(leadConvertido) {
+  const telefoneNormalizado = normalizarTelefone(leadConvertido.telefone);
+  if (!telefoneNormalizado) return;
+
+  const { data: outrosLeads, error } = await supabase
+    .from("leads")
+    .select("id, telefone")
+    .neq("id", leadConvertido.id)
+    .neq("status", "convertido");
+  if (error) throw error;
+
+  const duplicadosIds = (outrosLeads || [])
+    .filter((l) => normalizarTelefone(l.telefone) === telefoneNormalizado)
+    .map((l) => l.id);
+  if (duplicadosIds.length === 0) return;
+
+  const { error: updateError } = await supabase.from("leads").update({ status: "convertido" }).in("id", duplicadosIds);
+  if (updateError) throw updateError;
+}
+
 // Lead que não fechou em call — indicado pela equipe ou vindo de um
 // formulário de tráfego frio, cadastrado na mão até termos sincronia
 // automática com o formulário.
@@ -518,6 +546,7 @@ export async function convertLeadToClient(lead, cobranca) {
   if (checkError) throw checkError;
 
   await updateLeadStatus(lead.id, "convertido");
+  await marcarLeadsDuplicadosComoConvertidos(lead);
 
   let avisoAsaas = null;
   if (cobranca?.valor && cobranca?.dataInicio) {

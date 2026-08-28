@@ -140,7 +140,11 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
   const [excluindo, setExcluindo] = useState(false);
   const [convertendoLead, setConvertendoLead] = useState(null);
 
-  const filtered = leads.filter((lead) => lead.nome.toLowerCase().includes(query.toLowerCase()));
+  // Lead convertido já virou cliente — some da área de leads, o registro
+  // continua existindo (status "convertido"), só não aparece mais aqui.
+  const filtered = leads.filter(
+    (lead) => lead.status !== "convertido" && lead.nome.toLowerCase().includes(query.toLowerCase())
+  );
 
   async function salvarNovoLead() {
     if (!novo.nome.trim() || salvando) return;
