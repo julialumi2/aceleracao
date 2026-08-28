@@ -262,10 +262,11 @@ export default function AdminLayout({ session, onLogout }) {
     await deleteLead(lead.id).catch((err) => setLoadError(err.message));
   }
 
-  async function convertLead(lead) {
-    const novoCliente = await convertLeadToClient(lead);
+  async function convertLead(lead, cobranca) {
+    const { avisoAsaas, ...novoCliente } = await convertLeadToClient(lead, cobranca);
     setClients((prev) => [novoCliente, ...prev]);
     setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, status: "convertido" } : l)));
+    return { avisoAsaas };
   }
 
   async function handleCreateClient(fields) {

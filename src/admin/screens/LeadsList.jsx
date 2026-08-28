@@ -23,6 +23,87 @@ function textInputClass() {
   return "w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none";
 }
 
+function ConverterClienteModal({ lead, onClose, onConfirmar }) {
+  const [valor, setValor] = useState("");
+  const [dataInicio, setDataInicio] = useState(new Date().toISOString().slice(0, 10));
+  const [convertendo, setConvertendo] = useState(false);
+  const [erro, setErro] = useState("");
+  const [aviso, setAviso] = useState("");
+
+  const podeConfirmar = Number(valor) > 0 && dataInicio;
+
+  async function confirmar() {
+    if (!podeConfirmar || convertendo) return;
+    setErro("");
+    setAviso("");
+    setConvertendo(true);
+    try {
+      const resultado = await onConfirmar(lead, { valor: Number(valor), dataInicio });
+      if (resultado?.avisoAsaas) {
+        setAviso(resultado.avisoAsaas);
+      } else {
+        onClose();
+      }
+    } catch (err) {
+      setErro(err.message || "Não foi possível converter o lead. Tenta de novo.");
+    } finally {
+      setConvertendo(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-line bg-surface p-6">
+        <p className="font-display text-base tracking-wide text-ink">Converter {lead.nome} em cliente</p>
+        <p className="mt-1 text-xs text-ink-dim">
+          Isso já configura a cobrança recorrente mensal — dá pra ajustar depois na aba Cobrança do cliente.
+        </p>
+
+        <div className="mt-4">
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-ink-muted">Valor combinado (R$/mês)</span>
+            <input
+              type="number"
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              placeholder="2500"
+              className={textInputClass()}
+            />
+          </label>
+        </div>
+
+        <div className="mt-4">
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-ink-muted">Data que inicia a recorrência</span>
+            <input
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+              className={textInputClass()}
+            />
+          </label>
+        </div>
+
+        {erro && <p className="mt-3 text-sm text-flame">{erro}</p>}
+        {aviso && <p className="mt-3 text-sm text-emerald-bright">{aviso}</p>}
+
+        <div className="mt-5 flex items-center gap-3">
+          <button
+            onClick={confirmar}
+            disabled={!podeConfirmar || convertendo}
+            className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
+          >
+            {convertendo ? "Convertendo..." : aviso ? "Concluir" : "Converter"}
+          </button>
+          <button onClick={onClose} className="text-sm text-ink-muted hover:text-ink">
+            {aviso ? "Fechar" : "Cancelar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LeadRespostas({ lead }) {
   const itens = [
     ["Nome do negócio", lead.nomeNegocio],
@@ -57,6 +138,7 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
   const [expandedId, setExpandedId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [excluindo, setExcluindo] = useState(false);
+  const [convertendoLead, setConvertendoLead] = useState(null);
 
   const filtered = leads.filter((lead) => lead.nome.toLowerCase().includes(query.toLowerCase()));
 
@@ -267,7 +349,7 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
 
                   {lead.status !== "convertido" && (
                     <button
-                      onClick={() => onConvert(lead)}
+                      onClick={() => setConvertendoLead(lead)}
                       className="flex items-center gap-1.5 rounded-lg bg-emerald-brand px-3 py-1.5 text-xs font-medium text-base transition-colors hover:bg-emerald-bright"
                     >
                       <UserPlus size={13} />
@@ -311,6 +393,10 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
         )}
         {leads.length === 0 && <p className="text-sm text-ink-dim">Nenhum lead recebido ainda.</p>}
       </div>
+
+      {convertendoLead && (
+        <ConverterClienteModal lead={convertendoLead} onClose={() => setConvertendoLead(null)} onConfirmar={onConvert} />
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase.js";
+import { criarAssinaturaAsaas } from "./asaasApi.js";
 
 // ---------- Leitura ----------
 
@@ -468,7 +469,22 @@ export async function deleteTask(id) {
   if (error) throw error;
 }
 
-export async function convertLeadToClient(lead) {
+// cobranca opcional: { valor, dataInicio } — se informado, já grava a
+// cobrança recorrente mensal e tenta criar a assinatura de verdade no
+// Asaas. Se o Asaas falhar (não configurado, sem CNPJ ainda, etc.), a
+// conversão do lead continua valendo — só devolve um aviso pra equipe
+// terminar manualmente na aba Cobrança.
+export async function convertLeadToClient(lead, cobranca) {
+  const dadosCobranca = cobranca?.valor && cobranca?.dataInicio
+    ? {
+        valor_recorrente: cobranca.valor,
+        dia_vencimento_recorrente: new Date(`${cobranca.dataInicio}T00:00:00`).getDate(),
+        proxima_cobranca_em: cobranca.dataInicio,
+        cobranca_configurada_em: new Date().toISOString(),
+        periodicidade: "mensal",
+      }
+    : {};
+
   const { data: restaurant, error } = await supabase
     .from("restaurants")
     .insert({
@@ -478,6 +494,7 @@ export async function convertLeadToClient(lead) {
       telefone: lead.telefone,
       email: lead.email,
       saude: "laranja",
+      ...dadosCobranca,
     })
     .select()
     .single();
@@ -499,11 +516,35 @@ export async function convertLeadToClient(lead) {
 
   await updateLeadStatus(lead.id, "convertido");
 
-  return mapRestaurantRow({
+  let avisoAsaas = null;
+  if (cobranca?.valor && cobranca?.dataInicio) {
+    try {
+      const asaas = await criarAssinaturaAsaas({
+        nome: lead.nome,
+        email: lead.email,
+        telefone: lead.telefone,
+        valor: cobranca.valor,
+        proximaCobrancaEm: cobranca.dataInicio,
+      });
+      const { error: asaasUpdateError } = await supabase
+        .from("restaurants")
+        .update({ asaas_customer_id: asaas.asaasCustomerId, asaas_subscription_id: asaas.asaasSubscriptionId })
+        .eq("id", restaurant.id);
+      if (asaasUpdateError) throw asaasUpdateError;
+      restaurant.asaas_customer_id = asaas.asaasCustomerId;
+      restaurant.asaas_subscription_id = asaas.asaasSubscriptionId;
+    } catch (err) {
+      avisoAsaas = `Cliente convertido, mas a assinatura no Asaas não foi criada automaticamente (${err.message}). Complete na aba Cobrança do cliente — geralmente falta o CNPJ.`;
+    }
+  }
+
+  const cliente = mapRestaurantRow({
     ...restaurant,
     contracts: contract,
     contract_events: [],
     invoices: [],
     intensity_checks: [check],
   });
+
+  return { ...cliente, avisoAsaas };
 }
