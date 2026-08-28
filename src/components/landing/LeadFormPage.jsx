@@ -8,13 +8,6 @@ const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_COMERCIAL}?text=${encodeURICompo
   "Olá! Vim pelo site e quero saber mais sobre a Aceleração de Delivery."
 )}`;
 
-const FATURAMENTO_OPTIONS = [
-  "Até R$ 10 mil",
-  "R$ 10 mil a R$ 30 mil",
-  "R$ 30 mil a R$ 60 mil",
-  "Acima de R$ 60 mil",
-];
-
 const GARGALO_OPTIONS = [
   "Sinto que poderia escalar mais",
   "Cardápio pouco otimizado",
@@ -189,11 +182,12 @@ export default function LeadFormPage() {
       categoria: "Seu negócio",
       podeContinuar: true,
       campo: (
-        <Select
+        <Field
           label="Faturamento mensal atual"
+          helper="Valor aproximado em R$"
           value={campos.faturamentoMensal}
           onChange={(v) => set("faturamentoMensal", v)}
-          options={FATURAMENTO_OPTIONS}
+          placeholder="Ex: R$ 25.000"
         />
       ),
     },
