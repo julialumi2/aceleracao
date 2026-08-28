@@ -110,7 +110,7 @@ function TextField({ label, value, onChange, type = "text" }) {
   );
 }
 
-const CAMPOS_DADOS = ["empresa", "nome", "cnpj", "telefone", "email", "cep", "cardapioUrl"];
+const CAMPOS_DADOS = ["empresa", "nome", "cnpj", "telefone", "email", "endereco", "cidade", "cep", "cardapioUrl"];
 
 function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReativarCliente }) {
   const [confirmArquivar, setConfirmArquivar] = useState(false);
@@ -181,6 +181,8 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
         <TextField label="CNPJ" value={form.cnpj} onChange={(v) => editarCampo("cnpj", v)} />
         <TextField label="Telefone (WhatsApp)" value={form.telefone} onChange={(v) => editarCampo("telefone", v)} />
         <TextField label="E-mail" value={form.email} onChange={(v) => editarCampo("email", v)} />
+        <TextField label="Endereço" value={form.endereco} onChange={(v) => editarCampo("endereco", v)} />
+        <TextField label="Cidade" value={form.cidade} onChange={(v) => editarCampo("cidade", v)} />
         <TextField label="CEP" value={form.cep} onChange={(v) => editarCampo("cep", v)} />
         <TextField
           label="Link do cardápio"
