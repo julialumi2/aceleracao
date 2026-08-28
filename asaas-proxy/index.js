@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { gerarContratoDocx, gerarContratoHtml } from "./lib/contrato.js";
 import { htmlParaPdf } from "./lib/pdf.js";
 import { INSTAGRAM_CONFIGURADO, montarUrlAutorizacao, processarCallback, buscarMetricas } from "./lib/instagram.js";
+import { acharClienteExistente, montarAtualizacaoMescla } from "./lib/onboarding.js";
 
 const PORT = process.env.PORT || 3000;
 const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN;
@@ -580,6 +581,83 @@ app.get("/instagram/metricas", async (req, res) => {
   } catch (err) {
     console.error("Erro ao buscar métricas do Instagram:", err.message);
     return res.status(502).json({ error: err.message });
+  }
+});
+
+// Formulário público de cadastro (cadastro.aceleracao...). Antes só
+// inseria direto via Supabase anon; agora passa por aqui pra poder
+// checar se já existe um cliente com o mesmo telefone/empresa (ex: um
+// lead que a equipe já converteu) e mesclar em vez de duplicar.
+app.post("/onboarding/cadastro-publico", async (req, res) => {
+  const {
+    nome,
+    empresa,
+    telefone,
+    email,
+    cnpj,
+    endereco,
+    cidade,
+    cep,
+    banco,
+    agencia,
+    conta,
+    diasFuncionamento,
+    horarioAbertura,
+    horarioFechamento,
+    horarioAberturaFds,
+    horarioFechamentoFds,
+  } = req.body || {};
+
+  if (!nome) {
+    return res.status(400).json({ error: "nome é obrigatório" });
+  }
+
+  const dadosFormulario = {
+    nome,
+    empresa: empresa || null,
+    telefone: telefone || null,
+    email: email || null,
+    cnpj: cnpj || null,
+    endereco: endereco || null,
+    cidade: cidade || null,
+    cep: cep || null,
+    banco: banco || null,
+    agencia: agencia || null,
+    conta: conta || null,
+    dias_funcionamento: diasFuncionamento && diasFuncionamento.length ? diasFuncionamento : null,
+    horario_abertura: horarioAbertura || null,
+    horario_fechamento: horarioFechamento || null,
+    horario_abertura_fds: horarioAberturaFds || null,
+    horario_fechamento_fds: horarioFechamentoFds || null,
+  };
+
+  try {
+    const existente = await acharClienteExistente(supabase, { telefone, empresa });
+
+    if (existente) {
+      const atualizacao = montarAtualizacaoMescla(existente, dadosFormulario);
+      if (Object.keys(atualizacao).length > 0) {
+        const { error } = await supabase.from("restaurants").update(atualizacao).eq("id", existente.id);
+        if (error) throw error;
+      }
+      await supabase.from("contract_events").insert({
+        restaurant_id: existente.id,
+        evento: "Dados de cadastro público mesclados automaticamente com este cliente (mesmo telefone/empresa).",
+      });
+      return res.status(200).json({ merged: true, restaurantId: existente.id });
+    }
+
+    const { data: novo, error } = await supabase
+      .from("restaurants")
+      .insert({ ...dadosFormulario, saude: "laranja" })
+      .select("id")
+      .single();
+    if (error) throw error;
+
+    return res.status(200).json({ merged: false, restaurantId: novo.id });
+  } catch (err) {
+    console.error("Erro ao processar cadastro público:", err.message);
+    return res.status(500).json({ error: "não foi possível salvar o cadastro" });
   }
 });
 
