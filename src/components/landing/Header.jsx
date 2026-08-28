@@ -1,58 +1,27 @@
-import { Flame, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Flame, ArrowUpRight } from "lucide-react";
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
-
-  const links = [
-    { label: "Recursos", href: "#recursos" },
-    { label: "Como funciona", href: "#como-funciona" },
-  ];
-
   return (
     <header className="sticky top-0 z-40 border-b border-line/60 bg-base/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <a href="#topo" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-brand/15 text-emerald-bright">
             <Flame size={18} strokeWidth={2} />
           </span>
-          <span className="font-display text-lg tracking-wide text-ink">
-            Aceleração Delivery
+          <span className="font-display text-base tracking-wide text-ink sm:text-lg">
+            <span className="hidden sm:inline">Aceleração </span>de Delivery
           </span>
         </a>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="text-sm text-ink-muted transition-colors hover:text-ink"
-            >
-              {l.label}
-            </a>
-          ))}
-        </nav>
-
-        <button
-          className="text-ink md:hidden"
-          onClick={() => setOpen((o) => !o)}
-          aria-label="Abrir menu"
+        <a
+          href="/comecar"
+          className="group inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-brand px-4 py-2.5 text-xs font-semibold text-base transition-transform hover:-translate-y-0.5 hover:bg-emerald-bright sm:gap-2 sm:px-5 sm:text-sm"
         >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+          <span className="hidden sm:inline">Quero acelerar meu delivery</span>
+          <span className="sm:hidden">Acelerar delivery</span>
+          <ArrowUpRight size={15} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </a>
       </div>
-
-      {open && (
-        <div className="border-t border-line/60 bg-base px-6 pb-6 md:hidden">
-          <nav className="flex flex-col gap-4 pt-4">
-            {links.map((l) => (
-              <a key={l.href} href={l.href} className="text-sm text-ink-muted" onClick={() => setOpen(false)}>
-                {l.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }
