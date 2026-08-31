@@ -471,9 +471,11 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
     // — atalho ainda disponível pra quem quer pular a revisão.
     let fileBuffer;
     let filename;
+    let mimeType;
     if (html) {
       fileBuffer = await htmlParaPdf(html);
       filename = "contrato-mentoria.pdf";
+      mimeType = "application/pdf";
     } else {
       fileBuffer = gerarContratoDocx({
         nome,
@@ -486,7 +488,10 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
         dataAssinatura: dataAssinatura || new Date().toISOString().slice(0, 10),
       });
       filename = "contrato-mentoria.docx";
+      mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     }
+    // O Clicksign v3 exige um Data URI completo, não só o base64 puro.
+    const contentBase64 = `data:${mimeType};base64,${fileBuffer.toString("base64")}`;
 
     const envelope = await clicksignFetch("POST", "/envelopes", {
       data: { type: "envelopes", attributes: { name: `Contrato — ${nome}` } },
@@ -496,7 +501,7 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
     const documento = await clicksignFetch("POST", `/envelopes/${envelopeId}/documents`, {
       data: {
         type: "documents",
-        attributes: { filename, content_base64: fileBuffer.toString("base64") },
+        attributes: { filename, content_base64: contentBase64 },
       },
     });
     const documentoId = documento.data.id;
