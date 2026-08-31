@@ -539,7 +539,7 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
       data: { type: "notifications", attributes: {} },
     });
 
-    return res.status(200).json({ envelopeId });
+    return res.status(200).json({ envelopeId, documentoId });
   } catch (err) {
     console.error("Erro ao gerar/enviar contrato no Clicksign:", err.message);
     return res.status(502).json({ error: err.message });
@@ -547,25 +547,15 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
 });
 
 // Avisa quando o cliente assina o contrato, pra não depender de alguém
-// da equipe ir checar no Clicksign e marcar "assinado" na mão. A
-// documentação do Clicksign descreve a assinatura HMAC como o SHA256 da
-// soma do corpo da requisição com o secret — ainda em fase de
-// confirmação contra um evento real, por isso testamos as duas leituras
-// possíveis (concatenação simples e HMAC de verdade) e logamos qual bateu.
+// da equipe ir checar no Clicksign e marcar "assinado" na mão. Formato
+// da assinatura confirmado testando contra um evento real: HMAC-SHA256
+// de verdade (chave = secret, mensagem = corpo cru da requisição).
 function validarAssinaturaClicksign(rawBody, cabecalhoRecebido) {
   if (!CLICKSIGN_WEBHOOK_SECRET) return "sem_secret_configurado";
   if (!cabecalhoRecebido) return null;
 
-  const concatenado = crypto
-    .createHash("sha256")
-    .update(Buffer.concat([rawBody, Buffer.from(CLICKSIGN_WEBHOOK_SECRET)]))
-    .digest("hex");
-  if (cabecalhoRecebido === `sha256=${concatenado}`) return "concatenado";
-
-  const hmacReal = crypto.createHmac("sha256", CLICKSIGN_WEBHOOK_SECRET).update(rawBody).digest("hex");
-  if (cabecalhoRecebido === `sha256=${hmacReal}`) return "hmac_real";
-
-  return null;
+  const hmac = crypto.createHmac("sha256", CLICKSIGN_WEBHOOK_SECRET).update(rawBody).digest("hex");
+  return cabecalhoRecebido === `sha256=${hmac}` ? "hmac_real" : null;
 }
 
 app.post("/webhooks/clicksign", async (req, res) => {
@@ -584,32 +574,29 @@ app.post("/webhooks/clicksign", async (req, res) => {
     return res.status(200).json({ ignored: true });
   }
 
-  const envelopeId =
-    req.body?.data?.attributes?.envelope?.id ||
-    req.body?.data?.relationships?.envelope?.data?.id ||
-    req.body?.envelope?.id ||
-    req.body?.envelope?.data?.id ||
-    req.body?.document?.envelope_id ||
-    null;
+  // O payload real (confirmado testando contra um evento de verdade)
+  // não traz o id do envelope em lugar nenhum — só a chave do
+  // documento, em document.key. É por ela que correlacionamos.
+  const documentoId = req.body?.document?.key || null;
 
-  if (!envelopeId) {
-    console.warn("Webhook Clicksign: não encontrei o envelope no payload — ver log completo acima.");
-    return res.status(200).json({ ignored: true, reason: "envelope não identificado" });
+  if (!documentoId) {
+    console.warn("Webhook Clicksign: não encontrei document.key no payload — ver log completo acima.");
+    return res.status(200).json({ ignored: true, reason: "documento não identificado" });
   }
 
   const { data: contrato, error: findError } = await supabase
     .from("contracts")
     .select("restaurant_id, status")
-    .eq("clicksign_envelope_id", envelopeId)
+    .eq("clicksign_document_id", documentoId)
     .maybeSingle();
 
   if (findError) {
-    console.error("Erro ao buscar contrato pelo envelope do Clicksign:", findError.message);
+    console.error("Erro ao buscar contrato pelo documento do Clicksign:", findError.message);
     return res.status(500).json({ error: "erro ao buscar contrato" });
   }
   if (!contrato) {
-    console.warn(`Webhook Clicksign: nenhum contrato vinculado ao envelope ${envelopeId}`);
-    return res.status(200).json({ ignored: true, reason: "envelope não vinculado a nenhum contrato" });
+    console.warn(`Webhook Clicksign: nenhum contrato vinculado ao documento ${documentoId}`);
+    return res.status(200).json({ ignored: true, reason: "documento não vinculado a nenhum contrato" });
   }
   if (contrato.status === "assinado") {
     // O Clicksign pode reenviar o mesmo evento — idempotente, não duplica o histórico.

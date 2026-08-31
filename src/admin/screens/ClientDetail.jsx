@@ -365,8 +365,8 @@ function ContratoPreviewModal({ dadosContrato, onClose, onEnviado }) {
     setErro("");
     setEnviando(true);
     try {
-      const { envelopeId } = await gerarContratoClicksign({ ...dadosContrato, html });
-      await onEnviado(envelopeId);
+      const { envelopeId, documentoId } = await gerarContratoClicksign({ ...dadosContrato, html });
+      await onEnviado(envelopeId, documentoId);
     } catch (err) {
       setErro(err.message || "Não foi possível enviar o contrato. Tenta de novo.");
     } finally {
@@ -499,8 +499,8 @@ function GerarContratoButton({ client, onContratoGerado }) {
         <ContratoPreviewModal
           dadosContrato={dadosContrato}
           onClose={() => setMostrarModal(false)}
-          onEnviado={async (envelopeId) => {
-            await onContratoGerado(client, envelopeId);
+          onEnviado={async (envelopeId, documentoId) => {
+            await onContratoGerado(client, envelopeId, documentoId);
             setMostrarModal(false);
           }}
         />

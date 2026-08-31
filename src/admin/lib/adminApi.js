@@ -246,12 +246,17 @@ export async function setContractDocumentUrl(restaurantId, url) {
   if (error) throw error;
 }
 
-// Grava o envelope do Clicksign depois que o contrato é gerado e enviado
-// automaticamente (ver clicksignApi.js/gerarContratoClicksign).
-export async function setContractEnvelope(restaurantId, envelopeId) {
+// Grava o envelope e o documento do Clicksign depois que o contrato é
+// gerado e enviado automaticamente (ver
+// clicksignApi.js/gerarContratoClicksign). O documento é o que o
+// webhook de assinatura usa pra achar esse cliente de volta.
+export async function setContractEnvelope(restaurantId, envelopeId, documentoId) {
   const { error } = await supabase
     .from("contracts")
-    .upsert({ restaurant_id: restaurantId, clicksign_envelope_id: envelopeId }, { onConflict: "restaurant_id" });
+    .upsert(
+      { restaurant_id: restaurantId, clicksign_envelope_id: envelopeId, clicksign_document_id: documentoId },
+      { onConflict: "restaurant_id" }
+    );
   if (error) throw error;
 
   const { data, error: eventError } = await supabase

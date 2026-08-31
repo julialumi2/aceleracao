@@ -192,8 +192,8 @@ export default function AdminLayout({ session, onLogout }) {
   // Chamado depois que o contrato já foi gerado e enviado pro Clicksign
   // com sucesso (a chamada em si acontece em ContratoTab, que fala
   // direto com o asaas-proxy) — só registra o envelope e o evento aqui.
-  async function handleContratoGerado(client, envelopeId) {
-    const evento = await setContractEnvelope(client.id, envelopeId);
+  async function handleContratoGerado(client, envelopeId, documentoId) {
+    const evento = await setContractEnvelope(client.id, envelopeId, documentoId);
     patchClientLocal(client.id, {
       contrato: { ...client.contrato, historico: [...client.contrato.historico, evento] },
     });
