@@ -427,6 +427,14 @@ export async function restoreClient(id) {
   if (error) throw error;
 }
 
+// Apagar de vez — diferente de arquivar, sem volta. Só faz sentido pra
+// registro de teste/duplicado; contratos, boletos e afins do cliente
+// somem junto (cascade), tarefas ficam órfãs mas continuam existindo.
+export async function deleteClient(id) {
+  const { error } = await supabase.from("restaurants").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ---------- Cancelamento (diferente de arquivar) ----------
 // Cliente cancelou a mentoria mas pode ainda dever boleto — continua
 // aparecendo em Cobranças, só some das métricas de "cliente ativo".

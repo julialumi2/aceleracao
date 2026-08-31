@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, ChevronRight, UserPlus, Archive, ArchiveRestore } from "lucide-react";
+import { Search, ChevronRight, UserPlus, Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import StatusBadge, { NextBillingBadge } from "../components/StatusBadge.jsx";
 import { currentInvoice, billingSummary, formatDateAbrev } from "../lib/invoices.js";
 
@@ -23,13 +23,35 @@ function formatArchivedDate(iso) {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
-export default function ClientsList({ clients, onOpenClient, onCreateClient, archivedClients, loadingArchived, onLoadArchived, onRestoreClient }) {
+export default function ClientsList({
+  clients,
+  onOpenClient,
+  onCreateClient,
+  archivedClients,
+  loadingArchived,
+  onLoadArchived,
+  onRestoreClient,
+  onDeleteClient,
+}) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ contrato: "todos", boleto: "todos", intensidade: "todos" });
   const [mostrarForm, setMostrarForm] = useState(false);
   const [novo, setNovo] = useState({ empresa: "", nome: "", cnpj: "", telefone: "", email: "", cep: "" });
   const [salvando, setSalvando] = useState(false);
   const [verArquivados, setVerArquivados] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [excluindo, setExcluindo] = useState(false);
+
+  async function confirmarExclusao(client) {
+    if (excluindo) return;
+    setExcluindo(true);
+    try {
+      await onDeleteClient(client);
+      setConfirmDeleteId(null);
+    } finally {
+      setExcluindo(false);
+    }
+  }
 
   const filtered = clients.filter((c) => {
     const boleto = currentInvoice(c.boletos);
@@ -125,13 +147,37 @@ export default function ClientsList({ clients, onOpenClient, onCreateClient, arc
                   <p className="text-xs text-ink-dim">{c.cnpj || "CNPJ não informado"}</p>
                 </div>
                 <p className="text-xs text-ink-dim">{formatArchivedDate(c.arquivadoEm)}</p>
-                <button
-                  onClick={() => onRestoreClient(c)}
-                  className="flex items-center gap-1.5 justify-self-start rounded-full border border-emerald-brand/40 px-3 py-1.5 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10 sm:justify-self-end"
-                >
-                  <ArchiveRestore size={13} />
-                  Restaurar
-                </button>
+                <div className="flex items-center gap-2 justify-self-start sm:justify-self-end">
+                  <button
+                    onClick={() => onRestoreClient(c)}
+                    className="flex items-center gap-1.5 rounded-full border border-emerald-brand/40 px-3 py-1.5 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
+                  >
+                    <ArchiveRestore size={13} />
+                    Restaurar
+                  </button>
+                  {confirmDeleteId === c.id ? (
+                    <>
+                      <button
+                        onClick={() => confirmarExclusao(c)}
+                        disabled={excluindo}
+                        className="rounded-full bg-flame/15 px-3 py-1.5 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
+                      >
+                        {excluindo ? "Excluindo..." : "Confirmar"}
+                      </button>
+                      <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-ink-muted hover:text-ink">
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteId(c.id)}
+                      className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
+                    >
+                      <Trash2 size={13} />
+                      Excluir
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
 

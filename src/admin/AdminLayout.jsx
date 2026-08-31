@@ -38,6 +38,7 @@ import {
   fetchArchivedClients,
   archiveClient,
   restoreClient,
+  deleteClient,
   setCancelamento,
   reativarCliente,
 } from "./lib/adminApi.js";
@@ -352,6 +353,11 @@ export default function AdminLayout({ session, onLogout }) {
     setClients((prev) => [{ ...client, arquivadoEm: null }, ...prev]);
   }
 
+  async function handleDeleteClient(client) {
+    await deleteClient(client.id);
+    setArchivedClients((prev) => prev.filter((c) => c.id !== client.id));
+  }
+
   const selectedClient = clients.find((c) => c.id === selectedClientId) || null;
 
   const clientHandlers = {
@@ -418,6 +424,7 @@ export default function AdminLayout({ session, onLogout }) {
                     loadingArchived={loadingArchived}
                     onLoadArchived={loadArchivedClients}
                     onRestoreClient={handleRestoreClient}
+                    onDeleteClient={handleDeleteClient}
                   />
                 ))}
 
