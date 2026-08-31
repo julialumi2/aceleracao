@@ -33,6 +33,11 @@ const ASAAS_BILLING_CONFIGURADO = Boolean(ASAAS_API_KEY);
 const CLICKSIGN_API_TOKEN = process.env.CLICKSIGN_API_TOKEN;
 const CLICKSIGN_API_URL = process.env.CLICKSIGN_API_URL || "https://sandbox.clicksign.com/api/v3";
 const CLICKSIGN_CONFIGURADO = Boolean(CLICKSIGN_API_TOKEN);
+// Secret devolvido na criação do webhook (POST /webhooks) — confere a
+// assinatura HMAC de quem chama /webhooks/clicksign. Sem essa variável
+// configurada, o endpoint aceita sem validar (só enquanto ainda não
+// registramos o webhook e não temos o secret em mãos).
+const CLICKSIGN_WEBHOOK_SECRET = process.env.CLICKSIGN_WEBHOOK_SECRET;
 
 // Conexão do Instagram de cada cliente (OAuth via Facebook) — mesma
 // lógica de opcional. FRONTEND_URL é pra onde mandamos o cliente de
@@ -70,7 +75,10 @@ const EVENT_TO_STATUS = {
 };
 
 const app = express();
-app.use(express.json());
+// Guarda o corpo cru da requisição — necessário pra conferir a
+// assinatura HMAC do webhook do Clicksign, que é calculada sobre os
+// bytes originais, não sobre o JSON já reformatado pelo Express.
+app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
 app.use(cors);
 
 // Confirma que quem está chamando é um funcionário logado no painel —
@@ -531,6 +539,90 @@ app.post("/clicksign/gerar-contrato", async (req, res) => {
     console.error("Erro ao gerar/enviar contrato no Clicksign:", err.message);
     return res.status(502).json({ error: err.message });
   }
+});
+
+// Avisa quando o cliente assina o contrato, pra não depender de alguém
+// da equipe ir checar no Clicksign e marcar "assinado" na mão. A
+// documentação do Clicksign descreve a assinatura HMAC como o SHA256 da
+// soma do corpo da requisição com o secret — ainda em fase de
+// confirmação contra um evento real, por isso testamos as duas leituras
+// possíveis (concatenação simples e HMAC de verdade) e logamos qual bateu.
+function validarAssinaturaClicksign(rawBody, cabecalhoRecebido) {
+  if (!CLICKSIGN_WEBHOOK_SECRET) return "sem_secret_configurado";
+  if (!cabecalhoRecebido) return null;
+
+  const concatenado = crypto
+    .createHash("sha256")
+    .update(Buffer.concat([rawBody, Buffer.from(CLICKSIGN_WEBHOOK_SECRET)]))
+    .digest("hex");
+  if (cabecalhoRecebido === `sha256=${concatenado}`) return "concatenado";
+
+  const hmacReal = crypto.createHmac("sha256", CLICKSIGN_WEBHOOK_SECRET).update(rawBody).digest("hex");
+  if (cabecalhoRecebido === `sha256=${hmacReal}`) return "hmac_real";
+
+  return null;
+}
+
+app.post("/webhooks/clicksign", async (req, res) => {
+  const cabecalhoRecebido = req.header("content-hmac");
+  const resultadoAssinatura = validarAssinaturaClicksign(req.rawBody || Buffer.from(""), cabecalhoRecebido);
+  console.log(`Webhook Clicksign recebido: event=${req.body?.event?.name} assinatura=${resultadoAssinatura}`);
+  console.log("Payload completo do webhook Clicksign:", JSON.stringify(req.body));
+
+  if (!resultadoAssinatura) {
+    console.warn("Webhook Clicksign rejeitado: assinatura HMAC não confere");
+    return res.status(401).json({ error: "assinatura inválida" });
+  }
+
+  const nomeEvento = req.body?.event?.name;
+  if (nomeEvento !== "close" && nomeEvento !== "document_closed") {
+    return res.status(200).json({ ignored: true });
+  }
+
+  const envelopeId =
+    req.body?.data?.attributes?.envelope?.id ||
+    req.body?.data?.relationships?.envelope?.data?.id ||
+    req.body?.envelope?.id ||
+    req.body?.envelope?.data?.id ||
+    req.body?.document?.envelope_id ||
+    null;
+
+  if (!envelopeId) {
+    console.warn("Webhook Clicksign: não encontrei o envelope no payload — ver log completo acima.");
+    return res.status(200).json({ ignored: true, reason: "envelope não identificado" });
+  }
+
+  const { data: contrato, error: findError } = await supabase
+    .from("contracts")
+    .select("restaurant_id, status")
+    .eq("clicksign_envelope_id", envelopeId)
+    .maybeSingle();
+
+  if (findError) {
+    console.error("Erro ao buscar contrato pelo envelope do Clicksign:", findError.message);
+    return res.status(500).json({ error: "erro ao buscar contrato" });
+  }
+  if (!contrato) {
+    console.warn(`Webhook Clicksign: nenhum contrato vinculado ao envelope ${envelopeId}`);
+    return res.status(200).json({ ignored: true, reason: "envelope não vinculado a nenhum contrato" });
+  }
+  if (contrato.status === "assinado") {
+    // O Clicksign pode reenviar o mesmo evento — idempotente, não duplica o histórico.
+    return res.status(200).json({ ignored: true, reason: "já estava assinado" });
+  }
+
+  const { error: updateError } = await supabase
+    .from("contracts")
+    .update({ status: "assinado", signed_at: new Date().toISOString() })
+    .eq("restaurant_id", contrato.restaurant_id);
+  if (updateError) {
+    console.error("Erro ao marcar contrato como assinado:", updateError.message);
+    return res.status(500).json({ error: "erro ao atualizar contrato" });
+  }
+
+  await supabase.from("contract_events").insert({ restaurant_id: contrato.restaurant_id, evento: "Contrato assinado pelo cliente" });
+
+  return res.status(200).json({ ok: true });
 });
 
 // Página pública que o cliente abre (link que a equipe manda por
