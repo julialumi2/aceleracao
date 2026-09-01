@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MessageSquareText, Users, Plug, Check, KeyRound, Eye, EyeOff, UserPlus, X, Copy } from "lucide-react";
+import { MessageSquareText, Users, Plug, Check, KeyRound, Eye, EyeOff, UserPlus, X, Copy, Workflow, ExternalLink } from "lucide-react";
 import { signInWithEmail, updatePassword } from "../../lib/supabase.js";
 import { criarMembroEquipe, fetchMembrosEquipe } from "../lib/teamApi.js";
 
@@ -9,11 +9,13 @@ const DEFAULT_TEMPLATES = {
 };
 
 const INTEGRATIONS = [
-  { name: "Asaas", description: "Emissão e status de boletos", connected: true },
-  { name: "Clicksign", description: "Assinatura de contratos (controle manual, sem integração via API)", connected: false },
+  { name: "Asaas", description: "Cria cliente + assinatura recorrente e recebe status de boleto por webhook", connected: true },
+  { name: "Clicksign", description: "Gera e envia o contrato, recebe confirmação de assinatura por webhook", connected: true },
   { name: "WhatsApp (Meta Cloud API)", description: "Envio automático de alertas", connected: false },
   { name: "Instagram Graph API", description: "Verificação automática de intensidade", connected: false },
 ];
+
+const FLUXO_SISTEMA_URL = "https://claude.ai/code/artifact/18da37e0-8039-43b2-9407-784e4ec64aac";
 
 export default function Settings({ session }) {
   const [templates, setTemplates] = useState(DEFAULT_TEMPLATES);
@@ -30,6 +32,26 @@ export default function Settings({ session }) {
         <h1 className="font-display text-2xl tracking-wide text-ink">Configurações</h1>
         <p className="mt-1 text-sm text-ink-muted">Modelos de mensagem, equipe e integrações.</p>
       </div>
+
+      <section className="rounded-2xl border border-line bg-surface p-6">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <Workflow size={15} className="text-emerald-bright" />
+          Como o sistema funciona
+        </h2>
+        <p className="mt-1 text-xs text-ink-dim">
+          Fluxo completo, do formulário público até o boleto pago — inclui os diagramas de como o Clicksign e o Asaas
+          avisam o painel quando o cliente assina ou paga.
+        </p>
+        <a
+          href={FLUXO_SISTEMA_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright"
+        >
+          Ver fluxo do sistema
+          <ExternalLink size={14} />
+        </a>
+      </section>
 
       <PasswordSection session={session} />
 
