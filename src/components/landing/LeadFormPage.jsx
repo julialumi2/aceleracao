@@ -3,6 +3,7 @@ import { Flame, ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
 import { submitPublicLead } from "../../lib/publicLeads.js";
 import { registrarPageView, registrarLead } from "../../lib/metaPixel.js";
 import StepShell from "../shared/StepShell.jsx";
+import AvisoCookies from "./AvisoCookies.jsx";
 
 const WHATSAPP_COMERCIAL = "5515991933737";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_COMERCIAL}?text=${encodeURIComponent(
@@ -324,6 +325,7 @@ export default function LeadFormPage() {
           </>
         )}
       </div>
+      <AvisoCookies />
     </div>
   );
 }

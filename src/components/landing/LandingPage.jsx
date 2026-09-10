@@ -14,6 +14,7 @@ import ConversaSeria from "./ConversaSeria.jsx";
 import SobreAutor from "./SobreAutor.jsx";
 import Faq from "./Faq.jsx";
 import Footer from "./Footer.jsx";
+import AvisoCookies from "./AvisoCookies.jsx";
 
 export default function LandingPage() {
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function LandingPage() {
         <Faq />
       </main>
       <Footer />
+      <AvisoCookies />
     </div>
   );
 }
