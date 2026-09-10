@@ -28,8 +28,14 @@ export default function AvisoCookies() {
   }
 
   return (
-    <div role="region" aria-label="Aviso de cookies" className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4">
-      <div className="mx-auto flex max-w-3xl flex-col gap-2.5 rounded-2xl border border-line bg-surface/95 px-4 py-3 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center sm:gap-5 sm:px-5 sm:py-4">
+    <div
+      role="region"
+      aria-label="Aviso de cookies"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4"
+    >
+      {/* Só o cartão segura o clique — a faixa em volta dele é transparente e
+          cobre a largura toda da tela, então não pode bloquear o que está atrás. */}
+      <div className="pointer-events-auto mx-auto flex max-w-3xl flex-col gap-2.5 rounded-2xl border border-line bg-surface/95 px-4 py-3 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center sm:gap-5 sm:px-5 sm:py-4">
         <p className="flex-1 text-[13px] leading-snug text-ink-muted sm:text-sm">
           Usamos cookies para medir o resultado dos nossos anúncios. Saiba mais na{" "}
           <a href="/privacidade" className="text-emerald-bright hover:underline">
