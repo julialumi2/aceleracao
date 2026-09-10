@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { registrarPageView } from "../../lib/metaPixel.js";
 import Header from "./Header.jsx";
 import Hero from "./Hero.jsx";
 import SocialProof from "./SocialProof.jsx";
@@ -14,6 +16,10 @@ import Faq from "./Faq.jsx";
 import Footer from "./Footer.jsx";
 
 export default function LandingPage() {
+  useEffect(() => {
+    registrarPageView();
+  }, []);
+
   return (
     <div className="min-h-screen bg-base text-ink">
       <Header />

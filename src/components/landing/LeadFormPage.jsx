@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Flame, ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
 import { submitPublicLead } from "../../lib/publicLeads.js";
+import { registrarPageView, registrarLead } from "../../lib/metaPixel.js";
 import StepShell from "../shared/StepShell.jsx";
 
 const WHATSAPP_COMERCIAL = "5515991933737";
@@ -109,6 +110,10 @@ export default function LeadFormPage() {
   const [erro, setErro] = useState("");
   const [enviado, setEnviado] = useState(false);
 
+  useEffect(() => {
+    registrarPageView();
+  }, []);
+
   function set(campo, valor) {
     setCampos((c) => ({ ...c, [campo]: valor }));
   }
@@ -119,6 +124,7 @@ export default function LeadFormPage() {
     try {
       const origemParam = new URLSearchParams(window.location.search).get("origem");
       await submitPublicLead({ ...campos, origem: origemParam || "bio_instagram" });
+      registrarLead({ telefone: campos.telefone, nome: campos.nome });
       setEnviado(true);
     } catch (err) {
       setErro("Não foi possível enviar agora. Tenta de novo em instantes.");

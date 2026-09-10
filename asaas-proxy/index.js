@@ -5,6 +5,7 @@ import { gerarContratoDocx, gerarContratoHtml } from "./lib/contrato.js";
 import { htmlParaPdf } from "./lib/pdf.js";
 import { INSTAGRAM_CONFIGURADO, montarUrlAutorizacao, processarCallback, buscarMetricas } from "./lib/instagram.js";
 import { acharClienteExistente, montarAtualizacaoMescla } from "./lib/onboarding.js";
+import { montarUserData } from "./lib/meta.js";
 
 const PORT = process.env.PORT || 3000;
 const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN;
@@ -43,6 +44,16 @@ const CLICKSIGN_WEBHOOK_SECRET = process.env.CLICKSIGN_WEBHOOK_SECRET;
 // lógica de opcional. FRONTEND_URL é pra onde mandamos o cliente de
 // volta depois do login com o Facebook.
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://aceleracao.artesanosburger.com.br";
+
+// API de Conversões da Meta (Pixel server-side) — mesma lógica de
+// opcional: sem o token, /meta/evento responde 503 e o resto segue de pé.
+// META_TEST_EVENT_CODE só enquanto valida em "Testar eventos" no
+// Gerenciador de Eventos; remova a variável depois.
+const META_PIXEL_ID = process.env.META_PIXEL_ID || "1488572952942368";
+const META_CAPI_ACCESS_TOKEN = process.env.META_CAPI_ACCESS_TOKEN;
+const META_GRAPH_API_VERSION = process.env.META_GRAPH_API_VERSION || "v26.0";
+const META_TEST_EVENT_CODE = process.env.META_TEST_EVENT_CODE;
+const META_CAPI_CONFIGURADO = Boolean(META_CAPI_ACCESS_TOKEN);
 
 for (const [name, value] of Object.entries({ ASAAS_WEBHOOK_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY })) {
   if (!value) {
@@ -791,6 +802,109 @@ app.post("/onboarding/cadastro-publico", async (req, res) => {
   } catch (err) {
     console.error("Erro ao processar cadastro público:", err.message);
     return res.status(500).json({ error: "não foi possível salvar o cadastro" });
+  }
+});
+
+// Lado servidor do Pixel da Meta: o navegador manda o mesmo event_id que
+// usou no fbq(), a gente acrescenta IP/user agent, faz o hash dos dados
+// pessoais e repassa pra API de Conversões — a Meta deduplica pelos dois
+// caminhos. Com bloqueador de anúncio o Pixel não roda, mas isto chega.
+const META_EVENTOS_PERMITIDOS = new Set(["PageView", "Lead"]);
+const META_ORIGENS_PERMITIDAS = new Set([FRONTEND_URL, "http://localhost:5173"]);
+const META_LIMITE_POR_MINUTO = 20;
+const metaRequisicoesPorIp = new Map();
+
+function excedeuLimiteMeta(ip) {
+  const agora = Date.now();
+  const registro = metaRequisicoesPorIp.get(ip);
+  if (!registro || agora - registro.inicio > 60_000) {
+    if (metaRequisicoesPorIp.size > 5000) {
+      for (const [chave, valor] of metaRequisicoesPorIp) {
+        if (agora - valor.inicio > 60_000) metaRequisicoesPorIp.delete(chave);
+      }
+    }
+    metaRequisicoesPorIp.set(ip, { inicio: agora, total: 1 });
+    return false;
+  }
+  registro.total += 1;
+  return registro.total > META_LIMITE_POR_MINUTO;
+}
+
+function textoCurto(valor, max = 200) {
+  return typeof valor === "string" && valor.length <= max ? valor : undefined;
+}
+
+app.post("/meta/evento", async (req, res) => {
+  if (!META_CAPI_CONFIGURADO) {
+    return res.status(503).json({ error: "API de Conversões da Meta não configurada" });
+  }
+
+  if (!META_ORIGENS_PERMITIDAS.has(req.header("origin") || "")) {
+    return res.status(403).json({ error: "origem não permitida" });
+  }
+
+  const ip = (req.header("x-forwarded-for") || "").split(",")[0].trim() || req.socket.remoteAddress;
+  if (excedeuLimiteMeta(ip)) {
+    return res.status(429).json({ error: "muitas requisições" });
+  }
+
+  const { eventName, eventId, eventTime, eventSourceUrl, userData, customData } = req.body || {};
+  if (!META_EVENTOS_PERMITIDOS.has(eventName) || !textoCurto(eventId, 100)) {
+    return res.status(400).json({ error: "payload inválido" });
+  }
+
+  // event_time precisa bater com o do navegador; se vier fora de uma
+  // janela plausível, usa o horário do servidor.
+  const agoraSegundos = Math.floor(Date.now() / 1000);
+  const horarioEvento =
+    Number.isInteger(eventTime) && Math.abs(agoraSegundos - eventTime) < 3600 ? eventTime : agoraSegundos;
+
+  const urlOrigem = textoCurto(eventSourceUrl, 2000);
+  const urlEvento = urlOrigem && [...META_ORIGENS_PERMITIDAS].some((o) => urlOrigem.startsWith(o)) ? urlOrigem : FRONTEND_URL;
+
+  const contentName = textoCurto(customData?.content_name, 100);
+
+  const payload = {
+    data: [
+      {
+        event_name: eventName,
+        event_time: horarioEvento,
+        event_id: eventId,
+        event_source_url: urlEvento,
+        action_source: "website",
+        user_data: montarUserData({
+          email: textoCurto(userData?.email),
+          telefone: textoCurto(userData?.telefone, 40),
+          nome: textoCurto(userData?.nome),
+          ip,
+          userAgent: textoCurto(req.header("user-agent"), 500),
+          fbp: textoCurto(userData?.fbp),
+          fbc: textoCurto(userData?.fbc, 500),
+        }),
+        ...(contentName ? { custom_data: { content_name: contentName } } : {}),
+      },
+    ],
+    access_token: META_CAPI_ACCESS_TOKEN,
+    ...(META_TEST_EVENT_CODE ? { test_event_code: META_TEST_EVENT_CODE } : {}),
+  };
+
+  try {
+    const response = await fetch(`https://graph.facebook.com/${META_GRAPH_API_VERSION}/${META_PIXEL_ID}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const resposta = await response.json().catch(() => null);
+    if (!response.ok) {
+      const motivo = resposta?.error?.message || `Meta respondeu ${response.status}`;
+      console.error(`Erro ao enviar evento Meta ${eventName} id=${eventId}:`, motivo);
+      return res.status(502).json({ error: motivo });
+    }
+    console.log(`Evento Meta enviado: ${eventName} id=${eventId} recebidos=${resposta?.events_received}`);
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error(`Erro ao enviar evento Meta ${eventName} id=${eventId}:`, err.message);
+    return res.status(502).json({ error: "falha ao falar com a Meta" });
   }
 });
 

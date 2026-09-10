@@ -7,7 +7,7 @@ export default function PrivacyPolicyPage() {
         </a>
 
         <h1 className="mt-6 font-display text-3xl tracking-wide text-ink">Política de Privacidade</h1>
-        <p className="mt-2 text-sm text-ink-dim">Última atualização: 21 de agosto de 2026</p>
+        <p className="mt-2 text-sm text-ink-dim">Última atualização: 10 de setembro de 2026</p>
 
         <div className="mt-10 space-y-8 text-sm leading-relaxed text-ink-muted">
           <section>
@@ -24,7 +24,11 @@ export default function PrivacyPolicyPage() {
             <ul className="mt-2 list-disc space-y-2 pl-5">
               <li>
                 <strong className="text-ink">Formulário de interesse:</strong> nome, WhatsApp, nome do negócio, cidade/estado,
-                faixa de faturamento e respostas às demais perguntas do formulário.
+                faturamento mensal e respostas às demais perguntas do formulário.
+              </li>
+              <li>
+                <strong className="text-ink">Navegação no site:</strong> páginas visitadas, endereço IP, tipo de navegador e
+                cookies de medição de anúncios (ver seção 5).
               </li>
               <li>
                 <strong className="text-ink">Cadastro de cliente:</strong> nome, CNPJ, endereço, dados bancários,
@@ -47,7 +51,8 @@ export default function PrivacyPolicyPage() {
               <li>Gerar cobranças recorrentes via Asaas;</li>
               <li>Gerar e enviar contratos para assinatura via Clicksign;</li>
               <li>Acompanhar a intensidade de execução da estratégia de conteúdo nas redes sociais do cliente;</li>
-              <li>Enviar comunicações operacionais por WhatsApp relacionadas à mentoria.</li>
+              <li>Enviar comunicações operacionais por WhatsApp relacionadas à mentoria;</li>
+              <li>Medir o resultado dos nossos anúncios no Facebook e no Instagram.</li>
             </ul>
           </section>
 
@@ -55,13 +60,30 @@ export default function PrivacyPolicyPage() {
             <h2 className="font-display text-lg tracking-wide text-ink">4. Com quem compartilhamos</h2>
             <p className="mt-2">
               Não vendemos dados a terceiros. Compartilhamos apenas com prestadores necessários à operação do serviço:
-              Asaas (emissão de cobrança), Clicksign (assinatura de contrato) e Meta/Instagram (leitura de métricas da
-              conta conectada, mediante sua autorização explícita via login).
+              Asaas (emissão de cobrança), Clicksign (assinatura de contrato) e Meta — tanto para leitura de métricas da
+              conta Instagram conectada (mediante sua autorização explícita via login) quanto para medição de anúncios
+              (ver seção 5).
             </p>
           </section>
 
           <section>
-            <h2 className="font-display text-lg tracking-wide text-ink">5. Armazenamento e segurança</h2>
+            <h2 className="font-display text-lg tracking-wide text-ink">5. Cookies e medição de anúncios</h2>
+            <p className="mt-2">
+              Este site usa o Pixel da Meta e a API de Conversões da Meta para saber quantas pessoas chegaram pelos
+              nossos anúncios e quantas preencheram o formulário. Para isso, o Pixel grava cookies no seu navegador
+              (<code>_fbp</code> e <code>_fbc</code>) e, quando você envia o formulário, compartilhamos com a Meta seu
+              nome e WhatsApp em forma criptografada (hash SHA-256 — a Meta nunca recebe o dado em texto aberto), junto
+              com o endereço IP e o tipo de navegador. A Meta usa essas informações para medir e melhorar a entrega
+              dos anúncios.
+            </p>
+            <p className="mt-2">
+              Você pode bloquear ou apagar esses cookies nas configurações do seu navegador e ajustar como a Meta usa
+              seus dados para anúncios em Configurações do Facebook/Instagram → Preferências de anúncios.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-display text-lg tracking-wide text-ink">6. Armazenamento e segurança</h2>
             <p className="mt-2">
               Os dados ficam armazenados em banco de dados próprio, com acesso restrito à equipe da Aceleração
               Delivery. Tokens de acesso a contas conectadas (como o Instagram) ficam acessíveis somente pelos
@@ -70,7 +92,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-lg tracking-wide text-ink">6. Seus direitos</h2>
+            <h2 className="font-display text-lg tracking-wide text-ink">7. Seus direitos</h2>
             <p className="mt-2">
               Você pode solicitar a qualquer momento a exclusão dos seus dados, a revogação do acesso à sua conta do
               Instagram, ou esclarecimentos sobre o uso das suas informações. Veja{" "}
@@ -82,7 +104,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-lg tracking-wide text-ink">7. Contato</h2>
+            <h2 className="font-display text-lg tracking-wide text-ink">8. Contato</h2>
             <p className="mt-2">
               Dúvidas sobre privacidade? Fale com a gente pelo WhatsApp indicado no site ou pelo e-mail{" "}
               <a href="mailto:contato@resultadocontabilidade.com.br" className="text-emerald-bright hover:underline">
