@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive, Pencil, Trash2, Ban, RotateCcw } from "lucide-react";
 import StatusBadge, { NextBillingBadge } from "../components/StatusBadge.jsx";
+import OrigemCampanha from "../components/OrigemCampanha.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
 import { sortByVencimento, alertStage, ALERT_STAGE_LABELS, billingSummary } from "../lib/invoices.js";
@@ -202,6 +203,8 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
         {salvo && !dirty && <span className="text-xs text-emerald-bright">Alterações salvas.</span>}
         {dirty && <span className="text-xs text-ink-dim">Alterações não salvas.</span>}
       </div>
+
+      <OrigemCampanha utm={client.utm} className="mt-6 border-t border-line/60 pt-5" />
 
       <div className="mt-6 border-t border-line/60 pt-5">
         <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-ink-muted">

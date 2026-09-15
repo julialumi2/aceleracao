@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { registrarPageView } from "../../lib/metaPixel.js";
+import { guardarUtmsDaUrl } from "../../lib/utm.js";
 import Header from "./Header.jsx";
 import Hero from "./Hero.jsx";
 import SocialProof from "./SocialProof.jsx";
@@ -18,6 +19,7 @@ import AvisoCookies from "./AvisoCookies.jsx";
 
 export default function LandingPage() {
   useEffect(() => {
+    guardarUtmsDaUrl();
     registrarPageView();
   }, []);
 

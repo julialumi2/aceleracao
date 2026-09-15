@@ -56,6 +56,7 @@ function mapRestaurantRow(row) {
     telefone: row.telefone || "",
     email: row.email || "",
     cardapioUrl: row.cardapio_url || "",
+    utm: mapUtm(row),
     saude: row.saude || "laranja",
     arquivadoEm: row.arquivado_em || null,
     canceladoEm: row.cancelado_em || null,
@@ -98,6 +99,17 @@ function mapRestaurantRow(row) {
   };
 }
 
+// Parâmetros da campanha que trouxe o lead (utm_* do link do anúncio). O
+// cliente herda os mesmos na conversão.
+function mapUtm(row) {
+  return {
+    source: row.utm_source || "",
+    medium: row.utm_medium || "",
+    campaign: row.utm_campaign || "",
+    content: row.utm_content || "",
+  };
+}
+
 function mapLeadRow(row) {
   return {
     id: row.id,
@@ -105,6 +117,7 @@ function mapLeadRow(row) {
     email: row.email || "",
     telefone: row.telefone || "",
     origem: row.origem,
+    utm: mapUtm(row),
     status: row.status,
     temperatura: row.temperatura || null,
     criadoEm: row.created_at.slice(0, 10),
@@ -538,6 +551,10 @@ export async function convertLeadToClient(lead, cobranca) {
       telefone: lead.telefone,
       email: lead.email,
       saude: "laranja",
+      utm_source: lead.utm.source || null,
+      utm_medium: lead.utm.medium || null,
+      utm_campaign: lead.utm.campaign || null,
+      utm_content: lead.utm.content || null,
       ...dadosCobranca,
     })
     .select()

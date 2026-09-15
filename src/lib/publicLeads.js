@@ -16,6 +16,7 @@ export async function submitPublicLead({
   gestorTrafego,
   mensagem,
   origem,
+  utms,
 }) {
   const { error } = await supabase.from("leads").insert({
     nome,
@@ -28,6 +29,10 @@ export async function submitPublicLead({
     gestor_trafego: gestorTrafego || null,
     mensagem: mensagem || null,
     origem: origem || "bio_instagram",
+    utm_source: utms?.utm_source || null,
+    utm_medium: utms?.utm_medium || null,
+    utm_campaign: utms?.utm_campaign || null,
+    utm_content: utms?.utm_content || null,
     status: "novo",
   });
   if (error) throw error;
