@@ -242,15 +242,15 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
 
   return (
     <div className={visualizacao === "pipeline" ? "" : "mx-auto max-w-4xl"}>
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+        <div className="min-w-[12rem] flex-1">
           <h1 className="font-display text-2xl tracking-wide text-ink">Leads</h1>
-          <p className="mt-1 text-sm text-ink-muted">
+          <p className="mt-1 hidden text-sm text-ink-muted sm:block">
             Respostas do formulário de captação, sincronizadas na tabela <code className="font-mono text-xs">leads</code>.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 md:shrink-0">
           <div role="group" aria-label="Visualização" className="flex rounded-xl border border-line bg-surface p-1">
             {[
               { valor: "lista", rotulo: "Lista", Icone: LayoutList },
@@ -270,7 +270,7 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:w-64">
+          <div className="order-last flex w-full items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:order-none sm:w-64">
             <Search size={15} className="text-ink-dim" />
             <input
               value={query}
@@ -545,11 +545,16 @@ function LeadsPipeline({
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-ink-dim">
-          {semLeads
-            ? "Nenhum lead recebido ainda."
-            : leads.length === 0
-              ? "Nenhum lead encontrado com esse nome."
-              : "Arraste o card para mudar o status."}
+          {semLeads ? (
+            "Nenhum lead recebido ainda."
+          ) : leads.length === 0 ? (
+            "Nenhum lead encontrado com esse nome."
+          ) : (
+            <>
+              <span className="hidden md:inline">Arraste o card para mudar o status.</span>
+              <span className="md:hidden">Deslize pro lado pra ver as etapas.</span>
+            </>
+          )}
         </p>
         <label className="flex items-center gap-2 text-xs text-ink-dim">
           Ordenar
@@ -587,7 +592,7 @@ function LeadsPipeline({
                   if (!e.currentTarget.contains(e.relatedTarget)) setColunaAlvo(null);
                 }}
                 onDrop={(e) => soltar(e, coluna.valor)}
-                className={`w-[252px] shrink-0 snap-start rounded-xl border p-2.5 transition-colors ${
+                className={`w-[72vw] max-w-[300px] shrink-0 snap-start rounded-xl border p-2.5 transition-colors md:w-[252px] md:max-w-none ${
                   ehAlvo ? "border-emerald-brand/60 bg-emerald-brand/5" : "border-line/60 bg-surface/40"
                 }`}
               >
@@ -659,17 +664,17 @@ function ResumoPipeline({ leads }) {
   ];
 
   return (
-    <dl className="mb-6 grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface md:grid-cols-4">
+    <dl className="mb-4 grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface md:mb-6 md:grid-cols-4">
       {indicadores.map(({ rotulo, valor, detalhe }, i) => (
         <div
           key={rotulo}
-          className={`px-5 py-4 ${i % 2 === 1 ? "border-l border-line/60" : ""} ${i >= 2 ? "border-t border-line/60 md:border-t-0" : ""} ${
+          className={`px-4 py-3 md:px-5 md:py-4 ${i % 2 === 1 ? "border-l border-line/60" : ""} ${i >= 2 ? "border-t border-line/60 md:border-t-0" : ""} ${
             i === 2 ? "md:border-l" : ""
           }`}
         >
-          <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-dim">{rotulo}</dt>
-          <dd className="mt-2 font-display text-3xl leading-none tabular-nums text-ink">{valor}</dd>
-          <dd className="mt-1.5 text-xs text-ink-dim">{detalhe}</dd>
+          <dt className="text-[10px] font-medium uppercase tracking-[0.14em] text-ink-dim md:text-[11px]">{rotulo}</dt>
+          <dd className="mt-1.5 font-display text-2xl leading-none tabular-nums text-ink md:mt-2 md:text-3xl">{valor}</dd>
+          <dd className="mt-1 text-[11px] text-ink-dim md:mt-1.5 md:text-xs">{detalhe}</dd>
         </div>
       ))}
     </dl>
