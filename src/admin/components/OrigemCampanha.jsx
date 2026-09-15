@@ -19,7 +19,7 @@ export function temCampanha(utm) {
 
 // Mostra de onde o lead/cliente veio, a partir dos parâmetros do link da
 // campanha. Some quando ele chegou sem nenhum (bio, link direto, indicação).
-export default function OrigemCampanha({ utm, className = "" }) {
+export default function OrigemCampanha({ utm, className = "", compacto = false }) {
   if (!temCampanha(utm)) return null;
 
   const itens = [
@@ -39,7 +39,7 @@ export default function OrigemCampanha({ utm, className = "" }) {
           </span>
         )}
       </div>
-      <dl className="grid gap-3 sm:grid-cols-2">
+      <dl className={compacto ? "grid gap-2.5" : "grid gap-3 sm:grid-cols-2"}>
         {itens.map(([label, valor]) => (
           <div key={label}>
             <dt className="text-xs font-medium text-ink-dim">{label}</dt>

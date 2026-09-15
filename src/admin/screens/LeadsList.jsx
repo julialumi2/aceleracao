@@ -1,10 +1,20 @@
 import { useState } from "react";
-import { UserPlus, MessageCircle, Search, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { UserPlus, MessageCircle, Search, Plus, Trash2, ChevronDown, ChevronUp, LayoutList, Kanban } from "lucide-react";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
 import OrigemCampanha from "../components/OrigemCampanha.jsx";
 
-const STATUSES = ["novo", "contatado", "convertido", "descartado"];
+// Os valores antigos (contatado, convertido, descartado) continuam os mesmos
+// no banco — só o nome na tela mudou. "convertido" é a conversão em cliente.
+const STATUSES = [
+  { valor: "novo", rotulo: "Novo" },
+  { valor: "contatado", rotulo: "Em Contato" },
+  { valor: "qualificado", rotulo: "Qualificado" },
+  { valor: "reuniao_agendada", rotulo: "Reunião Agendada" },
+  { valor: "follow_up", rotulo: "Follow Up" },
+  { valor: "convertido", rotulo: "Fechado" },
+  { valor: "descartado", rotulo: "Desqualificado" },
+];
 const TEMPERATURAS = ["frio", "morno", "quente"];
 const ORIGENS = [
   { value: "indicacao_equipe", label: "Indicação da equipe" },
@@ -12,6 +22,43 @@ const ORIGENS = [
   { value: "bio_instagram", label: "Bio do Instagram" },
   { value: "outro", label: "Outro" },
 ];
+
+// Soltar um card em "Fechado" não muda o status direto: abre a janela de
+// conversão, que cria o cliente. A coluna fica sempre vazia porque lead
+// convertido some da tela de Leads.
+const COR_COLUNA = {
+  novo: "bg-emerald-brand",
+  convertido: "bg-emerald-bright",
+  descartado: "bg-flame-dim",
+};
+
+const COR_TEMPERATURA = {
+  quente: "bg-flame",
+  morno: "bg-emerald-brand",
+  frio: "bg-ink-dim",
+};
+
+const PESO_TEMPERATURA = { quente: 3, morno: 2, frio: 1 };
+
+const ORDENACOES = {
+  recentes: { rotulo: "Mais recentes", comparar: (a, b) => b.criadoEm.localeCompare(a.criadoEm) },
+  quentes: {
+    rotulo: "Mais quentes",
+    comparar: (a, b) =>
+      (PESO_TEMPERATURA[b.temperatura] || 0) - (PESO_TEMPERATURA[a.temperatura] || 0) || b.criadoEm.localeCompare(a.criadoEm),
+  },
+  antigos: { rotulo: "Mais antigos", comparar: (a, b) => a.criadoEm.localeCompare(b.criadoEm) },
+};
+
+const CHAVE_VISUALIZACAO = "leads-visualizacao";
+
+function lerVisualizacao() {
+  try {
+    return localStorage.getItem(CHAVE_VISUALIZACAO) === "pipeline" ? "pipeline" : "lista";
+  } catch {
+    return "lista";
+  }
+}
 
 function relativeDaysLabel(iso) {
   const dias = Math.floor((new Date() - new Date(iso)) / (1000 * 60 * 60 * 24));
@@ -105,7 +152,7 @@ function ConverterClienteModal({ lead, onClose, onConfirmar }) {
   );
 }
 
-function LeadRespostas({ lead }) {
+function LeadRespostas({ lead, compacto = false }) {
   const itens = [
     ["Nome do negócio", lead.nomeNegocio],
     ["Cidade", lead.cidade && lead.estado ? `${lead.cidade} - ${lead.estado}` : lead.cidade || lead.estado],
@@ -115,12 +162,14 @@ function LeadRespostas({ lead }) {
     ["Mensagem", lead.mensagem],
   ].filter(([, valor]) => valor);
 
+  const moldura = compacto ? "" : "mt-4 border-t border-line/60 pt-4";
+
   if (itens.length === 0) {
-    return <p className="mt-4 border-t border-line/60 pt-4 text-xs text-ink-dim">Sem respostas adicionais do formulário.</p>;
+    return <p className={`${moldura} text-xs text-ink-dim`}>Sem respostas adicionais do formulário.</p>;
   }
 
   return (
-    <dl className="mt-4 grid gap-3 border-t border-line/60 pt-4 sm:grid-cols-2">
+    <dl className={`${moldura} grid ${compacto ? "gap-2.5" : "gap-3 sm:grid-cols-2"}`}>
       {itens.map(([label, valor]) => (
         <div key={label}>
           <dt className="text-xs font-medium text-ink-dim">{label}</dt>
@@ -140,6 +189,27 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [excluindo, setExcluindo] = useState(false);
   const [convertendoLead, setConvertendoLead] = useState(null);
+  const [visualizacao, setVisualizacao] = useState(lerVisualizacao);
+
+  function trocarVisualizacao(nova) {
+    setVisualizacao(nova);
+    try {
+      localStorage.setItem(CHAVE_VISUALIZACAO, nova);
+    } catch {
+      // Sem armazenamento no navegador — a escolha vale só nesta visita.
+    }
+  }
+
+  // "convertido" nunca é gravado direto: sem passar pela conversão, o lead
+  // sumia daqui sem virar cliente.
+  function mudarStatus(lead, status) {
+    if (status === lead.status) return;
+    if (status === "convertido") {
+      setConvertendoLead(lead);
+      return;
+    }
+    onUpdateStatus(lead, status);
+  }
 
   // Lead convertido já virou cliente — some da área de leads, o registro
   // continua existindo (status "convertido"), só não aparece mais aqui.
@@ -171,7 +241,7 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className={visualizacao === "pipeline" ? "" : "mx-auto max-w-4xl"}>
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="font-display text-2xl tracking-wide text-ink">Leads</h1>
@@ -181,6 +251,25 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <div role="group" aria-label="Visualização" className="flex rounded-xl border border-line bg-surface p-1">
+            {[
+              { valor: "lista", rotulo: "Lista", Icone: LayoutList },
+              { valor: "pipeline", rotulo: "Pipeline", Icone: Kanban },
+            ].map(({ valor, rotulo, Icone }) => (
+              <button
+                key={valor}
+                type="button"
+                aria-pressed={visualizacao === valor}
+                onClick={() => trocarVisualizacao(valor)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  visualizacao === valor ? "bg-emerald-brand text-base" : "text-ink-muted hover:text-ink"
+                }`}
+              >
+                <Icone size={14} />
+                {rotulo}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:w-64">
             <Search size={15} className="text-ink-dim" />
             <input
@@ -279,6 +368,19 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
         </div>
       )}
 
+      {visualizacao === "pipeline" ? (
+        <LeadsPipeline
+          leads={filtered}
+          todos={leads}
+          semLeads={leads.length === 0}
+          onMudarStatus={mudarStatus}
+          onUpdateTemperatura={onUpdateTemperatura}
+          confirmDeleteId={confirmDeleteId}
+          onPedirExclusao={setConfirmDeleteId}
+          onConfirmarExclusao={confirmarExclusao}
+          excluindo={excluindo}
+        />
+      ) : (
       <div className="space-y-3">
         {filtered.map((lead) => {
           const waLink = buildWhatsAppLink(lead.telefone, leadFirstContactMessage(lead));
@@ -317,12 +419,12 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                 <div className="flex flex-wrap items-center gap-2">
                   <select
                     value={lead.status}
-                    onChange={(e) => onUpdateStatus(lead, e.target.value)}
+                    onChange={(e) => mudarStatus(lead, e.target.value)}
                     className="rounded-lg border border-line bg-surface-raised px-2.5 py-1.5 text-xs text-ink focus:outline-none"
                   >
                     {STATUSES.map((s) => (
-                      <option key={s} value={s} className="bg-surface text-ink">
-                        {s}
+                      <option key={s.valor} value={s.valor} className="bg-surface text-ink">
+                        {s.rotulo}
                       </option>
                     ))}
                   </select>
@@ -403,10 +505,312 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
         )}
         {leads.length === 0 && <p className="text-sm text-ink-dim">Nenhum lead recebido ainda.</p>}
       </div>
+      )}
 
       {convertendoLead && (
         <ConverterClienteModal lead={convertendoLead} onClose={() => setConvertendoLead(null)} onConfirmar={onConvert} />
       )}
     </div>
+  );
+}
+
+// Arrastar (HTML5) só funciona com mouse — no celular e no teclado, o status
+// muda pelo seletor que aparece ao abrir o card.
+function LeadsPipeline({
+  leads,
+  todos,
+  semLeads,
+  onMudarStatus,
+  onUpdateTemperatura,
+  confirmDeleteId,
+  onPedirExclusao,
+  onConfirmarExclusao,
+  excluindo,
+}) {
+  const [arrastandoId, setArrastandoId] = useState(null);
+  const [colunaAlvo, setColunaAlvo] = useState(null);
+  const [abertoId, setAbertoId] = useState(null);
+  const [ordem, setOrdem] = useState("recentes");
+
+  function soltar(e, status) {
+    e.preventDefault();
+    setColunaAlvo(null);
+    const lead = leads.find((l) => l.id === e.dataTransfer.getData("text/plain"));
+    if (lead) onMudarStatus(lead, status);
+  }
+
+  return (
+    <>
+      <ResumoPipeline leads={todos} />
+
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-ink-dim">
+          {semLeads
+            ? "Nenhum lead recebido ainda."
+            : leads.length === 0
+              ? "Nenhum lead encontrado com esse nome."
+              : "Arraste o card para mudar o status."}
+        </p>
+        <label className="flex items-center gap-2 text-xs text-ink-dim">
+          Ordenar
+          <select
+            value={ordem}
+            onChange={(e) => setOrdem(e.target.value)}
+            className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs text-ink focus:outline-none"
+          >
+            {Object.entries(ORDENACOES).map(([valor, { rotulo }]) => (
+              <option key={valor} value={valor} className="bg-surface text-ink">
+                {rotulo}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="-mx-5 snap-x snap-mandatory scroll-px-5 overflow-x-auto px-5 pb-3 md:mx-0 md:snap-none md:px-0">
+        <div className="flex items-start gap-3">
+          {STATUSES.map((coluna) => {
+            const daColuna = leads.filter((l) => l.status === coluna.valor).sort(ORDENACOES[ordem].comparar);
+            const ehConversao = coluna.valor === "convertido";
+            const ehAlvo = colunaAlvo === coluna.valor;
+
+            return (
+              <section
+                key={coluna.valor}
+                aria-label={coluna.rotulo}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "move";
+                  if (colunaAlvo !== coluna.valor) setColunaAlvo(coluna.valor);
+                }}
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) setColunaAlvo(null);
+                }}
+                onDrop={(e) => soltar(e, coluna.valor)}
+                className={`w-[252px] shrink-0 snap-start rounded-xl border p-2.5 transition-colors ${
+                  ehAlvo ? "border-emerald-brand/60 bg-emerald-brand/5" : "border-line/60 bg-surface/40"
+                }`}
+              >
+                <header className="mb-2.5 flex items-center justify-between px-1 pt-0.5">
+                  <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+                    <span className={`h-3 w-[3px] rounded-full ${COR_COLUNA[coluna.valor] || "bg-ink-dim/60"}`} />
+                    {coluna.rotulo}
+                  </h2>
+                  {!ehConversao && <span className="text-[11px] tabular-nums text-ink-dim">{daColuna.length}</span>}
+                </header>
+
+                {ehConversao ? (
+                  <div
+                    className={`rounded-lg border border-dashed px-3 py-5 text-center text-xs leading-relaxed transition-colors ${
+                      ehAlvo ? "border-emerald-brand/60 text-emerald-bright" : "border-line text-ink-dim"
+                    }`}
+                  >
+                    Solte aqui pra fechar e converter em cliente
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {daColuna.map((lead) => (
+                      <CardPipeline
+                        key={lead.id}
+                        lead={lead}
+                        aberto={abertoId === lead.id}
+                        onAlternar={() => setAbertoId(abertoId === lead.id ? null : lead.id)}
+                        arrastando={arrastandoId === lead.id}
+                        onComecarArrastar={() => setArrastandoId(lead.id)}
+                        onTerminarArrastar={() => {
+                          setArrastandoId(null);
+                          setColunaAlvo(null);
+                        }}
+                        onMudarStatus={onMudarStatus}
+                        onUpdateTemperatura={onUpdateTemperatura}
+                        confirmandoExclusao={confirmDeleteId === lead.id}
+                        onPedirExclusao={onPedirExclusao}
+                        onConfirmarExclusao={onConfirmarExclusao}
+                        excluindo={excluindo}
+                      />
+                    ))}
+                    {daColuna.length === 0 && <p className="px-1 pb-1 text-xs text-ink-dim">vazio</p>}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ResumoPipeline({ leads }) {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const naBase = leads.length;
+  const recebidosHoje = leads.filter((l) => l.criadoEm === hoje).length;
+  const semContato = leads.filter((l) => l.status === "novo").length;
+  const emAberto = leads.filter((l) => l.status !== "convertido" && l.status !== "descartado");
+  const quentes = emAberto.filter((l) => l.temperatura === "quente").length;
+  const agendados = leads.filter((l) => l.status === "reuniao_agendada").length;
+  const pctAgendados = naBase ? Math.round((agendados / naBase) * 100) : 0;
+
+  const indicadores = [
+    { rotulo: "Leads na base", valor: naBase, detalhe: `${recebidosHoje} hoje` },
+    { rotulo: "Sem contato", valor: semContato, detalhe: "aguardando retorno" },
+    { rotulo: "Quentes", valor: quentes, detalhe: "temperatura quente" },
+    { rotulo: "Reuniões agendadas", valor: agendados, detalhe: `${pctAgendados}% da base` },
+  ];
+
+  return (
+    <dl className="mb-6 grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface md:grid-cols-4">
+      {indicadores.map(({ rotulo, valor, detalhe }, i) => (
+        <div
+          key={rotulo}
+          className={`px-5 py-4 ${i % 2 === 1 ? "border-l border-line/60" : ""} ${i >= 2 ? "border-t border-line/60 md:border-t-0" : ""} ${
+            i === 2 ? "md:border-l" : ""
+          }`}
+        >
+          <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-dim">{rotulo}</dt>
+          <dd className="mt-2 font-display text-3xl leading-none tabular-nums text-ink">{valor}</dd>
+          <dd className="mt-1.5 text-xs text-ink-dim">{detalhe}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function CardPipeline({
+  lead,
+  aberto,
+  onAlternar,
+  arrastando,
+  onComecarArrastar,
+  onTerminarArrastar,
+  onMudarStatus,
+  onUpdateTemperatura,
+  confirmandoExclusao,
+  onPedirExclusao,
+  onConfirmarExclusao,
+  excluindo,
+}) {
+  const waLink = buildWhatsAppLink(lead.telefone, leadFirstContactMessage(lead));
+  const recente = Math.floor((new Date() - new Date(lead.criadoEm)) / (1000 * 60 * 60 * 24)) <= 1;
+  const local = lead.cidade ? `${lead.cidade}${lead.estado ? `/${lead.estado}` : ""}` : "";
+
+  return (
+    <article
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", lead.id);
+        e.dataTransfer.effectAllowed = "move";
+        onComecarArrastar();
+      }}
+      onDragEnd={onTerminarArrastar}
+      className={`cursor-grab rounded-lg border bg-surface transition-[opacity,border-color] active:cursor-grabbing ${
+        aberto ? "border-emerald-brand/40" : "border-line/80 hover:border-line"
+      } ${arrastando ? "opacity-40" : lead.status === "descartado" ? "opacity-60" : ""}`}
+    >
+      <button type="button" onClick={onAlternar} aria-expanded={aberto} className="block w-full p-3 text-left">
+        <span className="flex items-start justify-between gap-2">
+          <span className="text-sm font-semibold leading-snug text-ink">{lead.nome}</span>
+          {recente && lead.status === "novo" && (
+            <span className="shrink-0 rounded-full bg-emerald-brand/15 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-emerald-bright">
+              NOVO
+            </span>
+          )}
+        </span>
+        {(lead.nomeNegocio || local) && (
+          <span className="mt-0.5 block truncate text-xs text-ink-dim">{[lead.nomeNegocio, local].filter(Boolean).join(" · ")}</span>
+        )}
+
+        <span className="mt-2.5 flex items-center justify-between gap-2 border-t border-line/60 pt-2.5 text-[11px]">
+          {lead.temperatura ? (
+            <span className="flex items-center gap-1.5 capitalize text-ink-muted">
+              <span className={`h-1.5 w-1.5 rounded-full ${COR_TEMPERATURA[lead.temperatura]}`} />
+              {lead.temperatura}
+            </span>
+          ) : (
+            <span className="text-ink-dim">sem temperatura</span>
+          )}
+          <span className="truncate text-ink-dim">{lead.faturamentoMensal || relativeDaysLabel(lead.criadoEm)}</span>
+        </span>
+      </button>
+
+      {aberto && (
+        <div className="space-y-3 border-t border-line/60 px-3 pb-3 pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 rounded-lg border border-emerald-brand/40 px-2.5 py-1 text-[11px] font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
+            >
+              <MessageCircle size={12} />
+              Chamar no WhatsApp
+            </a>
+            <span className="text-[11px] text-ink-dim">{relativeDaysLabel(lead.criadoEm)}</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block">
+              <span className="mb-1 block text-[11px] text-ink-dim">Status</span>
+              <select
+                value={lead.status}
+                onChange={(e) => onMudarStatus(lead, e.target.value)}
+                className="w-full rounded-lg border border-line bg-surface-raised px-2 py-1.5 text-xs text-ink focus:outline-none"
+              >
+                {STATUSES.map((s) => (
+                  <option key={s.valor} value={s.valor} className="bg-surface text-ink">
+                    {s.rotulo}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[11px] text-ink-dim">Temperatura</span>
+              <select
+                value={lead.temperatura || ""}
+                onChange={(e) => onUpdateTemperatura(lead, e.target.value || null)}
+                className="w-full rounded-lg border border-line bg-surface-raised px-2 py-1.5 text-xs text-ink focus:outline-none"
+              >
+                <option value="" className="bg-surface text-ink">
+                  sem temperatura
+                </option>
+                {TEMPERATURAS.map((t) => (
+                  <option key={t} value={t} className="bg-surface text-ink">
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <LeadRespostas lead={lead} compacto />
+          <OrigemCampanha utm={lead.utm} compacto className="border-t border-line/60 pt-3" />
+
+          <div className="border-t border-line/60 pt-3">
+            {confirmandoExclusao ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onConfirmarExclusao(lead)}
+                  disabled={excluindo}
+                  className="rounded-lg bg-flame/15 px-2.5 py-1 text-[11px] font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
+                >
+                  Confirmar exclusão
+                </button>
+                <button onClick={() => onPedirExclusao(null)} className="text-[11px] text-ink-muted hover:text-ink">
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => onPedirExclusao(lead.id)}
+                className="flex items-center gap-1 text-[11px] font-medium text-ink-dim transition-colors hover:text-flame"
+              >
+                <Trash2 size={12} />
+                Excluir lead
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </article>
   );
 }
