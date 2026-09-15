@@ -31,7 +31,14 @@ export default function OrigemCampanha({ utm, className = "" }) {
 
   return (
     <div className={className}>
-      <p className="mb-3 text-xs font-medium text-ink-muted">De onde veio</p>
+      <div className="mb-3 flex items-center gap-2">
+        <p className="text-xs font-medium text-ink-muted">De onde veio</p>
+        {utm.source && (
+          <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-medium text-ink-muted">
+            via {nomePlataforma(utm.source)}
+          </span>
+        )}
+      </div>
       <dl className="grid gap-3 sm:grid-cols-2">
         {itens.map(([label, valor]) => (
           <div key={label}>

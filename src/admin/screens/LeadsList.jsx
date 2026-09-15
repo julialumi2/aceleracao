@@ -2,7 +2,7 @@ import { useState } from "react";
 import { UserPlus, MessageCircle, Search, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
-import OrigemCampanha, { nomePlataforma } from "../components/OrigemCampanha.jsx";
+import OrigemCampanha from "../components/OrigemCampanha.jsx";
 
 const STATUSES = ["novo", "contatado", "convertido", "descartado"];
 const TEMPERATURAS = ["frio", "morno", "quente"];
@@ -299,11 +299,6 @@ export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, 
                     {recente && lead.status === "novo" && (
                       <span className="rounded-full bg-emerald-brand/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-bright">
                         NOVO
-                      </span>
-                    )}
-                    {lead.utm.source && (
-                      <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-medium text-ink-muted">
-                        via {nomePlataforma(lead.utm.source)}
                       </span>
                     )}
                     {expandido ? (
