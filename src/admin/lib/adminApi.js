@@ -125,6 +125,7 @@ function mapLeadRow(row) {
     cidade: row.cidade || "",
     estado: row.estado || "",
     faturamentoMensal: row.faturamento_mensal || "",
+    momentoFinanceiro: row.momento_financeiro || "",
     maiorGargalo: row.maior_gargalo || "",
     gestorTrafego: row.gestor_trafego || "",
     mensagem: row.mensagem || "",

@@ -207,6 +207,7 @@ app.post("/webhooks/novo-lead", async (req, res) => {
     `*WhatsApp:* ${lead.telefone || "-"}`,
     `*Negócio:* ${lead.nome_negocio || "-"}`,
     `*Faturamento mensal:* ${lead.faturamento_mensal || "-"}`,
+    `*Momento financeiro:* ${lead.momento_financeiro || "-"}`,
     `*Maior gargalo:* ${lead.maior_gargalo || "-"}`,
     `*Gestor de tráfego:* ${lead.gestor_trafego || "-"}`,
   ];

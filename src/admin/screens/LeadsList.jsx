@@ -157,6 +157,7 @@ function LeadRespostas({ lead, compacto = false }) {
     ["Nome do negócio", lead.nomeNegocio],
     ["Cidade", lead.cidade && lead.estado ? `${lead.cidade} - ${lead.estado}` : lead.cidade || lead.estado],
     ["Faturamento mensal", lead.faturamentoMensal],
+    ["Momento financeiro", lead.momentoFinanceiro],
     ["Maior gargalo", lead.maiorGargalo],
     ["Gestor de tráfego", lead.gestorTrafego],
     ["Mensagem", lead.mensagem],

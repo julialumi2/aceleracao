@@ -11,6 +11,15 @@ const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_COMERCIAL}?text=${encodeURICompo
   "Olá! Vim pelo site e quero saber mais sobre a Aceleração de Delivery."
 )}`;
 
+const FATURAMENTO_OPTIONS = [
+  "Até R$ 10 mil",
+  "R$ 10 mil a R$ 30 mil",
+  "R$ 30 mil a R$ 60 mil",
+  "Acima de R$ 60 mil",
+];
+
+const MOMENTO_FINANCEIRO_OPTIONS = ["Ruim", "Razoável", "Bom", "Muito bom"];
+
 const GARGALO_OPTIONS = [
   "Sinto que poderia escalar mais",
   "Cardápio pouco otimizado",
@@ -57,6 +66,9 @@ const ESTADO_OPTIONS = [
 
 const MENSAGEM_MAX = 300;
 
+// Todas as perguntas são obrigatórias: o "Continuar" só libera com resposta.
+const respondido = (valor) => valor.trim().length > 0;
+
 const CAMPOS_INICIAIS = {
   nome: "",
   telefone: "",
@@ -64,6 +76,7 @@ const CAMPOS_INICIAIS = {
   cidade: "",
   estado: "",
   faturamentoMensal: "",
+  momentoFinanceiro: "",
   maiorGargalo: "",
   gestorTrafego: "",
   mensagem: "",
@@ -139,14 +152,14 @@ export default function LeadFormPage() {
   const passos = [
     {
       categoria: "Sobre você",
-      podeContinuar: campos.nome.trim().length > 0,
+      podeContinuar: respondido(campos.nome),
       campo: (
         <Field label="Nome completo" value={campos.nome} onChange={(v) => set("nome", v)} placeholder="Seu nome" />
       ),
     },
     {
       categoria: "Sobre você",
-      podeContinuar: campos.telefone.trim().length > 0,
+      podeContinuar: respondido(campos.telefone),
       campo: (
         <Field
           label="WhatsApp"
@@ -160,7 +173,7 @@ export default function LeadFormPage() {
     },
     {
       categoria: "Seu negócio",
-      podeContinuar: true,
+      podeContinuar: respondido(campos.nomeNegocio),
       campo: (
         <Field
           label="Nome do negócio"
@@ -172,7 +185,7 @@ export default function LeadFormPage() {
     },
     {
       categoria: "Seu negócio",
-      podeContinuar: campos.cidade.trim().length > 0 && campos.estado.trim().length > 0,
+      podeContinuar: respondido(campos.cidade) && respondido(campos.estado),
       campo: (
         <>
           <Field
@@ -189,20 +202,31 @@ export default function LeadFormPage() {
     },
     {
       categoria: "Seu negócio",
-      podeContinuar: true,
+      podeContinuar: respondido(campos.faturamentoMensal),
       campo: (
-        <Field
+        <Select
           label="Faturamento mensal atual"
-          helper="Valor aproximado em R$"
           value={campos.faturamentoMensal}
           onChange={(v) => set("faturamentoMensal", v)}
-          placeholder="Ex: R$ 25.000"
+          options={FATURAMENTO_OPTIONS}
         />
       ),
     },
     {
       categoria: "Seu negócio",
-      podeContinuar: true,
+      podeContinuar: respondido(campos.momentoFinanceiro),
+      campo: (
+        <Select
+          label="Como você classifica seu momento financeiro hoje?"
+          value={campos.momentoFinanceiro}
+          onChange={(v) => set("momentoFinanceiro", v)}
+          options={MOMENTO_FINANCEIRO_OPTIONS}
+        />
+      ),
+    },
+    {
+      categoria: "Seu negócio",
+      podeContinuar: respondido(campos.maiorGargalo),
       campo: (
         <Select
           label="Maior gargalo hoje"
@@ -214,7 +238,7 @@ export default function LeadFormPage() {
     },
     {
       categoria: "Seu negócio",
-      podeContinuar: true,
+      podeContinuar: respondido(campos.gestorTrafego),
       campo: (
         <Select
           label="Já tem um gestor de tráfego? Está contente com o resultado?"
@@ -226,12 +250,11 @@ export default function LeadFormPage() {
     },
     {
       categoria: "Mais detalhes",
-      podeContinuar: true,
+      podeContinuar: respondido(campos.mensagem),
       campo: (
         <label className="block">
-          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
-            Mensagem (opcional)
-          </span>
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">Mensagem</span>
+          <span className="mb-3 block text-xs text-ink-dim">Conta um pouco do que você espera da mentoria</span>
           <textarea
             value={campos.mensagem}
             onChange={(e) => set("mensagem", e.target.value.slice(0, MENSAGEM_MAX))}
