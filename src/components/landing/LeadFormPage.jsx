@@ -66,7 +66,8 @@ const ESTADO_OPTIONS = [
 
 const MENSAGEM_MAX = 300;
 
-// Todas as perguntas são obrigatórias: o "Continuar" só libera com resposta.
+// Todas as perguntas, menos a mensagem final, são obrigatórias: o
+// "Continuar" só libera com resposta.
 const respondido = (valor) => valor.trim().length > 0;
 
 const CAMPOS_INICIAIS = {
@@ -250,11 +251,12 @@ export default function LeadFormPage() {
     },
     {
       categoria: "Mais detalhes",
-      podeContinuar: respondido(campos.mensagem),
+      podeContinuar: true,
       campo: (
         <label className="block">
-          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">Mensagem</span>
-          <span className="mb-3 block text-xs text-ink-dim">Conta um pouco do que você espera da mentoria</span>
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-emerald-bright">
+            Mensagem (opcional)
+          </span>
           <textarea
             value={campos.mensagem}
             onChange={(e) => set("mensagem", e.target.value.slice(0, MENSAGEM_MAX))}
