@@ -128,6 +128,7 @@ function mapLeadRow(row) {
     momentoFinanceiro: row.momento_financeiro || "",
     maiorGargalo: row.maior_gargalo || "",
     gestorTrafego: row.gestor_trafego || "",
+    comoConheceu: row.como_conheceu || "",
     mensagem: row.mensagem || "",
   };
 }

@@ -210,6 +210,7 @@ app.post("/webhooks/novo-lead", async (req, res) => {
     `*Momento financeiro:* ${lead.momento_financeiro || "-"}`,
     `*Maior gargalo:* ${lead.maior_gargalo || "-"}`,
     `*Gestor de tráfego:* ${lead.gestor_trafego || "-"}`,
+    `*Por onde nos conheceu:* ${lead.como_conheceu || "-"}`,
   ];
   if (lead.mensagem) linhas.push(`*Mensagem:* ${lead.mensagem}`);
   linhas.push(`*Origem:* ${lead.origem || "-"}`);

@@ -160,6 +160,7 @@ function LeadRespostas({ lead, compacto = false }) {
     ["Momento financeiro", lead.momentoFinanceiro],
     ["Maior gargalo", lead.maiorGargalo],
     ["Gestor de tráfego", lead.gestorTrafego],
+    ["Por onde nos conheceu", lead.comoConheceu],
     ["Mensagem", lead.mensagem],
   ].filter(([, valor]) => valor);
 

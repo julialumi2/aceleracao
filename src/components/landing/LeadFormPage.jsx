@@ -28,6 +28,8 @@ const GARGALO_OPTIONS = [
   "Não sei dizer ao certo",
 ];
 
+const COMO_CONHECEU_OPTIONS = ["Instagram", "Indicação", "Comprei um curso", "Anúncios"];
+
 const GESTOR_TRAFEGO_OPTIONS = [
   "Não tenho gestor de tráfego",
   "Tenho, mas não estou satisfeito com o resultado",
@@ -80,6 +82,7 @@ const CAMPOS_INICIAIS = {
   momentoFinanceiro: "",
   maiorGargalo: "",
   gestorTrafego: "",
+  comoConheceu: "",
   mensagem: "",
 };
 
@@ -246,6 +249,18 @@ export default function LeadFormPage() {
           value={campos.gestorTrafego}
           onChange={(v) => set("gestorTrafego", v)}
           options={GESTOR_TRAFEGO_OPTIONS}
+        />
+      ),
+    },
+    {
+      categoria: "Mais detalhes",
+      podeContinuar: respondido(campos.comoConheceu),
+      campo: (
+        <Select
+          label="Por onde conheceu nosso trabalho?"
+          value={campos.comoConheceu}
+          onChange={(v) => set("comoConheceu", v)}
+          options={COMO_CONHECEU_OPTIONS}
         />
       ),
     },
