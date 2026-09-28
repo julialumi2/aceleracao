@@ -1,6 +1,6 @@
 const CHAVE = "campanha-de-origem";
 const VALIDADE_MS = 30 * 24 * 60 * 60 * 1000;
-const CAMPOS = ["utm_source", "utm_medium", "utm_campaign", "utm_content"];
+const CAMPOS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
 
 function utmsDaUrl() {
   const params = new URLSearchParams(window.location.search);

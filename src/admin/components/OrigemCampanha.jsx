@@ -14,7 +14,7 @@ export function nomePlataforma(source) {
 }
 
 export function temCampanha(utm) {
-  return Boolean(utm?.source || utm?.medium || utm?.campaign || utm?.content);
+  return Boolean(utm?.source || utm?.medium || utm?.campaign || utm?.content || utm?.term);
 }
 
 // Mostra de onde o lead/cliente veio, a partir dos parâmetros do link da
@@ -27,6 +27,7 @@ export default function OrigemCampanha({ utm, className = "", compacto = false }
     ["Meio", utm.medium],
     ["Campanha", utm.campaign],
     ["Conteúdo", utm.content],
+    ["Público", utm.term],
   ].filter(([, valor]) => valor);
 
   return (

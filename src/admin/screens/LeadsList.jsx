@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserPlus, MessageCircle, Search, Plus, Trash2, ChevronDown, ChevronUp, LayoutList, Kanban } from "lucide-react";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
@@ -182,8 +182,21 @@ function LeadRespostas({ lead, compacto = false }) {
   );
 }
 
-export default function LeadsList({ leads, onUpdateStatus, onUpdateTemperatura, onCreateLead, onDeleteLead, onConvert }) {
-  const [query, setQuery] = useState("");
+export default function LeadsList({
+  leads,
+  onUpdateStatus,
+  onUpdateTemperatura,
+  onCreateLead,
+  onDeleteLead,
+  onConvert,
+  buscaInicial = "",
+}) {
+  const [query, setQuery] = useState(buscaInicial);
+
+  // Quem chega pela Análise de Anúncios cai aqui com o nome do lead já na busca.
+  useEffect(() => {
+    if (buscaInicial) setQuery(buscaInicial);
+  }, [buscaInicial]);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [novo, setNovo] = useState({ nome: "", telefone: "", email: "", origem: "indicacao_equipe", temperatura: "morno" });
   const [salvando, setSalvando] = useState(false);

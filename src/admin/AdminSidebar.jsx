@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ShieldCheck, LayoutDashboard, Users, Contact, Wallet, Activity, ListTodo, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldCheck, LayoutDashboard, Users, Contact, Megaphone, Wallet, Activity, ListTodo, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "clientes", label: "Clientes (CRM)", icon: Users },
   { key: "leads", label: "Leads", icon: Contact },
+  { key: "analise", label: "Análise de Anúncios e Origem", icon: Megaphone },
   { key: "cobrancas", label: "Cobranças", icon: Wallet },
   { key: "intensidade", label: "Intensidade", icon: Activity },
   { key: "tarefas", label: "Tarefas", icon: ListTodo },
@@ -76,7 +77,7 @@ export default function AdminSidebar({ active, onNavigate, session, onLogout }) 
               }`}
             >
               <Icon size={17} className="shrink-0" />
-              {!collapsed && label}
+              {!collapsed && <span className="text-left leading-snug">{label}</span>}
             </button>
           );
         })}

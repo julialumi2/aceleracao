@@ -37,6 +37,7 @@ export async function submitPublicLead({
     utm_medium: utms?.utm_medium || null,
     utm_campaign: utms?.utm_campaign || null,
     utm_content: utms?.utm_content || null,
+    utm_term: utms?.utm_term || null,
     status: "novo",
   });
   if (error) throw error;

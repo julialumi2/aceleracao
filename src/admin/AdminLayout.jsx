@@ -5,6 +5,7 @@ import AdminDashboard from "./screens/AdminDashboard.jsx";
 import ClientsList from "./screens/ClientsList.jsx";
 import ClientDetail from "./screens/ClientDetail.jsx";
 import LeadsList from "./screens/LeadsList.jsx";
+import AnaliseOrigem from "./screens/AnaliseOrigem.jsx";
 import Billing from "./screens/Billing.jsx";
 import Intensity from "./screens/Intensity.jsx";
 import TasksBoard from "./screens/TasksBoard.jsx";
@@ -42,12 +43,13 @@ import {
   setCancelamento,
   reativarCliente,
 } from "./lib/adminApi.js";
-import { Loader2, LayoutDashboard, Users, Contact, Wallet, Settings as SettingsIcon } from "lucide-react";
+import { Loader2, LayoutDashboard, Users, Contact, Megaphone, Wallet, Settings as SettingsIcon } from "lucide-react";
 
 const MOBILE_NAV = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
   { key: "clientes", label: "Clientes", icon: Users },
   { key: "leads", label: "Leads", icon: Contact },
+  { key: "analise", label: "Anúncios", icon: Megaphone },
   { key: "cobrancas", label: "Cobranças", icon: Wallet },
   { key: "configuracoes", label: "Config", icon: SettingsIcon },
 ];
@@ -64,6 +66,7 @@ export default function AdminLayout({ session, onLogout }) {
   const [archivedClients, setArchivedClients] = useState([]);
   const [archivedLoaded, setArchivedLoaded] = useState(false);
   const [loadingArchived, setLoadingArchived] = useState(false);
+  const [buscaLeads, setBuscaLeads] = useState("");
 
   useEffect(() => {
     loadAll();
@@ -255,7 +258,15 @@ export default function AdminLayout({ session, onLogout }) {
 
   function navigate(key) {
     setSelectedClientId(null);
+    setBuscaLeads("");
     setActive(key);
+  }
+
+  // Clique num lead da Análise de Anúncios: abre a aba Leads já filtrada nele.
+  function abrirLeadNaLista(lead) {
+    setSelectedClientId(null);
+    setBuscaLeads(lead.nome || "");
+    setActive("leads");
   }
 
   function openClient(id, tab = "dados") {
@@ -436,8 +447,11 @@ export default function AdminLayout({ session, onLogout }) {
                   onCreateLead={handleCreateLead}
                   onDeleteLead={handleDeleteLead}
                   onConvert={convertLead}
+                  buscaInicial={buscaLeads}
                 />
               )}
+
+              {active === "analise" && <AnaliseOrigem leads={leads} onAbrirLead={abrirLeadNaLista} />}
 
               {active === "cobrancas" && (
                 <Billing

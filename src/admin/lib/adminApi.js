@@ -107,6 +107,7 @@ function mapUtm(row) {
     medium: row.utm_medium || "",
     campaign: row.utm_campaign || "",
     content: row.utm_content || "",
+    term: row.utm_term || "",
   };
 }
 
@@ -121,6 +122,8 @@ function mapLeadRow(row) {
     status: row.status,
     temperatura: row.temperatura || null,
     criadoEm: row.created_at.slice(0, 10),
+    // Horário completo: a análise de origem agrupa por dia no fuso de SP.
+    criadoEmIso: row.created_at,
     nomeNegocio: row.nome_negocio || "",
     cidade: row.cidade || "",
     estado: row.estado || "",
@@ -611,4 +614,41 @@ export async function convertLeadToClient(lead, cobranca) {
   });
 
   return { ...cliente, avisoAsaas };
+}
+
+// ---------- Análise de anúncios e origem ----------
+
+// A soma é feita no banco (funções analise_origem_*): o painel recebe só o
+// resumo por origem, sem telefone nem e-mail. As funções rodam com a
+// permissão de quem chama, a mesma da aba Leads.
+export async function fetchAnalisePorOrigem({ inicio, fim, nivel }) {
+  const { data, error } = await supabase.rpc("analise_origem_por_origem", {
+    p_inicio: inicio,
+    p_fim: fim,
+    p_nivel: nivel,
+  });
+  if (error) throw error;
+  return (data || []).map((linha) => ({
+    chave: linha.origem_chave || "",
+    origem: linha.origem || "",
+    total: Number(linha.total) || 0,
+    acima30k: Number(linha.acima_30k) || 0,
+    ate30k: Number(linha.ate_30k) || 0,
+    naoInformado: Number(linha.nao_informado) || 0,
+  }));
+}
+
+export async function fetchAnalisePorDia({ inicio, fim }) {
+  const { data, error } = await supabase.rpc("analise_origem_por_dia", {
+    p_inicio: inicio,
+    p_fim: fim,
+  });
+  if (error) throw error;
+  return (data || []).map((linha) => ({
+    dia: linha.dia,
+    total: Number(linha.total) || 0,
+    acima30k: Number(linha.acima_30k) || 0,
+    ate30k: Number(linha.ate_30k) || 0,
+    naoInformado: Number(linha.nao_informado) || 0,
+  }));
 }
