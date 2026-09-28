@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Users, TrendingUp, TrendingDown, Target, Trophy, ChevronRight, X } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, Target, Trophy, CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { fetchAnalisePorOrigem, fetchAnalisePorDia } from "../lib/adminApi.js";
 
 const FUSO = "America/Sao_Paulo";
@@ -164,6 +164,145 @@ function chaveDaOrigem(lead, nivel) {
     term: lead.utm?.term,
   };
   return (valores[nivel] || "").trim().toLowerCase();
+}
+
+// ---------- calendário de intervalo ----------
+
+const DIAS_SEMANA = ["D", "S", "T", "Q", "Q", "S", "S"];
+const formatadorMes = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
+
+function mesDoDia(iso) {
+  return iso.slice(0, 7);
+}
+
+function mudarMes(mes, passo) {
+  const [ano, numero] = mes.split("-").map(Number);
+  const data = new Date(Date.UTC(ano, numero - 1 + passo, 1));
+  return data.toISOString().slice(0, 7);
+}
+
+function celulasDoMes(mes) {
+  const [ano, numero] = mes.split("-").map(Number);
+  const vaziasAntes = new Date(Date.UTC(ano, numero - 1, 1)).getUTCDay();
+  const totalDias = new Date(Date.UTC(ano, numero, 0)).getUTCDate();
+  const celulas = Array.from({ length: vaziasAntes }, () => null);
+  for (let dia = 1; dia <= totalDias; dia += 1) {
+    celulas.push(`${mes}-${String(dia).padStart(2, "0")}`);
+  }
+  return celulas;
+}
+
+function rotuloMes(mes) {
+  const [ano, numero] = mes.split("-").map(Number);
+  const nome = formatadorMes.format(new Date(Date.UTC(ano, numero - 1, 1)));
+  return nome.charAt(0).toUpperCase() + nome.slice(1);
+}
+
+// Clique no dia inicial, clique no final. O segundo clique já aplica o
+// filtro e fecha — é o uso do dia a dia, no celular inclusive.
+function CalendarioIntervalo({ de, ate, maximo, onEscolher, onFechar }) {
+  const [mes, setMes] = useState(mesDoDia(de || maximo));
+  const [inicioTemp, setInicioTemp] = useState("");
+  const [diaSobre, setDiaSobre] = useState("");
+
+  useEffect(() => {
+    function aoTeclar(evento) {
+      if (evento.key === "Escape") onFechar();
+    }
+    document.addEventListener("keydown", aoTeclar);
+    return () => document.removeEventListener("keydown", aoTeclar);
+  }, [onFechar]);
+
+  function escolherDia(dia) {
+    if (!inicioTemp) {
+      setInicioTemp(dia);
+      return;
+    }
+    if (dia < inicioTemp) {
+      setInicioTemp(dia);
+      return;
+    }
+    onEscolher({ de: inicioTemp, ate: dia });
+  }
+
+  const fimPrevisto = inicioTemp && diaSobre > inicioTemp ? diaSobre : "";
+  const inicioSelecionado = inicioTemp || de;
+  const fimSelecionado = inicioTemp ? fimPrevisto : ate;
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Fechar calendário"
+        onClick={onFechar}
+        className="fixed inset-0 z-40 cursor-default"
+      />
+      <div className="absolute right-0 top-full z-50 mt-2 w-[min(19rem,88vw)] rounded-2xl border border-line bg-surface p-3 shadow-2xl">
+        <div className="mb-2 flex items-center justify-between">
+          <button
+            type="button"
+            aria-label="Mês anterior"
+            onClick={() => setMes(mudarMes(mes, -1))}
+            className="rounded-lg border border-line p-1.5 text-ink-dim transition-colors hover:text-ink"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <span className="text-sm font-medium text-ink">{rotuloMes(mes)}</span>
+          <button
+            type="button"
+            aria-label="Próximo mês"
+            disabled={mes >= mesDoDia(maximo)}
+            onClick={() => setMes(mudarMes(mes, 1))}
+            className="rounded-lg border border-line p-1.5 text-ink-dim transition-colors hover:text-ink disabled:opacity-30"
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-7 gap-0.5 text-center">
+          {DIAS_SEMANA.map((letra, indice) => (
+            <span key={`${letra}-${indice}`} className="py-1 text-[10px] font-medium uppercase text-ink-dim">
+              {letra}
+            </span>
+          ))}
+          {celulasDoMes(mes).map((dia, indice) => {
+            if (!dia) return <span key={`vazio-${indice}`} />;
+            const futuro = dia > maximo;
+            const ehInicio = dia === inicioSelecionado;
+            const ehFim = dia === fimSelecionado;
+            const noMeio = inicioSelecionado && fimSelecionado && dia > inicioSelecionado && dia < fimSelecionado;
+            const ponta = ehInicio || ehFim;
+            return (
+              <button
+                key={dia}
+                type="button"
+                disabled={futuro}
+                onClick={() => escolherDia(dia)}
+                onMouseEnter={() => setDiaSobre(dia)}
+                className={`rounded-lg py-1.5 text-xs tabular-nums transition-colors ${
+                  ponta
+                    ? "bg-emerald-brand font-semibold text-base"
+                    : noMeio
+                      ? "bg-emerald-brand/15 text-ink"
+                      : futuro
+                        ? "text-ink-dim/40"
+                        : "text-ink-muted hover:bg-surface-raised hover:text-ink"
+                }`}
+              >
+                {Number(dia.slice(-2))}
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mt-3 border-t border-line/60 pt-2.5 text-[11px] text-ink-dim">
+          {inicioTemp
+            ? `Início em ${diaCurto(inicioTemp)}. Agora escolha o último dia.`
+            : "Clique no primeiro dia e depois no último."}
+        </p>
+      </div>
+    </>
+  );
 }
 
 // ---------- pedaços da tela ----------
@@ -484,6 +623,7 @@ export default function AnaliseOrigem({ leads = [], onAbrirLead }) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [origemSelecionada, setOrigemSelecionada] = useState(null);
+  const [calendarioAberto, setCalendarioAberto] = useState(false);
 
   const intervalo = useMemo(() => intervaloDoPeriodo(periodo, de, ate), [periodo, de, ate]);
   const mostrarDiario = periodo !== "hoje" && periodo !== "ontem";
@@ -590,7 +730,10 @@ export default function AnaliseOrigem({ leads = [], onAbrirLead }) {
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={periodo}
-            onChange={(e) => setPeriodo(e.target.value)}
+            onChange={(e) => {
+              setPeriodo(e.target.value);
+              setCalendarioAberto(e.target.value === "personalizado");
+            }}
             aria-label="Período"
             className="rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
           >
@@ -601,28 +744,38 @@ export default function AnaliseOrigem({ leads = [], onAbrirLead }) {
             ))}
           </select>
 
-          {periodo === "personalizado" && (
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={de}
-                max={ate}
-                onChange={(e) => setDe(e.target.value)}
-                aria-label="Data inicial"
-                className="rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink [color-scheme:dark] focus:border-emerald-brand/60 focus:outline-none"
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setCalendarioAberto((aberto) => !aberto)}
+              aria-expanded={calendarioAberto}
+              className={`flex items-center gap-2 rounded-xl border bg-surface px-3 py-2 text-sm transition-colors ${
+                periodo === "personalizado"
+                  ? "border-emerald-brand/40 text-ink"
+                  : "border-line text-ink-muted hover:text-ink"
+              }`}
+            >
+              <CalendarDays size={15} />
+              {periodo === "personalizado"
+                ? `${diaCurto(intervalo.inicio)} a ${diaCurto(intervalo.fim)}`
+                : "Escolher datas"}
+            </button>
+
+            {calendarioAberto && (
+              <CalendarioIntervalo
+                de={periodo === "personalizado" ? de : ""}
+                ate={periodo === "personalizado" ? ate : ""}
+                maximo={diaEmSaoPaulo()}
+                onFechar={() => setCalendarioAberto(false)}
+                onEscolher={({ de: novoDe, ate: novoAte }) => {
+                  setDe(novoDe);
+                  setAte(novoAte);
+                  setPeriodo("personalizado");
+                  setCalendarioAberto(false);
+                }}
               />
-              <span className="text-xs text-ink-dim">até</span>
-              <input
-                type="date"
-                value={ate}
-                min={de}
-                max={diaEmSaoPaulo()}
-                onChange={(e) => setAte(e.target.value)}
-                aria-label="Data final"
-                className="rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink [color-scheme:dark] focus:border-emerald-brand/60 focus:outline-none"
-              />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
