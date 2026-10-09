@@ -55,6 +55,12 @@ const META_GRAPH_API_VERSION = process.env.META_GRAPH_API_VERSION || "v26.0";
 const META_TEST_EVENT_CODE = process.env.META_TEST_EVENT_CODE;
 const META_CAPI_CONFIGURADO = Boolean(META_CAPI_ACCESS_TOKEN);
 
+// CRM de WhatsApp (Unnichat) — opcional, como os demais. A chave e a URL
+// do webhook ficam só aqui no servidor; o formulário público nunca as vê.
+const UNNICHAT_WEBHOOK_URL = process.env.UNNICHAT_WEBHOOK_URL;
+const UNNICHAT_API_KEY = process.env.UNNICHAT_API_KEY;
+const UNNICHAT_CONFIGURADO = Boolean(UNNICHAT_WEBHOOK_URL && UNNICHAT_API_KEY);
+
 for (const [name, value] of Object.entries({ ASAAS_WEBHOOK_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY })) {
   if (!value) {
     console.error(`Variável de ambiente obrigatória ausente: ${name}`);
@@ -812,24 +818,24 @@ app.post("/onboarding/cadastro-publico", async (req, res) => {
 // pessoais e repassa pra API de Conversões — a Meta deduplica pelos dois
 // caminhos. Com bloqueador de anúncio o Pixel não roda, mas isto chega.
 const META_EVENTOS_PERMITIDOS = new Set(["PageView", "Lead"]);
-const META_ORIGENS_PERMITIDAS = new Set([FRONTEND_URL, "http://localhost:5173"]);
-const META_LIMITE_POR_MINUTO = 20;
-const metaRequisicoesPorIp = new Map();
+const ORIGENS_PUBLICAS = new Set([FRONTEND_URL, "http://localhost:5173"]);
+const LIMITE_PUBLICO_POR_MINUTO = 20;
+const requisicoesPublicasPorIp = new Map();
 
-function excedeuLimiteMeta(ip) {
+function excedeuLimitePublico(ip) {
   const agora = Date.now();
-  const registro = metaRequisicoesPorIp.get(ip);
+  const registro = requisicoesPublicasPorIp.get(ip);
   if (!registro || agora - registro.inicio > 60_000) {
-    if (metaRequisicoesPorIp.size > 5000) {
-      for (const [chave, valor] of metaRequisicoesPorIp) {
-        if (agora - valor.inicio > 60_000) metaRequisicoesPorIp.delete(chave);
+    if (requisicoesPublicasPorIp.size > 5000) {
+      for (const [chave, valor] of requisicoesPublicasPorIp) {
+        if (agora - valor.inicio > 60_000) requisicoesPublicasPorIp.delete(chave);
       }
     }
-    metaRequisicoesPorIp.set(ip, { inicio: agora, total: 1 });
+    requisicoesPublicasPorIp.set(ip, { inicio: agora, total: 1 });
     return false;
   }
   registro.total += 1;
-  return registro.total > META_LIMITE_POR_MINUTO;
+  return registro.total > LIMITE_PUBLICO_POR_MINUTO;
 }
 
 function textoCurto(valor, max = 200) {
@@ -841,12 +847,12 @@ app.post("/meta/evento", async (req, res) => {
     return res.status(503).json({ error: "API de Conversões da Meta não configurada" });
   }
 
-  if (!META_ORIGENS_PERMITIDAS.has(req.header("origin") || "")) {
+  if (!ORIGENS_PUBLICAS.has(req.header("origin") || "")) {
     return res.status(403).json({ error: "origem não permitida" });
   }
 
   const ip = (req.header("x-forwarded-for") || "").split(",")[0].trim() || req.socket.remoteAddress;
-  if (excedeuLimiteMeta(ip)) {
+  if (excedeuLimitePublico(ip)) {
     return res.status(429).json({ error: "muitas requisições" });
   }
 
@@ -862,7 +868,7 @@ app.post("/meta/evento", async (req, res) => {
     Number.isInteger(eventTime) && Math.abs(agoraSegundos - eventTime) < 3600 ? eventTime : agoraSegundos;
 
   const urlOrigem = textoCurto(eventSourceUrl, 2000);
-  const urlEvento = urlOrigem && [...META_ORIGENS_PERMITIDAS].some((o) => urlOrigem.startsWith(o)) ? urlOrigem : FRONTEND_URL;
+  const urlEvento = urlOrigem && [...ORIGENS_PUBLICAS].some((o) => urlOrigem.startsWith(o)) ? urlOrigem : FRONTEND_URL;
 
   const contentName = textoCurto(customData?.content_name, 100);
 
@@ -908,6 +914,80 @@ app.post("/meta/evento", async (req, res) => {
     console.error(`Erro ao enviar evento Meta ${eventName} id=${eventId}:`, err.message);
     return res.status(502).json({ error: "falha ao falar com a Meta" });
   }
+});
+
+// Webhook do CRM de WhatsApp (Unnichat): cada lead do formulário vira um
+// contato lá. O número vai só com dígitos, no formato 55 + DDD + número.
+function telefoneUnnichat(valor) {
+  const digitos = String(valor || "").replace(/\D/g, "");
+  if (digitos.length === 10 || digitos.length === 11) return `55${digitos}`;
+  if (digitos.startsWith("55") && (digitos.length === 12 || digitos.length === 13)) return digitos;
+  return "";
+}
+
+// Dez segundos de paciência e uma segunda tentativa quando a culpa pode
+// ser da rede ou do lado deles (5xx). Payload errado (4xx) não repete.
+async function chamarUnnichat(corpo) {
+  let ultimo = { ok: false, status: 0, detalhe: "sem resposta" };
+  for (const tentativa of [1, 2]) {
+    try {
+      const resposta = await fetch(UNNICHAT_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corpo),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (resposta.ok) return { ok: true, status: resposta.status };
+      const detalhe = (await resposta.text().catch(() => "")).slice(0, 300);
+      ultimo = { ok: false, status: resposta.status, detalhe };
+      if (resposta.status < 500) return ultimo;
+    } catch (err) {
+      ultimo = { ok: false, status: 0, detalhe: err.message };
+    }
+    if (tentativa === 2) return ultimo;
+  }
+  return ultimo;
+}
+
+app.post("/unnichat/lead", async (req, res) => {
+  if (!UNNICHAT_CONFIGURADO) {
+    return res.status(503).json({ error: "integração com a Unnichat não configurada" });
+  }
+
+  if (!ORIGENS_PUBLICAS.has(req.header("origin") || "")) {
+    return res.status(403).json({ error: "origem não permitida" });
+  }
+
+  const ip = (req.header("x-forwarded-for") || "").split(",")[0].trim() || req.socket.remoteAddress;
+  if (excedeuLimitePublico(ip)) {
+    return res.status(429).json({ error: "muitas requisições" });
+  }
+
+  const telefone = telefoneUnnichat(textoCurto(req.body?.telefone, 40));
+  if (!telefone) {
+    return res.status(400).json({ error: "telefone inválido" });
+  }
+
+  const resultado = await chamarUnnichat({
+    apiKey: UNNICHAT_API_KEY,
+    data: {
+      user: {
+        phoneNumber: telefone,
+        name: (textoCurto(req.body?.nome, 120) || "").trim(),
+        email: (textoCurto(req.body?.email, 160) || "").trim().toLowerCase(),
+      },
+    },
+  });
+
+  // O lead já foi gravado antes desta chamada, então falha aqui não
+  // derruba o envio: fica no log (sem a chave e sem os dados da pessoa) e
+  // a página mostra sucesso normalmente.
+  if (!resultado.ok) {
+    console.error(`Unnichat recusou o lead: status ${resultado.status} corpo ${resultado.detalhe}`);
+  } else {
+    console.log(`Lead enviado pra Unnichat: status ${resultado.status}`);
+  }
+  return res.status(200).json({ ok: resultado.ok });
 });
 
 app.listen(PORT, () => {

@@ -3,6 +3,7 @@ import { Flame, ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
 import { submitPublicLead } from "../../lib/publicLeads.js";
 import { registrarPageView, registrarLead } from "../../lib/metaPixel.js";
 import { guardarUtmsDaUrl, lerUtms } from "../../lib/utm.js";
+import { enviarLeadParaUnnichat, telefoneValido, emailValido } from "../../lib/unnichat.js";
 import StepShell from "../shared/StepShell.jsx";
 import AvisoCookies from "./AvisoCookies.jsx";
 
@@ -75,6 +76,7 @@ const respondido = (valor) => valor.trim().length > 0;
 const CAMPOS_INICIAIS = {
   nome: "",
   telefone: "",
+  email: "",
   nomeNegocio: "",
   cidade: "",
   estado: "",
@@ -145,6 +147,7 @@ export default function LeadFormPage() {
       const origemParam = new URLSearchParams(window.location.search).get("origem");
       await submitPublicLead({ ...campos, origem: origemParam || "bio_instagram", utms: lerUtms() });
       registrarLead({ telefone: campos.telefone, nome: campos.nome });
+      enviarLeadParaUnnichat({ nome: campos.nome, email: campos.email, telefone: campos.telefone });
       setEnviado(true);
     } catch (err) {
       setErro("Não foi possível enviar agora. Tenta de novo em instantes.");
@@ -163,15 +166,28 @@ export default function LeadFormPage() {
     },
     {
       categoria: "Sobre você",
-      podeContinuar: respondido(campos.telefone),
+      podeContinuar: telefoneValido(campos.telefone),
       campo: (
         <Field
           label="WhatsApp"
-          helper="É por aqui que a gente entra em contato"
+          helper="Com DDD — é por aqui que a gente entra em contato"
           type="tel"
           value={campos.telefone}
           onChange={(v) => set("telefone", v)}
           placeholder="(15) 99999-0000"
+        />
+      ),
+    },
+    {
+      categoria: "Sobre você",
+      podeContinuar: emailValido(campos.email),
+      campo: (
+        <Field
+          label="E-mail"
+          type="email"
+          value={campos.email}
+          onChange={(v) => set("email", v)}
+          placeholder="voce@email.com"
         />
       ),
     },

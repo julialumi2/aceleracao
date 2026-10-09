@@ -8,6 +8,7 @@ import { supabase } from "./supabase.js";
 export async function submitPublicLead({
   nome,
   telefone,
+  email,
   nomeNegocio,
   cidade,
   estado,
@@ -23,6 +24,7 @@ export async function submitPublicLead({
   const { error } = await supabase.from("leads").insert({
     nome,
     telefone: telefone || null,
+    email: email ? email.trim().toLowerCase() : null,
     nome_negocio: nomeNegocio || null,
     cidade: cidade || null,
     estado: estado || null,
