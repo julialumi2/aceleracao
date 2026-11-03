@@ -3,6 +3,7 @@ import { UserPlus, MessageCircle, Search, Plus, Trash2, ChevronDown, ChevronUp, 
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
 import OrigemCampanha from "../components/OrigemCampanha.jsx";
+import TagResponsavel, { corDaPessoa, primeiroNome } from "../components/TagResponsavel.jsx";
 
 // Os valores antigos (contatado, convertido, descartado) continuam os mesmos
 // no banco — só o nome na tela mudou. "convertido" é a conversão em cliente.
@@ -190,6 +191,9 @@ export default function LeadsList({
   onDeleteLead,
   onConvert,
   buscaInicial = "",
+  equipe = [],
+  souAdmin = false,
+  onDefinirResponsavel,
 }) {
   const [query, setQuery] = useState(buscaInicial);
 
@@ -385,6 +389,9 @@ export default function LeadsList({
 
       {visualizacao === "pipeline" ? (
         <LeadsPipeline
+          equipe={equipe}
+          souAdmin={souAdmin}
+          onDefinirResponsavel={onDefinirResponsavel}
           leads={filtered}
           todos={leads}
           semLeads={leads.length === 0}
@@ -406,12 +413,13 @@ export default function LeadsList({
           return (
             <div key={lead.id} className="rounded-2xl border border-line bg-surface p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <button
+                <div className="min-w-0 flex-1">
+                  <button
                   type="button"
                   onClick={() => setExpandedId(expandido ? null : lead.id)}
-                  className="group flex-1 text-left"
+                  className="group block w-full text-left"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-medium text-ink">{lead.nome}</p>
                     {recente && lead.status === "novo" && (
                       <span className="rounded-full bg-emerald-brand/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-bright">
@@ -429,7 +437,11 @@ export default function LeadsList({
                     {lead.cidade ? `${lead.cidade}${lead.estado ? `/${lead.estado}` : ""} · ` : ""}
                     {lead.email || lead.telefone || "sem contato"} · {relativeDaysLabel(lead.criadoEm)}
                   </p>
-                </button>
+                  </button>
+                  <div className="mt-2">
+                    <TagResponsavel lead={lead} equipe={equipe} souAdmin={souAdmin} onDefinir={onDefinirResponsavel} compacto />
+                  </div>
+                </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <select
@@ -532,6 +544,9 @@ export default function LeadsList({
 // Arrastar (HTML5) só funciona com mouse — no celular e no teclado, o status
 // muda pelo seletor que aparece ao abrir o card.
 function LeadsPipeline({
+  equipe,
+  souAdmin,
+  onDefinirResponsavel,
   leads,
   todos,
   semLeads,
@@ -643,6 +658,9 @@ function LeadsPipeline({
                         }}
                         onMudarStatus={onMudarStatus}
                         onUpdateTemperatura={onUpdateTemperatura}
+                        equipe={equipe}
+                        souAdmin={souAdmin}
+                        onDefinirResponsavel={onDefinirResponsavel}
                         confirmandoExclusao={confirmDeleteId === lead.id}
                         onPedirExclusao={onPedirExclusao}
                         onConfirmarExclusao={onConfirmarExclusao}
@@ -698,6 +716,9 @@ function ResumoPipeline({ leads }) {
 
 function CardPipeline({
   lead,
+  equipe,
+  souAdmin,
+  onDefinirResponsavel,
   aberto,
   onAlternar,
   arrastando,
@@ -713,6 +734,7 @@ function CardPipeline({
   const waLink = buildWhatsAppLink(lead.telefone, leadFirstContactMessage(lead));
   const recente = Math.floor((new Date() - new Date(lead.criadoEm)) / (1000 * 60 * 60 * 24)) <= 1;
   const local = lead.cidade ? `${lead.cidade}${lead.estado ? `/${lead.estado}` : ""}` : "";
+  const responsavel = (equipe || []).find((m) => m.id && m.id === lead.responsavelId);
 
   return (
     <article
@@ -738,6 +760,14 @@ function CardPipeline({
         </span>
         {(lead.nomeNegocio || local) && (
           <span className="mt-0.5 block truncate text-xs text-ink-dim">{[lead.nomeNegocio, local].filter(Boolean).join(" · ")}</span>
+        )}
+        {responsavel && (
+          <span
+            className={`mt-2 inline-flex items-center gap-1.5 rounded-[7px] border px-2 py-[2px] text-[10.5px] font-medium ${corDaPessoa(responsavel.id)}`}
+          >
+            <span className="h-[5px] w-[5px] rounded-full bg-current" />
+            {primeiroNome(responsavel.name)}
+          </span>
         )}
 
         <span className="mt-2.5 flex items-center justify-between gap-2 border-t border-line/60 pt-2.5 text-[11px]">
@@ -766,6 +796,11 @@ function CardPipeline({
               Chamar no WhatsApp
             </a>
             <span className="text-[11px] text-ink-dim">{relativeDaysLabel(lead.criadoEm)}</span>
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] text-ink-dim">Quem falou</span>
+            <TagResponsavel lead={lead} equipe={equipe} souAdmin={souAdmin} onDefinir={onDefinirResponsavel} compacto />
           </div>
 
           <div className="grid grid-cols-2 gap-2">

@@ -32,7 +32,16 @@ export async function criarMembroEquipe({ nome, email, cargo }) {
 // Lista real da equipe (tabela staff_members), pra não depender mais de
 // um array fixo no código que "esquecia" quem era criado depois.
 export async function fetchMembrosEquipe() {
-  const { data, error } = await supabase.from("staff_members").select("nome, email, cargo").order("created_at");
+  const { data, error } = await supabase
+    .from("staff_members")
+    .select("user_id, nome, email, cargo, admin")
+    .order("created_at");
   if (error) throw error;
-  return (data || []).map((m) => ({ name: m.nome, email: m.email, role: m.cargo || "Equipe" }));
+  return (data || []).map((m) => ({
+    id: m.user_id,
+    name: m.nome,
+    email: m.email,
+    role: m.cargo || "Equipe",
+    admin: Boolean(m.admin),
+  }));
 }

@@ -132,6 +132,8 @@ function mapLeadRow(row) {
     maiorGargalo: row.maior_gargalo || "",
     gestorTrafego: row.gestor_trafego || "",
     comoConheceu: row.como_conheceu || "",
+    responsavelId: row.responsavel_id || null,
+    responsavelEm: row.responsavel_em || null,
     mensagem: row.mensagem || "",
   };
 }
@@ -651,4 +653,25 @@ export async function fetchAnalisePorDia({ inicio, fim }) {
     ate30k: Number(linha.ate_30k) || 0,
     naoInformado: Number(linha.nao_informado) || 0,
   }));
+}
+
+// Quem falou com o lead. A trava da primeira marcação é um gatilho no
+// banco (ver migração responsavel_do_lead): aqui só traduzimos o erro
+// dele pra uma frase que a equipe entenda.
+export async function setLeadResponsavel(leadId, usuarioId) {
+  const { data, error } = await supabase
+    .from("leads")
+    .update({ responsavel_id: usuarioId })
+    .eq("id", leadId)
+    .select("responsavel_id, responsavel_em")
+    .single();
+
+  if (error) {
+    if ((error.message || "").includes("administrador")) {
+      throw new Error("Esse lead já tem responsável. Só Julia ou Guilherme podem trocar.");
+    }
+    throw error;
+  }
+
+  return { responsavelId: data.responsavel_id, responsavelEm: data.responsavel_em };
 }

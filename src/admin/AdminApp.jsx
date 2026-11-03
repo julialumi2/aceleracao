@@ -6,7 +6,7 @@ import AdminLayout from "./AdminLayout.jsx";
 import { supabase } from "../lib/supabase.js";
 
 function sessionFromUser(user) {
-  return { name: user.email.split("@")[0] || "Equipe", email: user.email };
+  return { id: user.id, name: user.email.split("@")[0] || "Equipe", email: user.email };
 }
 
 // Mesmo padrão de navegação por estado usado no app do cliente (App.jsx).

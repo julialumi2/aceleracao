@@ -6,6 +6,7 @@ import ClientsList from "./screens/ClientsList.jsx";
 import ClientDetail from "./screens/ClientDetail.jsx";
 import LeadsList from "./screens/LeadsList.jsx";
 import AnaliseOrigem from "./screens/AnaliseOrigem.jsx";
+import { fetchMembrosEquipe } from "./lib/teamApi.js";
 import Billing from "./screens/Billing.jsx";
 import Intensity from "./screens/Intensity.jsx";
 import TasksBoard from "./screens/TasksBoard.jsx";
@@ -14,6 +15,7 @@ import {
   fetchClients,
   fetchLeads,
   fetchTasks,
+  setLeadResponsavel,
   createTask,
   updateTaskStatus,
   deleteTask,
@@ -86,6 +88,7 @@ export default function AdminLayout({ session, onLogout }) {
   const [archivedLoaded, setArchivedLoaded] = useState(false);
   const [loadingArchived, setLoadingArchived] = useState(false);
   const [buscaLeads, setBuscaLeads] = useState("");
+  const [equipe, setEquipe] = useState([]);
 
   useEffect(() => {
     loadAll();
@@ -107,10 +110,16 @@ export default function AdminLayout({ session, onLogout }) {
     if (!silencioso) setLoading(true);
     setLoadError("");
     try {
-      const [clientsData, leadsData, tasksData] = await Promise.all([fetchClients(), fetchLeads(), fetchTasks()]);
+      const [clientsData, leadsData, tasksData, equipeData] = await Promise.all([
+        fetchClients(),
+        fetchLeads(),
+        fetchTasks(),
+        fetchMembrosEquipe().catch(() => []),
+      ]);
       setClients(clientsData);
       setLeads(leadsData);
       setTasks(tasksData);
+      setEquipe(equipeData);
     } catch (err) {
       const sessaoExpirada = /jwt|token/i.test(err.message || "");
       if (sessaoExpirada && !jaTentouRenovar) {
@@ -279,6 +288,15 @@ export default function AdminLayout({ session, onLogout }) {
     setSelectedClientId(null);
     setBuscaLeads("");
     setActive(key);
+  }
+
+  // Quem falou com o lead. A trava da primeira marcação é do banco; aqui
+  // só atualizamos a lista com o que ele devolveu.
+  async function handleDefinirResponsavelLead(lead, membro) {
+    const salvo = await setLeadResponsavel(lead.id, membro.id);
+    setLeads((prev) =>
+      prev.map((l) => (l.id === lead.id ? { ...l, responsavelId: salvo.responsavelId, responsavelEm: salvo.responsavelEm } : l))
+    );
   }
 
   // Clique num lead da Análise de Anúncios: abre a aba Leads já filtrada nele.
@@ -497,6 +515,9 @@ export default function AdminLayout({ session, onLogout }) {
                   onDeleteLead={handleDeleteLead}
                   onConvert={convertLead}
                   buscaInicial={buscaLeads}
+                  equipe={equipe}
+                  souAdmin={equipe.some((m) => m.id === session?.id && m.admin)}
+                  onDefinirResponsavel={handleDefinirResponsavelLead}
                 />
               )}
 
