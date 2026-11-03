@@ -446,7 +446,10 @@ export default function AdminLayout({ session, onLogout }) {
         contadores={contadores}
       />
 
-      <div className="flex min-h-screen flex-1 flex-col">
+      {/* min-w-0: sem isso, uma faixa larga (a pipeline) empurra a coluna
+          inteira e quem rola na horizontal é a página, levando junto o
+          menu lateral e a barra de cima. */}
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <div className="flex items-center justify-between gap-3 border-b border-line bg-surface/60 px-5 py-3.5 lg:hidden">
           <span className="flex items-center gap-2 text-[13px] font-semibold tracking-tight text-ink">
             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-brand to-flame text-base">

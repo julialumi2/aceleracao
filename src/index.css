@@ -96,6 +96,19 @@
       background-color: #f5a513;
     }
 
+    /* Dentro de uma coluna da pipeline (266px) a barra de 12px vira um
+       elemento de desenho. Aqui ela só marca que tem mais card embaixo. */
+    .rolagem-fina::-webkit-scrollbar {
+      width: 8px;
+    }
+    .rolagem-fina::-webkit-scrollbar-thumb {
+      background-color: rgba(245, 165, 19, 0.3);
+      border-width: 2px;
+    }
+    .rolagem-fina:hover::-webkit-scrollbar-thumb {
+      background-color: rgba(245, 165, 19, 0.55);
+    }
+
     /* Firefox não tem os pseudo-elementos acima: fica a versão fina. */
     @supports not selector(::-webkit-scrollbar) {
       html {

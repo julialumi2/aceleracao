@@ -550,6 +550,21 @@ export default function LeadsList({
 
 // Arrastar (HTML5) só funciona com mouse — no celular e no teclado, o status
 // muda pelo seletor que aparece ao abrir o card.
+// A mesma caixa tracejada nas sete colunas: em "Fechado" ela é um alvo
+// permanente, nas outras só aparece quando a coluna está vazia. Uma forma
+// só, pra que a fileira leia como um objeto repetido e não como dois.
+function CaixaVazia({ children, destacada }) {
+  return (
+    <div
+      className={`flex flex-1 flex-col items-center justify-center rounded-[11px] border border-dashed px-3 py-5 text-center text-[11.5px] leading-relaxed transition-colors ${
+        destacada ? "border-emerald-brand/60 bg-emerald-brand/5 text-emerald-brand" : "border-line text-ink-dim"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
 function LeadsPipeline({
   equipe,
   souAdmin,
@@ -610,7 +625,7 @@ function LeadsPipeline({
       </div>
 
       <div className="-mx-5 snap-x snap-mandatory scroll-px-5 overflow-x-auto px-5 pb-3 md:mx-0 md:snap-none md:px-0">
-        <div className="flex items-start gap-3">
+        <div className="flex gap-3">
           {STATUSES.map((coluna) => {
             const daColuna = leads.filter((l) => l.status === coluna.valor).sort(ORDENACOES[ordem].comparar);
             const ehConversao = coluna.valor === "convertido";
@@ -629,11 +644,11 @@ function LeadsPipeline({
                   if (!e.currentTarget.contains(e.relatedTarget)) setColunaAlvo(null);
                 }}
                 onDrop={(e) => soltar(e, coluna.valor)}
-                className={`w-[76vw] max-w-[310px] shrink-0 snap-start overflow-hidden rounded-[14px] border transition-colors md:w-[266px] md:max-w-none ${
+                className={`flex h-[min(70vh,620px)] min-h-[320px] w-[76vw] max-w-[310px] shrink-0 snap-start flex-col overflow-hidden rounded-[14px] border transition-colors md:w-[266px] md:max-w-none ${
                   ehAlvo ? "border-emerald-brand/60 bg-emerald-brand/[0.04]" : "border-line bg-surface"
                 }`}
               >
-                <header className="flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+                <header className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-3 py-2.5">
                   <h2 className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${COR_COLUNA[coluna.valor] || "bg-ink-dim"}`} />
                     <span className="truncate">{coluna.rotulo}</span>
@@ -646,18 +661,14 @@ function LeadsPipeline({
                 </header>
 
                 {ehConversao ? (
-                  <div className="p-2.5">
-                    <div
-                      className={`flex flex-col items-center gap-2 rounded-[11px] border border-dashed px-3 py-7 text-center text-[11.5px] leading-relaxed transition-colors ${
-                        ehAlvo ? "border-emerald-brand/60 bg-emerald-brand/5 text-emerald-brand" : "border-line-forte text-ink-dim"
-                      }`}
-                    >
-                      <UserCheck size={17} />
+                  <div className="rolagem-fina flex flex-1 flex-col overflow-y-auto p-2.5">
+                    <CaixaVazia destacada={ehAlvo}>
+                      <UserCheck size={16} className="mx-auto mb-1.5" />
                       Solte aqui pra fechar e converter em cliente
-                    </div>
+                    </CaixaVazia>
                   </div>
                 ) : (
-                  <div className="flex min-h-[90px] flex-col gap-2 p-2.5">
+                  <div className="rolagem-fina flex flex-1 flex-col gap-2 overflow-y-auto p-2.5">
                     {daColuna.map((lead) => (
                       <CardPipeline
                         key={lead.id}
@@ -682,9 +693,7 @@ function LeadsPipeline({
                       />
                     ))}
                     {daColuna.length === 0 && (
-                      <p className="rounded-[11px] border border-dashed border-line px-3 py-5 text-center text-[11.5px] text-ink-dim">
-                        {ehAlvo ? "Solte aqui" : "Nenhum lead"}
-                      </p>
+                      <CaixaVazia destacada={ehAlvo}>{ehAlvo ? "Solte aqui" : "Nenhum lead"}</CaixaVazia>
                     )}
                   </div>
                 )}
