@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { UserPlus, MessageCircle, Search, Plus, Trash2, ChevronDown, ChevronUp, LayoutList, Kanban } from "lucide-react";
+import { UserPlus, MessageCircle, Search, Plus, Trash2, ChevronDown, ChevronUp, LayoutList, Kanban, GripVertical, UserCheck } from "lucide-react";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { leadFirstContactMessage } from "../lib/messageTemplates.js";
 import OrigemCampanha from "../components/OrigemCampanha.jsx";
 import TagResponsavel, { corDaPessoa, primeiroNome } from "../components/TagResponsavel.jsx";
+import KpiCard from "../components/KpiCard.jsx";
 
 // Os valores antigos (contatado, convertido, descartado) continuam os mesmos
 // no banco — só o nome na tela mudou. "convertido" é a conversão em cliente.
@@ -27,10 +28,16 @@ const ORIGENS = [
 // Soltar um card em "Fechado" não muda o status direto: abre a janela de
 // conversão, que cria o cliente. A coluna fica sempre vazia porque lead
 // convertido some da tela de Leads.
+// Um ponto por etapa: brasa no começo do funil, verde quando fecha,
+// vermelho quando morre, neutro no meio — cor só onde ela informa algo.
 const COR_COLUNA = {
   novo: "bg-emerald-brand",
-  convertido: "bg-emerald-bright",
-  descartado: "bg-flame-dim",
+  contatado: "bg-info",
+  qualificado: "bg-info",
+  reuniao_agendada: "bg-info",
+  follow_up: "bg-ink-dim",
+  convertido: "bg-ok",
+  descartado: "bg-flame",
 };
 
 const COR_TEMPERATURA = {
@@ -574,7 +581,7 @@ function LeadsPipeline({
       <ResumoPipeline leads={todos} />
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-ink-dim">
+        <p className="text-[12.5px] text-ink-dim">
           {semLeads ? (
             "Nenhum lead recebido ainda."
           ) : leads.length === 0 ? (
@@ -586,12 +593,12 @@ function LeadsPipeline({
             </>
           )}
         </p>
-        <label className="flex items-center gap-2 text-xs text-ink-dim">
+        <label className="flex items-center gap-2 text-[12.5px] text-ink-dim">
           Ordenar
           <select
             value={ordem}
             onChange={(e) => setOrdem(e.target.value)}
-            className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs text-ink focus:outline-none"
+            className="rounded-[10px] border border-line-forte bg-surface px-2.5 py-1.5 text-[12.5px] text-ink transition-colors focus:border-emerald-brand focus:outline-none focus:ring-[3px] focus:ring-emerald-brand/15"
           >
             {Object.entries(ORDENACOES).map(([valor, { rotulo }]) => (
               <option key={valor} value={valor} className="bg-surface text-ink">
@@ -622,28 +629,35 @@ function LeadsPipeline({
                   if (!e.currentTarget.contains(e.relatedTarget)) setColunaAlvo(null);
                 }}
                 onDrop={(e) => soltar(e, coluna.valor)}
-                className={`w-[72vw] max-w-[300px] shrink-0 snap-start rounded-xl border p-2.5 transition-colors md:w-[252px] md:max-w-none ${
-                  ehAlvo ? "border-emerald-brand/60 bg-emerald-brand/5" : "border-line/60 bg-surface/40"
+                className={`w-[76vw] max-w-[310px] shrink-0 snap-start overflow-hidden rounded-[14px] border transition-colors md:w-[266px] md:max-w-none ${
+                  ehAlvo ? "border-emerald-brand/60 bg-emerald-brand/[0.04]" : "border-line bg-surface"
                 }`}
               >
-                <header className="mb-2.5 flex items-center justify-between px-1 pt-0.5">
-                  <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-                    <span className={`h-3 w-[3px] rounded-full ${COR_COLUNA[coluna.valor] || "bg-ink-dim/60"}`} />
-                    {coluna.rotulo}
+                <header className="flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+                  <h2 className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${COR_COLUNA[coluna.valor] || "bg-ink-dim"}`} />
+                    <span className="truncate">{coluna.rotulo}</span>
                   </h2>
-                  {!ehConversao && <span className="text-[11px] tabular-nums text-ink-dim">{daColuna.length}</span>}
+                  {!ehConversao && (
+                    <span className="shrink-0 rounded-md bg-surface-raised px-1.5 py-0.5 font-mono text-[10.5px] tabular-nums text-ink-muted">
+                      {daColuna.length}
+                    </span>
+                  )}
                 </header>
 
                 {ehConversao ? (
-                  <div
-                    className={`rounded-lg border border-dashed px-3 py-5 text-center text-xs leading-relaxed transition-colors ${
-                      ehAlvo ? "border-emerald-brand/60 text-emerald-bright" : "border-line text-ink-dim"
-                    }`}
-                  >
-                    Solte aqui pra fechar e converter em cliente
+                  <div className="p-2.5">
+                    <div
+                      className={`flex flex-col items-center gap-2 rounded-[11px] border border-dashed px-3 py-7 text-center text-[11.5px] leading-relaxed transition-colors ${
+                        ehAlvo ? "border-emerald-brand/60 bg-emerald-brand/5 text-emerald-brand" : "border-line-forte text-ink-dim"
+                      }`}
+                    >
+                      <UserCheck size={17} />
+                      Solte aqui pra fechar e converter em cliente
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex min-h-[90px] flex-col gap-2 p-2.5">
                     {daColuna.map((lead) => (
                       <CardPipeline
                         key={lead.id}
@@ -667,7 +681,11 @@ function LeadsPipeline({
                         excluindo={excluindo}
                       />
                     ))}
-                    {daColuna.length === 0 && <p className="px-1 pb-1 text-xs text-ink-dim">vazio</p>}
+                    {daColuna.length === 0 && (
+                      <p className="rounded-[11px] border border-dashed border-line px-3 py-5 text-center text-[11.5px] text-ink-dim">
+                        {ehAlvo ? "Solte aqui" : "Nenhum lead"}
+                      </p>
+                    )}
                   </div>
                 )}
               </section>
@@ -691,26 +709,19 @@ function ResumoPipeline({ leads }) {
 
   const indicadores = [
     { rotulo: "Leads na base", valor: naBase, detalhe: `${recebidosHoje} hoje` },
-    { rotulo: "Sem contato", valor: semContato, detalhe: "aguardando retorno" },
+    { rotulo: "Sem contato", valor: semContato, detalhe: "aguardando retorno", tone: semContato ? "warning" : "default" },
     { rotulo: "Quentes", valor: quentes, detalhe: "temperatura quente" },
     { rotulo: "Reuniões agendadas", valor: agendados, detalhe: `${pctAgendados}% da base` },
   ];
 
   return (
-    <dl className="mb-4 grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface md:mb-6 md:grid-cols-4">
-      {indicadores.map(({ rotulo, valor, detalhe }, i) => (
-        <div
-          key={rotulo}
-          className={`px-4 py-3 md:px-5 md:py-4 ${i % 2 === 1 ? "border-l border-line/60" : ""} ${i >= 2 ? "border-t border-line/60 md:border-t-0" : ""} ${
-            i === 2 ? "md:border-l" : ""
-          }`}
-        >
-          <dt className="text-[10px] font-medium uppercase tracking-[0.14em] text-ink-dim md:text-[11px]">{rotulo}</dt>
-          <dd className="mt-1.5 font-display text-2xl leading-none tabular-nums text-ink md:mt-2 md:text-3xl">{valor}</dd>
-          <dd className="mt-1 text-[11px] text-ink-dim md:mt-1.5 md:text-xs">{detalhe}</dd>
+    <div className="mb-4 grid grid-cols-2 gap-2.5 md:mb-6 md:flex md:flex-wrap md:gap-3">
+      {indicadores.map(({ rotulo, valor, detalhe, tone }) => (
+        <div key={rotulo} className="md:w-[196px]">
+          <KpiCard label={rotulo} value={valor} nota={detalhe} tone={tone} />
         </div>
       ))}
-    </dl>
+    </div>
   );
 }
 
@@ -745,22 +756,33 @@ function CardPipeline({
         onComecarArrastar();
       }}
       onDragEnd={onTerminarArrastar}
-      className={`cursor-grab rounded-lg border bg-surface transition-[opacity,border-color] active:cursor-grabbing ${
-        aberto ? "border-emerald-brand/40" : "border-line/80 hover:border-line"
-      } ${arrastando ? "opacity-40" : lead.status === "descartado" ? "opacity-60" : ""}`}
+      className={`group cursor-grab rounded-[11px] border bg-surface-raised transition-[opacity,border-color,box-shadow] active:cursor-grabbing ${
+        aberto ? "border-emerald-brand/50" : "border-line hover:border-line-forte"
+      } ${arrastando ? "opacity-40 ring-2 ring-emerald-brand/40" : lead.status === "descartado" ? "opacity-60" : ""}`}
     >
-      <button type="button" onClick={onAlternar} aria-expanded={aberto} className="block w-full p-3 text-left">
-        <span className="flex items-start justify-between gap-2">
-          <span className="text-sm font-semibold leading-snug text-ink">{lead.nome}</span>
+      <button type="button" onClick={onAlternar} aria-expanded={aberto} className="block w-full px-3 py-2.5 text-left">
+        <span className="flex items-start gap-2">
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13.5px] font-semibold leading-snug tracking-tight text-ink">
+              {lead.nome}
+            </span>
+            {(lead.nomeNegocio || local) && (
+              <span className="mt-0.5 block truncate text-[11.5px] text-ink-dim">
+                {[lead.nomeNegocio, local].filter(Boolean).join(" · ")}
+              </span>
+            )}
+          </span>
           {recente && lead.status === "novo" && (
-            <span className="shrink-0 rounded-full bg-emerald-brand/15 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-emerald-bright">
+            <span className="shrink-0 rounded-md bg-emerald-brand/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-emerald-brand">
               NOVO
             </span>
           )}
+          <GripVertical
+            size={13}
+            className="mt-0.5 hidden shrink-0 text-ink-dim opacity-0 transition-opacity group-hover:opacity-100 md:block"
+          />
         </span>
-        {(lead.nomeNegocio || local) && (
-          <span className="mt-0.5 block truncate text-xs text-ink-dim">{[lead.nomeNegocio, local].filter(Boolean).join(" · ")}</span>
-        )}
+
         {responsavel && (
           <span
             className={`mt-2 inline-flex items-center gap-1.5 rounded-[7px] border px-2 py-[2px] text-[10.5px] font-medium ${corDaPessoa(responsavel.id)}`}
@@ -770,7 +792,7 @@ function CardPipeline({
           </span>
         )}
 
-        <span className="mt-2.5 flex items-center justify-between gap-2 border-t border-line/60 pt-2.5 text-[11px]">
+        <span className="mt-2.5 flex items-center justify-between gap-2 border-t border-line pt-2 text-[11px]">
           {lead.temperatura ? (
             <span className="flex items-center gap-1.5 capitalize text-ink-muted">
               <span className={`h-1.5 w-1.5 rounded-full ${COR_TEMPERATURA[lead.temperatura]}`} />
@@ -779,7 +801,11 @@ function CardPipeline({
           ) : (
             <span className="text-ink-dim">sem temperatura</span>
           )}
-          <span className="truncate text-ink-dim">{lead.faturamentoMensal || relativeDaysLabel(lead.criadoEm)}</span>
+          {lead.faturamentoMensal ? (
+            <span className="truncate font-mono text-[10.5px] tabular-nums text-ink-muted">{lead.faturamentoMensal}</span>
+          ) : (
+            <span className="truncate text-ink-dim">{relativeDaysLabel(lead.criadoEm)}</span>
+          )}
         </span>
       </button>
 

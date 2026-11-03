@@ -32,6 +32,11 @@ export default function TagResponsavel({ lead, equipe = [], souAdmin = false, on
   const caixaRef = useRef(null);
 
   const responsavel = equipe.find((m) => m.id && m.id === lead.responsavelId);
+  // Só quem atende lead entra como opção (hoje: Douglas e Leonardo). Se
+  // ninguém estiver marcado no banco, cai pra equipe inteira em vez de
+  // mostrar uma lista vazia.
+  const candidatos = equipe.filter((m) => m.atendeLeads);
+  const opcoes = candidatos.length > 0 ? candidatos : equipe;
   const travado = Boolean(lead.responsavelId) && !souAdmin;
 
   useEffect(() => {
@@ -121,7 +126,7 @@ export default function TagResponsavel({ lead, equipe = [], souAdmin = false, on
                 {responsavel ? "Trocar o responsável" : "Quem falou com esse lead?"}
               </p>
               <div className="max-h-56 overflow-y-auto">
-                {equipe.map((membro) => (
+                {opcoes.map((membro) => (
                   <button
                     key={membro.id || membro.email}
                     type="button"
@@ -134,7 +139,7 @@ export default function TagResponsavel({ lead, equipe = [], souAdmin = false, on
                     {membro.id === lead.responsavelId && <Check size={13} className="ml-auto text-ink-dim" />}
                   </button>
                 ))}
-                {equipe.length === 0 && <p className="px-2 py-3 text-[12px] text-ink-dim">Ninguém cadastrado na equipe.</p>}
+                {opcoes.length === 0 && <p className="px-2 py-3 text-[12px] text-ink-dim">Ninguém cadastrado na equipe.</p>}
               </div>
             </>
           )}

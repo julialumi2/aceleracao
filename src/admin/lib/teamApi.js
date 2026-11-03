@@ -32,10 +32,9 @@ export async function criarMembroEquipe({ nome, email, cargo }) {
 // Lista real da equipe (tabela staff_members), pra não depender mais de
 // um array fixo no código que "esquecia" quem era criado depois.
 export async function fetchMembrosEquipe() {
-  const { data, error } = await supabase
-    .from("staff_members")
-    .select("user_id, nome, email, cargo, admin")
-    .order("created_at");
+  // select("*") de propósito: assim a tela não quebra enquanto uma coluna
+  // nova (admin, atende_leads...) ainda não existe no banco.
+  const { data, error } = await supabase.from("staff_members").select("*").order("created_at");
   if (error) throw error;
   return (data || []).map((m) => ({
     id: m.user_id,
@@ -43,5 +42,6 @@ export async function fetchMembrosEquipe() {
     email: m.email,
     role: m.cargo || "Equipe",
     admin: Boolean(m.admin),
+    atendeLeads: Boolean(m.atende_leads),
   }));
 }
