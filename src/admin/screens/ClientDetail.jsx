@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Building2, FileSignature, Wallet, TrendingUp, MessageCircle, Plus, UtensilsCrossed, CalendarClock, CheckCircle2, Archive, Pencil, Trash2, Ban, RotateCcw } from "lucide-react";
 import StatusBadge, { NextBillingBadge } from "../components/StatusBadge.jsx";
 import OrigemCampanha from "../components/OrigemCampanha.jsx";
+import Botao, { Segmentado } from "../components/Botao.jsx";
+import Dica from "../components/Dica.jsx";
+import { classeCampo, RotuloCampo } from "../components/Campo.jsx";
 import { buildWhatsAppLink } from "../lib/waLink.js";
 import { billingAlertMessage, intensityAlertMessage } from "../lib/messageTemplates.js";
 import { sortByVencimento, alertStage, ALERT_STAGE_LABELS, billingSummary } from "../lib/invoices.js";
@@ -92,20 +95,18 @@ export default function ClientDetail({ client, onBack, initialTab = "dados", ...
 }
 
 function Panel({ children }) {
-  return <div className="rounded-2xl border border-line bg-surface p-6">{children}</div>;
+  return <div className="rounded-2xl border border-line bg-surface p-5 sm:p-7">{children}</div>;
 }
 
-function TextField({ label, value, onChange, type = "text" }) {
+function TextField({ label, dica, value, onChange, type = "text" }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-ink-muted">{label}</span>
+      <RotuloCampo dica={dica}>{label}</RotuloCampo>
       <input
         type={type}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none ${
-          type === "date" ? "[color-scheme:dark]" : ""
-        }`}
+        className={classeCampo(type === "date" ? "[color-scheme:dark]" : "")}
       />
     </label>
   );
@@ -176,7 +177,7 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
 
   return (
     <Panel>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-5 gap-y-5 sm:grid-cols-2">
         <TextField label="Empresa" value={form.empresa} onChange={(v) => editarCampo("empresa", v)} />
         <TextField label="Nome do responsável" value={form.nome} onChange={(v) => editarCampo("nome", v)} />
         <TextField label="CNPJ" value={form.cnpj} onChange={(v) => editarCampo("cnpj", v)} />
@@ -192,14 +193,10 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
         />
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
-        <button
-          onClick={salvar}
-          disabled={!dirty || salvando}
-          className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-50"
-        >
+      <div className="mt-6 flex items-center gap-3">
+        <Botao variante="primario" onClick={salvar} disabled={!dirty || salvando}>
           {salvando ? "Salvando..." : "Salvar"}
-        </button>
+        </Botao>
         {salvo && !dirty && <span className="text-xs text-emerald-bright">Alterações salvas.</span>}
         {dirty && <span className="text-xs text-ink-dim">Alterações não salvas.</span>}
       </div>
@@ -207,27 +204,26 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
       <OrigemCampanha utm={client.utm} className="mt-6 border-t border-line/60 pt-5" />
 
       <div className="mt-6 border-t border-line/60 pt-5">
-        <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+        <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
           <UtensilsCrossed size={13} />
           Saúde da campanha
         </p>
-        <div className="flex flex-wrap gap-2">
-          {SAUDE_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => onUpdate(client.id, { saude: opt.value })}
-              className={`rounded-full px-4 py-2 text-xs font-medium transition-colors ${
-                client.saude === opt.value ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        <Segmentado
+          rotulo="Saúde da campanha"
+          valor={client.saude}
+          onEscolher={(valor) => onUpdate(client.id, { saude: valor })}
+          opcoes={SAUDE_OPTIONS.map((opt) => ({ valor: opt.value, rotulo: opt.label }))}
+        />
       </div>
 
       <div className="mt-6 border-t border-line/60 pt-5">
-        <p className="mb-1 text-xs font-medium text-ink-muted">Cancelamento da mentoria</p>
+        <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+          Cancelamento da mentoria
+          <Dica>
+            Para quem saiu da mentoria mas ainda pode dever boleto. Diferente de arquivar: o cliente continua aparecendo em
+            Cobranças até a dívida ser resolvida.
+          </Dica>
+        </p>
         {client.canceladoEm ? (
           <>
             <p className="mb-3 text-xs text-ink-dim">
@@ -240,82 +236,62 @@ function DadosTab({ client, onUpdate, onArchiveClient, onSetCancelamento, onReat
               )}
               . Continua aparecendo em Cobranças até os boletos em aberto serem resolvidos.
             </p>
-            <button
-              onClick={reativar}
-              disabled={reativando}
-              className="flex items-center gap-1.5 rounded-xl border border-line px-4 py-2 text-xs font-medium text-ink-muted transition-colors hover:border-emerald-brand/40 hover:text-emerald-bright disabled:opacity-60"
-            >
-              <RotateCcw size={13} /> Reativar cliente
-            </button>
+            <Botao variante="secundario" tamanho="sm" icone={RotateCcw} onClick={reativar} disabled={reativando}>
+              Reativar cliente
+            </Botao>
           </>
         ) : (
           <>
-            <p className="mb-3 text-xs text-ink-dim">
-              Cliente que saiu da mentoria mas ainda pode dever boleto — diferente de arquivar, continua aparecendo em Cobranças
-              até a dívida ser resolvida.
-            </p>
             {mostrarFormCancelar ? (
               <div>
                 <label className="block">
-                  <span className="mb-1.5 block text-xs font-medium text-ink-muted">Motivo do cancelamento</span>
+                  <RotuloCampo>Motivo do cancelamento</RotuloCampo>
                   <textarea
                     value={motivo}
                     onChange={(e) => setMotivo(e.target.value)}
                     rows={2}
-                    className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+                    className={classeCampo()}
                   />
                 </label>
-                <div className="mt-3 flex items-center gap-3">
-                  <button
-                    onClick={cancelar}
-                    disabled={cancelando}
-                    className="rounded-xl bg-flame/15 px-4 py-2 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
-                  >
+                <div className="mt-3 flex items-center gap-2">
+                  <Botao variante="perigoFirme" tamanho="sm" onClick={cancelar} disabled={cancelando}>
                     Confirmar cancelamento
-                  </button>
-                  <button onClick={() => setMostrarFormCancelar(false)} className="text-xs text-ink-muted hover:text-ink">
-                    Cancelar
-                  </button>
+                  </Botao>
+                  <Botao variante="fantasma" tamanho="sm" onClick={() => setMostrarFormCancelar(false)}>
+                    Voltar
+                  </Botao>
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => setMostrarFormCancelar(true)}
-                className="flex items-center gap-1.5 rounded-xl border border-line px-4 py-2 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
-              >
-                <Ban size={13} /> Marcar como cancelado
-              </button>
+              <Botao variante="perigo" tamanho="sm" icone={Ban} onClick={() => setMostrarFormCancelar(true)}>
+                Marcar como cancelado
+              </Botao>
             )}
           </>
         )}
       </div>
 
       <div className="mt-6 border-t border-line/60 pt-5">
-        <p className="mb-1 text-xs font-medium text-ink-muted">Arquivar cliente</p>
-        <p className="mb-3 text-xs text-ink-dim">
-          Remove esse cliente das listas ativas (Dashboard, Cobranças, Intensidade). O cadastro e todo o histórico continuam
-          guardados e podem ser restaurados a qualquer momento em Clientes → Ver arquivados.
+        <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+          Arquivar cliente
+          <Dica>
+            Some das listas ativas (Dashboard, Cobranças, Intensidade). O cadastro e o histórico continuam guardados e voltam
+            a qualquer momento em Clientes → Ver arquivados.
+          </Dica>
         </p>
         {confirmArquivar ? (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={arquivar}
-              disabled={arquivando}
-              className="rounded-xl bg-flame/15 px-4 py-2 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
-            >
+          <div className="flex items-center gap-2">
+            <Botao variante="perigoFirme" tamanho="sm" onClick={arquivar} disabled={arquivando}>
               Confirmar arquivamento
-            </button>
-            <button onClick={() => setConfirmArquivar(false)} className="text-xs text-ink-muted hover:text-ink">
-              Cancelar
-            </button>
+            </Botao>
+            <Botao variante="fantasma" tamanho="sm" onClick={() => setConfirmArquivar(false)}>
+              Voltar
+            </Botao>
           </div>
         ) : (
-          <button
-            onClick={() => setConfirmArquivar(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-line px-4 py-2 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
-          >
-            <Archive size={13} /> Arquivar cliente
-          </button>
+          <Botao variante="perigo" tamanho="sm" icone={Archive} onClick={() => setConfirmArquivar(true)}>
+            Arquivar cliente
+          </Botao>
         )}
       </div>
     </Panel>
@@ -472,30 +448,26 @@ function GerarContratoButton({ client, onContratoGerado }) {
   }
 
   return (
-    <div className="mb-5 rounded-xl border border-line/60 bg-surface-raised p-4">
-      <p className="text-sm font-medium text-ink">Contrato (Clicksign)</p>
-      <p className="mt-1 text-xs text-ink-dim">
-        "Baixar rascunho" gera o arquivo pra conferir rápido, sem mandar nada pra ninguém. "Visualizar e revisar" abre
-        o contrato pra você editar o texto se precisar, antes de mandar pro Clicksign colher a assinatura.
+    <div className="mb-6 rounded-xl border border-line/60 bg-surface-raised p-4 sm:p-5">
+      <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+        Contrato (Clicksign)
+        <Dica>
+          <strong className="font-medium text-ink">Baixar rascunho</strong> gera o arquivo pra você conferir, sem mandar nada
+          pra ninguém. <strong className="font-medium text-ink">Visualizar e revisar</strong> abre o contrato pra editar o
+          texto antes de enviar pro Clicksign colher a assinatura.
+        </Dica>
       </p>
+      <p className="mt-1 text-xs text-ink-dim">Gere, revise e envie pra assinatura.</p>
       {!podeBaixar && <p className="mt-2 text-xs text-flame">Falta configurar a cobrança recorrente antes de gerar o contrato.</p>}
       {podeBaixar && !podeGerar && <p className="mt-2 text-xs text-flame">Falta e-mail do cliente antes de enviar pra assinatura.</p>}
       {erro && <p className="mt-2 text-xs text-flame">{erro}</p>}
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          onClick={baixarRascunho}
-          disabled={!podeBaixar || baixando}
-          className="rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-60"
-        >
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Botao variante="secundario" onClick={baixarRascunho} disabled={!podeBaixar || baixando}>
           {baixando ? "Gerando..." : "Baixar rascunho"}
-        </button>
-        <button
-          onClick={() => setMostrarModal(true)}
-          disabled={!podeGerar}
-          className="rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
-        >
+        </Botao>
+        <Botao variante="primario" onClick={() => setMostrarModal(true)} disabled={!podeGerar}>
           Visualizar e revisar
-        </button>
+        </Botao>
       </div>
 
       {mostrarModal && (
@@ -529,26 +501,24 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl, on
         <GerarContratoButton client={client} onContratoGerado={onContratoGerado} />
       </div>
 
-      <div className="flex gap-2">
-        <button
-          onClick={() => onSetContractStatus(client, "pendente")}
-          className={`flex-1 rounded-full py-2.5 text-sm font-medium transition-colors ${
-            client.contrato.status === "pendente" ? "bg-flame/15 text-flame" : "border border-line text-ink-muted hover:text-ink"
-          }`}
-        >
-          Marcar como pendente
-        </button>
-        <button
-          onClick={() => onSetContractStatus(client, "assinado")}
-          className={`flex-1 rounded-full py-2.5 text-sm font-medium transition-colors ${
-            client.contrato.status === "assinado" ? "bg-green-400/15 text-green-300" : "border border-line text-ink-muted hover:text-ink"
-          }`}
-        >
-          Marcar como assinado
-        </button>
-      </div>
+      <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+        Marcar status na mão
+        <Dica>
+          Quando o contrato é enviado pelo Clicksign, o status muda sozinho na assinatura. Use isto só se a assinatura
+          aconteceu por fora ou se precisar corrigir.
+        </Dica>
+      </p>
+      <Segmentado
+        rotulo="Status do contrato"
+        valor={client.contrato.status}
+        onEscolher={(valor) => onSetContractStatus(client, valor)}
+        opcoes={[
+          { valor: "pendente", rotulo: "Pendente" },
+          { valor: "assinado", rotulo: "Assinado" },
+        ]}
+      />
 
-      <div className="mt-5">
+      <div className="mt-6">
         <TextField
           label="Link do documento (Clicksign)"
           value={client.contrato.documentoUrl}
@@ -556,7 +526,7 @@ function ContratoTab({ client, onSetContractStatus, onSetContractDocumentUrl, on
         />
       </div>
 
-      <div className="mt-6 border-t border-line/60 pt-5">
+      <div className="mt-7 border-t border-line/60 pt-6">
         <p className="mb-3 text-xs font-medium text-ink-muted">Histórico</p>
         <ul className="space-y-2">
           {[...(client.contrato.historico || [])].reverse().map((h) => (
@@ -598,10 +568,14 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
     <>
       <RecurringBillingSetup client={client} onSetRecurringBilling={onSetRecurringBilling} onClearRecurringBilling={onClearRecurringBilling} />
     <Panel>
-      <p className="mb-1 text-xs font-medium text-ink-muted">Histórico de boletos registrados, do vencimento mais recente ao mais antigo</p>
-      <p className="mb-4 text-xs text-ink-dim">
-        Só aparece aqui o que já foi registrado (pago manualmente ou sincronizado do Asaas) — a previsão da próxima cobrança, lá em cima, não conta como um boleto até ele existir de verdade.
+      <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+        Boletos registrados
+        <Dica>
+          Aparece aqui o que já foi registrado — pago na mão ou sincronizado do Asaas. A previsão da próxima cobrança, lá em
+          cima, só vira linha aqui quando o boleto existir de verdade.
+        </Dica>
       </p>
+      <p className="mb-5 text-xs text-ink-dim">Do vencimento mais recente ao mais antigo.</p>
 
       <div className="space-y-3">
         {boletos.map((b) => (
@@ -618,8 +592,13 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
         {boletos.length === 0 && <p className="text-sm text-ink-dim">Nenhum boleto cadastrado ainda.</p>}
       </div>
 
-      <div className="mt-5 border-t border-line/60 pt-5">
-        <p className="mb-3 text-xs font-medium text-ink-muted">Registrar boleto já emitido no Asaas</p>
+      <div className="mt-7 border-t border-line/60 pt-6">
+        <p className="mb-4 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+          Registrar boleto já emitido no Asaas
+          <Dica>
+            Só copia pra cá o valor e o vencimento que já existem no Asaas. Não gera boleto novo nem cobra o cliente.
+          </Dica>
+        </p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[120px] flex-1">
             <TextField label="Valor (R$)" value={novo.valor} onChange={(v) => setNovo((n) => ({ ...n, valor: v }))} />
@@ -627,28 +606,18 @@ function CobrancaTab({ client, onAddInvoice, onSetInvoiceStatus, onMarkInvoiceAl
           <div className="min-w-[140px] flex-1">
             <TextField label="Vencimento" type="date" value={novo.vencimento} onChange={(v) => setNovo((n) => ({ ...n, vencimento: v }))} />
           </div>
-          <button
-            onClick={adicionarBoleto}
-            disabled={salvando}
-            className="flex items-center gap-1.5 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-medium text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
-          >
-            <Plus size={14} /> Registrar
-          </button>
+          <Botao variante="primario" icone={Plus} onClick={adicionarBoleto} disabled={salvando}>
+            Registrar
+          </Botao>
         </div>
-        <div className="mt-3">
+        <div className="mt-4">
           <TextField
             label="ID do boleto no Asaas (opcional)"
+            dica="Com o ID preenchido, o boleto se atualiza sozinho quando o Asaas avisa que mudou de status. Sem ele, um aviso futuro pode criar uma linha duplicada em vez de atualizar esta."
             value={novo.asaasId}
             onChange={(v) => setNovo((n) => ({ ...n, asaasId: v }))}
           />
-          <p className="mt-1 text-xs text-ink-dim">
-            Se preencher, esse boleto atualiza sozinho quando o Asaas avisar que ele mudou de status — sem isso, um evento futuro
-            pode criar uma linha duplicada em vez de atualizar essa aqui.
-          </p>
         </div>
-        <p className="mt-2 text-xs text-ink-dim">
-          Só copia o valor e vencimento que já existem no Asaas — não gera boleto novo nem cobra o cliente.
-        </p>
         {erro && <p className="mt-2 text-sm text-flame">{erro}</p>}
       </div>
     </Panel>
@@ -692,8 +661,8 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
 
   if (editando) {
     return (
-      <div className="rounded-xl border border-line/60 bg-surface-raised p-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+      <div className="rounded-xl border border-line/60 bg-surface-raised p-4 sm:p-5">
+        <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="Valor (R$)" value={form.valor} onChange={(v) => setForm((f) => ({ ...f, valor: v }))} />
           <TextField label="Vencimento" type="date" value={form.vencimento} onChange={(v) => setForm((f) => ({ ...f, vencimento: v }))} />
         </div>
@@ -701,24 +670,20 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
           <TextField label="ID do boleto no Asaas (opcional)" value={form.asaasId} onChange={(v) => setForm((f) => ({ ...f, asaasId: v }))} />
         </div>
         {erro && <p className="mt-2 text-sm text-flame">{erro}</p>}
-        <div className="mt-3 flex items-center gap-3">
-          <button
-            onClick={salvarEdicao}
-            disabled={salvando}
-            className="rounded-full bg-emerald-brand px-4 py-1.5 text-xs font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
-          >
+        <div className="mt-4 flex items-center gap-2">
+          <Botao variante="primario" tamanho="sm" onClick={salvarEdicao} disabled={salvando}>
             Salvar
-          </button>
-          <button onClick={() => setEditando(false)} className="text-xs text-ink-muted hover:text-ink">
+          </Botao>
+          <Botao variante="fantasma" tamanho="sm" onClick={() => setEditando(false)}>
             Cancelar
-          </button>
+          </Botao>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-line/60 bg-surface-raised p-4">
+    <div className="rounded-xl border border-line/60 bg-surface-raised p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <span className="font-mono text-sm text-ink">R$ {b.valor.toFixed(2)}</span>
@@ -728,59 +693,48 @@ function BoletoCard({ client, boleto: b, onSetInvoiceStatus, onMarkInvoiceAlertS
         <StatusBadge status={b.status} />
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {["pendente", "atrasado", "pago"].map((s) => (
-          <button
-            key={s}
-            onClick={() => onSetInvoiceStatus(client, b.id, s)}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-              b.status === s ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
-            }`}
-          >
-            {s === "pendente" ? "A pagar" : s === "atrasado" ? "Atrasado" : "Pago"}
-          </button>
-        ))}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Segmentado
+          rotulo="Status do boleto"
+          valor={b.status}
+          onEscolher={(valor) => onSetInvoiceStatus(client, b.id, valor)}
+          opcoes={[
+            { valor: "pendente", rotulo: "A pagar" },
+            { valor: "atrasado", rotulo: "Atrasado" },
+            { valor: "pago", rotulo: "Pago" },
+          ]}
+        />
         {stage && (
           <a
             href={waLink}
             target="_blank"
             rel="noreferrer"
             onClick={() => onMarkInvoiceAlertSent(client, b.id)}
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-emerald-brand/40 px-3 py-1.5 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-emerald-brand/40 px-3.5 py-2 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
           >
-            <MessageCircle size={12} />
+            <MessageCircle size={13} />
             Alertar ({ALERT_STAGE_LABELS[stage].toLowerCase()})
           </a>
         )}
       </div>
 
-      <div className="mt-2 flex items-center justify-end gap-2 border-t border-line/40 pt-2">
-        <button
-          onClick={() => setEditando(true)}
-          className="flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:text-ink"
-        >
-          <Pencil size={12} /> Editar
-        </button>
+      <div className="mt-3 flex items-center justify-end gap-2 border-t border-line/40 pt-3">
+        <Botao variante="secundario" tamanho="sm" icone={Pencil} onClick={() => setEditando(true)}>
+          Editar
+        </Botao>
         {confirmExcluir ? (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={excluir}
-              disabled={salvando}
-              className="rounded-full bg-flame/15 px-3 py-1.5 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
-            >
+          <>
+            <Botao variante="perigoFirme" tamanho="sm" onClick={excluir} disabled={salvando}>
               Confirmar exclusão
-            </button>
-            <button onClick={() => setConfirmExcluir(false)} className="text-xs text-ink-muted hover:text-ink">
-              Cancelar
-            </button>
-          </div>
+            </Botao>
+            <Botao variante="fantasma" tamanho="sm" onClick={() => setConfirmExcluir(false)}>
+              Voltar
+            </Botao>
+          </>
         ) : (
-          <button
-            onClick={() => setConfirmExcluir(true)}
-            className="flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
-          >
-            <Trash2 size={12} /> Excluir
-          </button>
+          <Botao variante="perigo" tamanho="sm" icone={Trash2} onClick={() => setConfirmExcluir(true)}>
+            Excluir
+          </Botao>
         )}
       </div>
     </div>
@@ -1291,21 +1245,21 @@ function InstagramMetricsPanel({ client }) {
   }
 
   return (
-    <div className="mb-5 rounded-xl border border-line/60 bg-surface-raised p-4">
-      <p className="text-sm font-medium text-ink">Instagram</p>
+    <div className="mb-6 rounded-xl border border-line/60 bg-surface-raised p-4 sm:p-5">
+      <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+        Instagram
+        <Dica>
+          Manda o link pro cliente autorizar o acesso. Depois disso, os números de posts e alcance aparecem aqui
+          automaticamente, sem ninguém precisar digitar.
+        </Dica>
+      </p>
 
       {!status?.conectado ? (
         <>
-          <p className="mt-1 text-xs text-ink-dim">
-            O cliente ainda não conectou o Instagram. Manda o link abaixo pra ele autorizar o acesso — depois disso
-            os números de posts e alcance aparecem aqui automaticamente.
-          </p>
-          <button
-            onClick={copiarLink}
-            className="mt-3 rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink"
-          >
+          <p className="mt-1 text-xs text-ink-dim">Ainda não conectado.</p>
+          <Botao variante="secundario" className="mt-4" onClick={copiarLink}>
             {linkCopiado ? "Link copiado!" : "Copiar link de conexão"}
-          </button>
+          </Botao>
         </>
       ) : (
         <>
@@ -1328,13 +1282,9 @@ function InstagramMetricsPanel({ client }) {
             </div>
           )}
 
-          <button
-            onClick={atualizarMetricas}
-            disabled={atualizando}
-            className="mt-3 rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink disabled:opacity-60"
-          >
+          <Botao variante="secundario" className="mt-4" onClick={atualizarMetricas} disabled={atualizando}>
             {atualizando ? "Buscando..." : metricas ? "Atualizar números" : "Buscar números"}
-          </button>
+          </Botao>
         </>
       )}
 
@@ -1366,32 +1316,37 @@ function IntensidadeTab({ client, onAddIntensityCheck, onMarkIntensityMessageSen
 
       <p className="text-xs text-ink-dim">Registro manual da equipe sobre o momento do cliente.</p>
 
-      <div className="mt-4">
+      <div className="mt-5">
         <label className="block">
-          <span className="mb-1.5 block text-xs font-medium text-ink-muted">Nova observação (opcional, antes de registrar)</span>
+          <RotuloCampo>Observação (opcional)</RotuloCampo>
           <textarea
             value={observacaoNova}
             onChange={(e) => setObservacaoNova(e.target.value)}
             rows={2}
             placeholder={client.intensidade.observacao}
-            className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+            className={classeCampo()}
           />
         </label>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {["ativo", "em_queda", "inativo"].map((s) => (
-          <button
-            key={s}
-            onClick={() => registrarChecagem(s)}
-            disabled={salvando}
-            className={`rounded-full px-4 py-2 text-xs font-medium transition-colors disabled:opacity-60 ${
-              client.intensidade.status === s ? "bg-emerald-brand text-base" : "border border-line text-ink-muted hover:text-ink"
-            }`}
-          >
-            Registrar como {s === "ativo" ? "Ativo" : s === "em_queda" ? "Em queda" : "Inativo"}
-          </button>
-        ))}
+      <div className="mt-5">
+        <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+          Registrar verificação
+          <Dica>
+            Escolher um status aqui guarda uma verificação no histórico, com a observação acima e a data de hoje.
+          </Dica>
+        </p>
+        <Segmentado
+          rotulo="Status da intensidade"
+          valor={client.intensidade.status}
+          desabilitado={salvando}
+          onEscolher={registrarChecagem}
+          opcoes={[
+            { valor: "ativo", rotulo: "Ativo" },
+            { valor: "em_queda", rotulo: "Em queda" },
+            { valor: "inativo", rotulo: "Inativo" },
+          ]}
+        />
       </div>
 
       {client.intensidade.status !== "ativo" && (
@@ -1400,14 +1355,14 @@ function IntensidadeTab({ client, onAddIntensityCheck, onMarkIntensityMessageSen
           target="_blank"
           rel="noreferrer"
           onClick={() => onMarkIntensityMessageSent(client)}
-          className="mt-5 flex items-center justify-center gap-2 rounded-full bg-emerald-brand px-5 py-3 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright"
+          className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-brand px-5 py-3 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright"
         >
           <MessageCircle size={16} />
           Enviar mensagem via WhatsApp
         </a>
       )}
 
-      <div className="mt-6 border-t border-line/60 pt-5">
+      <div className="mt-7 border-t border-line/60 pt-6">
         <p className="mb-3 text-xs font-medium text-ink-muted">Histórico de verificações</p>
         <ul className="space-y-2">
           {[...(client.intensidade.historico || [])].reverse().map((h) => (

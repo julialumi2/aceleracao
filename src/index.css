@@ -3,6 +3,52 @@
 @tailwind utilities;
 
 @layer base {
+  /* Paleta do site público (landing, formulários, login) — a da marca. */
+  :root {
+    --c-base: 7 6 4;
+    --c-base-soft: 12 9 6;
+    --c-surface: 18 13 8;
+    --c-surface-raised: 27 20 12;
+    --c-line: 68 68 68;
+    --c-line-forte: 68 68 68;
+    --c-ink: 255 255 255;
+    --c-ink-muted: 184 184 184;
+    --c-ink-dim: 122 122 122;
+    --c-brasa: 245 165 19;
+    --c-brasa-forte: 255 194 77;
+    --c-chama: 255 49 49;
+    --c-ok: 53 192 138;
+    --c-info: 122 162 247;
+  }
+
+  /* Painel interno: grafite quente, fios mais leves e texto em três
+     níveis. Mesmo âmbar da marca, que aqui é a única cor de ação. */
+  .painel {
+    --c-base: 11 10 9;
+    --c-base-soft: 16 15 13;
+    --c-surface: 20 19 17;
+    --c-surface-raised: 28 26 23;
+    --c-line: 43 40 37;
+    --c-line-forte: 58 54 49;
+    --c-ink: 247 245 242;
+    --c-ink-muted: 171 164 156;
+    --c-ink-dim: 114 107 99;
+    --c-brasa-forte: 255 190 61;
+    --c-chama: 255 90 90;
+
+    font-family: theme("fontFamily.painel");
+    letter-spacing: -0.006em;
+  }
+
+  /* O Anton é a assinatura da marca e fica no site público; em tela de
+     trabalho ele cansa e desalinha número, então dentro do painel o
+     mesmo utilitário vira a grotesca em peso forte. */
+  .painel .font-display {
+    font-family: theme("fontFamily.painel");
+    font-weight: 700;
+    letter-spacing: -0.028em;
+  }
+
   html {
     @apply scroll-smooth;
   }

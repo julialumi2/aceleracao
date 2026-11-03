@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Search, ChevronRight, UserPlus, Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import StatusBadge, { NextBillingBadge } from "../components/StatusBadge.jsx";
+import Botao from "../components/Botao.jsx";
+import { classeCampo, RotuloCampo } from "../components/Campo.jsx";
 import { currentInvoice, billingSummary, formatDateAbrev } from "../lib/invoices.js";
 
 const FILTERS = {
@@ -95,7 +97,7 @@ export default function ClientsList({
 
         <div className="flex flex-wrap items-center gap-3">
           {!verArquivados && (
-            <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:w-64">
+            <div className="flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 transition-colors focus-within:border-emerald-brand/70 focus-within:ring-2 focus-within:ring-emerald-brand/25 sm:w-64">
               <Search size={15} className="text-ink-dim" />
               <input
                 value={query}
@@ -105,23 +107,18 @@ export default function ClientsList({
               />
             </div>
           )}
-          <button
+          <Botao
+            variante="secundario"
+            icone={Archive}
             onClick={toggleArquivados}
-            className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
-              verArquivados ? "border-emerald-brand/40 text-emerald-bright" : "border-line text-ink-muted hover:text-ink"
-            }`}
+            className={verArquivados ? "border-emerald-brand/40 text-emerald-bright" : ""}
           >
-            <Archive size={15} />
             {verArquivados ? "Ver ativos" : "Ver arquivados"}
-          </button>
+          </Botao>
           {!verArquivados && (
-            <button
-              onClick={() => setMostrarForm((v) => !v)}
-              className="flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright"
-            >
-              <UserPlus size={15} />
+            <Botao variante="primario" icone={UserPlus} onClick={() => setMostrarForm((v) => !v)}>
               Adicionar cliente
-            </button>
+            </Botao>
           )}
         </div>
       </div>
@@ -148,34 +145,28 @@ export default function ClientsList({
                 </div>
                 <p className="text-xs text-ink-dim">{formatArchivedDate(c.arquivadoEm)}</p>
                 <div className="flex items-center gap-2 justify-self-start sm:justify-self-end">
-                  <button
+                  <Botao
+                    variante="secundario"
+                    tamanho="sm"
+                    icone={ArchiveRestore}
                     onClick={() => onRestoreClient(c)}
-                    className="flex items-center gap-1.5 rounded-full border border-emerald-brand/40 px-3 py-1.5 text-xs font-medium text-emerald-bright transition-colors hover:bg-emerald-brand/10"
+                    className="border-emerald-brand/40 text-emerald-bright hover:bg-emerald-brand/10"
                   >
-                    <ArchiveRestore size={13} />
                     Restaurar
-                  </button>
+                  </Botao>
                   {confirmDeleteId === c.id ? (
                     <>
-                      <button
-                        onClick={() => confirmarExclusao(c)}
-                        disabled={excluindo}
-                        className="rounded-full bg-flame/15 px-3 py-1.5 text-xs font-semibold text-flame transition-colors hover:bg-flame/25 disabled:opacity-60"
-                      >
+                      <Botao variante="perigoFirme" tamanho="sm" onClick={() => confirmarExclusao(c)} disabled={excluindo}>
                         {excluindo ? "Excluindo..." : "Confirmar"}
-                      </button>
-                      <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-ink-muted hover:text-ink">
-                        Cancelar
-                      </button>
+                      </Botao>
+                      <Botao variante="fantasma" tamanho="sm" onClick={() => setConfirmDeleteId(null)}>
+                        Voltar
+                      </Botao>
                     </>
                   ) : (
-                    <button
-                      onClick={() => setConfirmDeleteId(c.id)}
-                      className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-flame/40 hover:text-flame"
-                    >
-                      <Trash2 size={13} />
+                    <Botao variante="perigo" tamanho="sm" icone={Trash2} onClick={() => setConfirmDeleteId(c.id)}>
                       Excluir
-                    </button>
+                    </Botao>
                   )}
                 </div>
               </div>
@@ -188,34 +179,30 @@ export default function ClientsList({
       ) : (
         <>
           {mostrarForm && (
-            <div className="mb-6 rounded-2xl border border-line bg-surface p-6">
+            <div className="mb-6 rounded-2xl border border-line bg-surface p-5 sm:p-7">
               <p className="text-sm font-medium text-ink">Novo cliente</p>
-              <p className="mt-1 text-xs text-ink-dim">Cliente que fechou por fora do formulário — cadastra direto aqui.</p>
+              <p className="mt-1 text-xs text-ink-dim">Cliente que fechou por fora do formulário.</p>
 
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="mt-5 grid gap-x-5 gap-y-5 sm:grid-cols-2">
                 {CAMPOS_NOVO_CLIENTE.map(({ key, label }) => (
                   <label key={key} className="block">
-                    <span className="mb-1.5 block text-xs font-medium text-ink-muted">{label}</span>
+                    <RotuloCampo>{label}</RotuloCampo>
                     <input
                       value={novo[key]}
                       onChange={(e) => setNovo((n) => ({ ...n, [key]: e.target.value }))}
-                      className="w-full rounded-xl border border-line bg-surface-raised px-3.5 py-2.5 text-sm text-ink focus:border-emerald-brand/60 focus:outline-none"
+                      className={classeCampo()}
                     />
                   </label>
                 ))}
               </div>
 
-              <div className="mt-5 flex items-center gap-3">
-                <button
-                  onClick={salvarNovoCliente}
-                  disabled={!novo.nome.trim() || salvando}
-                  className="rounded-xl bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-base transition-colors hover:bg-emerald-bright disabled:opacity-60"
-                >
+              <div className="mt-6 flex items-center gap-2">
+                <Botao variante="primario" onClick={salvarNovoCliente} disabled={!novo.nome.trim() || salvando}>
                   Salvar e abrir cadastro
-                </button>
-                <button onClick={() => setMostrarForm(false)} className="text-sm text-ink-muted hover:text-ink">
+                </Botao>
+                <Botao variante="fantasma" onClick={() => setMostrarForm(false)}>
                   Cancelar
-                </button>
+                </Botao>
               </div>
             </div>
           )}
@@ -263,7 +250,7 @@ function ClientsTable({ clients, onOpenClient }) {
           <button
             key={c.id}
             onClick={() => onOpenClient(c.id)}
-            className={`grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left transition-colors last:border-b-0 sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto] ${
+            className={`grid w-full grid-cols-2 items-center gap-4 border-b border-line/40 px-5 py-4 text-left sm:py-5 transition-colors last:border-b-0 sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_auto] ${
               c.canceladoEm ? "bg-flame/5 hover:bg-flame/10" : "hover:bg-surface-raised"
             }`}
           >
@@ -274,12 +261,14 @@ function ClientsTable({ clients, onOpenClient }) {
                 {c.cnpj || "CNPJ não informado"}
               </p>
             </div>
-            <StatusBadge status={c.contrato.status} context="contrato" />
-            {resumo?.tipo === "boleto" && <StatusBadge status={resumo.boleto.status} />}
-            {resumo?.tipo === "previsao" && <NextBillingBadge label={formatDateAbrev(resumo.data)} />}
-            {!resumo && <span className="text-xs text-ink-dim">—</span>}
-            <StatusBadge status={c.intensidade.status} />
-            <StatusBadge status={`saude_${c.saude}`} />
+            <span className="justify-self-start"><StatusBadge status={c.contrato.status} context="contrato" /></span>
+            <span className="justify-self-start">
+              {resumo?.tipo === "boleto" && <StatusBadge status={resumo.boleto.status} />}
+              {resumo?.tipo === "previsao" && <NextBillingBadge label={formatDateAbrev(resumo.data)} />}
+              {!resumo && <span className="text-xs text-ink-dim">—</span>}
+            </span>
+            <span className="justify-self-start"><StatusBadge status={c.intensidade.status} /></span>
+            <span className="justify-self-start"><StatusBadge status={`saude_${c.saude}`} /></span>
             <ChevronRight size={16} className="hidden text-ink-dim sm:block" />
           </button>
         );
@@ -290,7 +279,7 @@ function ClientsTable({ clients, onOpenClient }) {
 
 function FilterSelect({ label, value, options, onChange }) {
   return (
-    <label className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-xs">
+    <label className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2.5 text-xs transition-colors focus-within:border-emerald-brand/70 focus-within:ring-2 focus-within:ring-emerald-brand/25">
       <span className="text-ink-dim">{label}</span>
       <select
         value={value}

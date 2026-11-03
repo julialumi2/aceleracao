@@ -3,9 +3,9 @@ import { Plus, Circle, Clock, CheckCircle2, Trash2, ArrowRight } from "lucide-re
 import StatusBadge from "../components/StatusBadge.jsx";
 
 const COLUNAS = [
-  { status: "a_fazer", label: "A Fazer", icon: Circle, accent: "text-sky-300 border-sky-400/40" },
-  { status: "em_andamento", label: "Em Andamento", icon: Clock, accent: "text-amber-300 border-amber-400/40" },
-  { status: "feito", label: "Feito", icon: CheckCircle2, accent: "text-green-300 border-green-400/40" },
+  { status: "a_fazer", label: "A Fazer", icon: Circle, accent: "text-info border-info/40" },
+  { status: "em_andamento", label: "Em Andamento", icon: Clock, accent: "text-emerald-brand border-emerald-brand/40" },
+  { status: "feito", label: "Feito", icon: CheckCircle2, accent: "text-ok border-ok/40" },
 ];
 
 const PRIORIDADES = ["urgente", "alta", "media", "baixa"];

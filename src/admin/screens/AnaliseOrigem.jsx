@@ -310,7 +310,7 @@ function CalendarioIntervalo({ de, ate, maximo, onEscolher, onFechar }) {
 function Variacao({ comparacao }) {
   if (!comparacao) return <p className="mt-1 text-[11px] text-ink-dim">sem base de comparação</p>;
   const { direcao, texto } = comparacao;
-  const cor = direcao > 0 ? "text-green-300" : direcao < 0 ? "text-flame" : "text-ink-dim";
+  const cor = direcao > 0 ? "text-ok" : direcao < 0 ? "text-flame" : "text-ink-dim";
   const Icone = direcao > 0 ? TrendingUp : direcao < 0 ? TrendingDown : null;
   return (
     <p className={`mt-1 flex items-center gap-1 text-[11px] ${cor}`}>

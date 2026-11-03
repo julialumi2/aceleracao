@@ -1,18 +1,24 @@
-export default function KpiCard({ icon: Icon, label, value, tone = "default" }) {
-  const toneStyles = {
-    default: "text-emerald-bright bg-emerald-brand/10",
-    warning: "text-amber-300 bg-amber-400/10",
-    danger: "text-flame bg-flame/10",
-  };
+// Número grande em mono (alinha coluna e não "dança" quando o valor
+// muda) com o rótulo em caixa alta pequena. Tom "danger"/"warning"
+// acende a borda e o número em brasa, pra puxar o olho sem gritar.
+const TONS = {
+  default: "border-line",
+  warning: "border-emerald-brand/35",
+  danger: "border-emerald-brand/35",
+};
 
+const TONS_VALOR = {
+  default: "text-ink",
+  warning: "text-emerald-brand",
+  danger: "text-emerald-brand",
+};
+
+export default function KpiCard({ label, value, nota, tone = "default" }) {
   return (
-    <div className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
-      <span className={`flex h-9 w-9 items-center justify-center rounded-xl sm:h-10 sm:w-10 ${toneStyles[tone]}`}>
-        <Icon size={17} className="sm:hidden" />
-        <Icon size={18} className="hidden sm:block" />
-      </span>
-      <p className="mt-3 font-display text-xl tracking-wide text-ink sm:mt-4 sm:text-2xl">{value}</p>
-      <p className="mt-1 text-xs text-ink-dim">{label}</p>
+    <div className={`rounded-[14px] border bg-surface p-4 sm:p-[18px] ${TONS[tone]}`}>
+      <p className="font-mono text-[10px] uppercase leading-snug tracking-[0.14em] text-ink-muted">{label}</p>
+      <p className={`mt-2.5 font-mono text-[26px] font-medium leading-none tabular-nums ${TONS_VALOR[tone]}`}>{value}</p>
+      {nota && <p className="mt-2 text-[11.5px] text-ink-dim">{nota}</p>}
     </div>
   );
 }

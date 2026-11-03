@@ -1,3 +1,8 @@
+// As cores saem de variáveis CSS (definidas em src/index.css) pra que o
+// painel interno possa ter a própria paleta — grafite quente — sem mexer
+// no site público, que continua com a paleta da marca.
+const cor = (nome) => `rgb(var(${nome}) / <alpha-value>)`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: "class",
@@ -6,40 +11,45 @@ export default {
     extend: {
       colors: {
         base: {
-          DEFAULT: "#070604",
-          soft: "#0C0906",
+          DEFAULT: cor("--c-base"),
+          soft: cor("--c-base-soft"),
         },
         surface: {
-          DEFAULT: "#120D08",
-          raised: "#1B140C",
+          DEFAULT: cor("--c-surface"),
+          raised: cor("--c-surface-raised"),
           light: "#FFFFFF",
           "light-soft": "#F6F9F7",
         },
         line: {
-          DEFAULT: "#444444",
+          DEFAULT: cor("--c-line"),
+          forte: cor("--c-line-forte"),
           light: "#444444",
         },
         emerald: {
-          brand: "#F5A513",
-          bright: "#FFC24D",
+          brand: cor("--c-brasa"),
+          bright: cor("--c-brasa-forte"),
           deep: "#C97F00",
         },
         flame: {
-          DEFAULT: "#FF3131",
+          DEFAULT: cor("--c-chama"),
           dim: "#B92424",
         },
         ink: {
-          DEFAULT: "#FFFFFF",
-          muted: "#B8B8B8",
-          dim: "#7A7A7A",
+          DEFAULT: cor("--c-ink"),
+          muted: cor("--c-ink-muted"),
+          dim: cor("--c-ink-dim"),
           dark: "#0E1512",
           "dark-muted": "#444444",
         },
+        // Estado, não decoração: pago/assinado e informação.
+        ok: cor("--c-ok"),
+        info: cor("--c-info"),
       },
       fontFamily: {
         display: ["Anton", "sans-serif"],
         body: ["Manrope", "sans-serif"],
         mono: ['"IBM Plex Mono"', "monospace"],
+        painel: ['"Schibsted Grotesk"', "system-ui", "sans-serif"],
       },
       backgroundImage: {
         "ring-glow":

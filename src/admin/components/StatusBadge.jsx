@@ -1,36 +1,47 @@
+// Quatro famílias de estado, nada além disso: verde = resolvido,
+// brasa = precisa de você, chama = risco, neutro = sem carga.
+const OK = "border-ok/30 bg-ok/10 text-ok";
+const ATENCAO = "border-emerald-brand/30 bg-emerald-brand/10 text-emerald-brand";
+const RISCO = "border-flame/30 bg-flame/10 text-flame";
+const NEUTRO = "border-line-forte bg-surface-raised text-ink-muted";
+const INFO = "border-info/30 bg-info/10 text-info";
+
 const STYLES = {
   // contrato
-  assinado: "bg-green-400/10 text-green-300 border-green-400/30",
-  pendente: "bg-amber-400/10 text-amber-300 border-amber-400/30",
-  contrato_pendente: "bg-flame/10 text-flame border-flame/30",
+  assinado: OK,
+  pendente: ATENCAO,
+  contrato_pendente: RISCO,
   // boleto
-  pago: "bg-green-400/10 text-green-300 border-green-400/30",
-  atrasado: "bg-flame/10 text-flame border-flame/30",
+  pago: OK,
+  atrasado: RISCO,
   // intensidade
-  ativo: "bg-green-400/10 text-green-300 border-green-400/30",
-  em_queda: "bg-amber-400/10 text-amber-300 border-amber-400/30",
-  inativo: "bg-flame/10 text-flame border-flame/30",
+  ativo: OK,
+  em_queda: ATENCAO,
+  inativo: RISCO,
   // leads
-  novo: "bg-sky-400/10 text-sky-300 border-sky-400/30",
-  contatado: "bg-amber-400/10 text-amber-300 border-amber-400/30",
-  convertido: "bg-emerald-brand/10 text-emerald-bright border-emerald-brand/30",
-  descartado: "bg-ink-dim/10 text-ink-dim border-line",
+  novo: INFO,
+  contatado: ATENCAO,
+  qualificado: INFO,
+  reuniao_agendada: INFO,
+  follow_up: ATENCAO,
+  convertido: OK,
+  descartado: NEUTRO,
   // cliente que cancelou a mentoria
-  cancelado: "bg-flame text-ink border-flame",
+  cancelado: RISCO,
   // saúde da campanha (independente da intensidade de redes sociais)
-  saude_verde: "bg-green-400/10 text-green-300 border-green-400/30",
-  saude_amarelo: "bg-amber-400/10 text-amber-300 border-amber-400/30",
-  saude_laranja: "bg-orange-400/10 text-orange-300 border-orange-400/30",
-  saude_inativo: "bg-flame/10 text-flame border-flame/30",
+  saude_verde: OK,
+  saude_amarelo: ATENCAO,
+  saude_laranja: ATENCAO,
+  saude_inativo: RISCO,
   // temperatura do lead
-  temp_frio: "bg-sky-400/10 text-sky-300 border-sky-400/30",
-  temp_morno: "bg-amber-400/10 text-amber-300 border-amber-400/30",
-  temp_quente: "bg-flame/10 text-flame border-flame/30",
+  temp_frio: INFO,
+  temp_morno: ATENCAO,
+  temp_quente: RISCO,
   // prioridade de tarefa
-  prioridade_urgente: "bg-flame/10 text-flame border-flame/30",
-  prioridade_alta: "bg-orange-400/10 text-orange-300 border-orange-400/30",
-  prioridade_media: "bg-amber-400/10 text-amber-300 border-amber-400/30",
-  prioridade_baixa: "bg-green-400/10 text-green-300 border-green-400/30",
+  prioridade_urgente: RISCO,
+  prioridade_alta: ATENCAO,
+  prioridade_media: ATENCAO,
+  prioridade_baixa: OK,
 };
 
 const LABELS = {
@@ -43,9 +54,12 @@ const LABELS = {
   em_queda: "Em queda",
   inativo: "Inativo",
   novo: "Novo",
-  contatado: "Contatado",
-  convertido: "Convertido",
-  descartado: "Descartado",
+  contatado: "Em contato",
+  qualificado: "Qualificado",
+  reuniao_agendada: "Reunião agendada",
+  follow_up: "Follow up",
+  convertido: "Fechado",
+  descartado: "Desqualificado",
   cancelado: "Cancelado",
   saude_verde: "Rodando com resultado",
   saude_amarelo: "Rodando, sem resultado",
@@ -66,9 +80,9 @@ export default function StatusBadge({ status, context }) {
   const label = LABELS[key] || LABELS[status] || status;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${style}`}
+      className={`inline-flex items-center gap-1.5 rounded-[7px] border px-2 py-[3px] text-[11.5px] font-medium ${style}`}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      <span className="h-[5px] w-[5px] rounded-full bg-current" />
       {label}
     </span>
   );
@@ -79,8 +93,8 @@ export default function StatusBadge({ status, context }) {
 // os badges de verdade.
 export function NextBillingBadge({ label }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium bg-sky-400/10 text-sky-300 border-sky-400/30">
-      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+    <span className="inline-flex items-center gap-1.5 rounded-[7px] border border-info/30 bg-info/10 px-2 py-[3px] text-[11.5px] font-medium text-info">
+      <span className="h-[5px] w-[5px] rounded-full bg-current" />
       {label}
     </span>
   );

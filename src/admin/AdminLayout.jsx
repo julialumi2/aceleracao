@@ -43,7 +43,26 @@ import {
   setCancelamento,
   reativarCliente,
 } from "./lib/adminApi.js";
-import { Loader2, LayoutDashboard, Users, Contact, Megaphone, Wallet, Settings as SettingsIcon } from "lucide-react";
+import { Loader2, Flame, LayoutDashboard, Users, Contact, Megaphone, Wallet, Settings as SettingsIcon } from "lucide-react";
+import { currentInvoice } from "./lib/invoices.js";
+
+const TITULOS = {
+  dashboard: "Visão geral",
+  clientes: "Clientes",
+  leads: "Leads",
+  analise: "Anúncios e Origem",
+  cobrancas: "Cobranças",
+  intensidade: "Intensidade",
+  tarefas: "Tarefas",
+  configuracoes: "Configurações",
+};
+
+const HOJE = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  timeZone: "America/Sao_Paulo",
+});
 
 const MOBILE_NAV = [
   { key: "dashboard", label: "Início", icon: LayoutDashboard },
@@ -390,17 +409,47 @@ export default function AdminLayout({ session, onLogout }) {
     onReativarCliente: handleReativarCliente,
   };
 
+  const contadores = {
+    clientes: clients.filter((c) => !c.canceladoEm).length,
+    leads: leads.length,
+    cobrancas: clients.filter((c) => currentInvoice(c.boletos)?.status === "atrasado").length,
+    tarefas: tasks.filter((t) => t.status !== "feito").length,
+  };
+
+  const dataDeHoje = HOJE.format(new Date());
+
   return (
-    <div className="flex min-h-screen bg-base text-ink">
-      <AdminSidebar active={active} onNavigate={navigate} session={session} onLogout={onLogout} />
+    <div className="painel flex min-h-screen bg-base text-ink">
+      <AdminSidebar
+        active={active}
+        onNavigate={navigate}
+        session={session}
+        onLogout={onLogout}
+        contadores={contadores}
+      />
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <div className="flex items-center justify-between border-b border-line/60 bg-surface/40 px-5 py-4 lg:hidden">
-          <span className="font-display text-base tracking-wide text-ink">Painel interno</span>
-          <button onClick={onLogout} className="text-xs text-ink-muted">Sair</button>
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-surface/60 px-5 py-3.5 lg:hidden">
+          <span className="flex items-center gap-2 text-[13px] font-semibold tracking-tight text-ink">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-brand to-flame text-base">
+              <Flame size={13} strokeWidth={2.4} />
+            </span>
+            {TITULOS[active] || "Painel"}
+          </span>
+          <button onClick={onLogout} className="text-xs text-ink-muted hover:text-ink">
+            Sair
+          </button>
         </div>
 
-        <main className="flex-1 px-5 pt-8 pb-24 md:px-10 md:pt-10 md:pb-24 lg:pb-10">
+        <div className="hidden items-center justify-between gap-4 border-b border-line bg-surface/50 px-10 py-3 lg:flex">
+          <p className="text-[12.5px] text-ink-dim">
+            Painel <span className="px-1.5 text-ink-dim/60">/</span>
+            <span className="font-semibold text-ink">{TITULOS[active] || "Painel"}</span>
+          </p>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-ink-dim">{dataDeHoje}</p>
+        </div>
+
+        <main className="flex-1 px-5 pb-24 pt-7 md:px-10 md:pb-24 md:pt-9 lg:pb-10">
           {loading && (
             <div className="flex items-center gap-2 text-sm text-ink-muted">
               <Loader2 size={16} className="animate-spin" /> Carregando dados do Supabase...
@@ -487,16 +536,16 @@ export default function AdminLayout({ session, onLogout }) {
           )}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line/60 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
           {MOBILE_NAV.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => navigate(key)}
-              className={`flex flex-col items-center gap-1 py-3 text-[10px] ${
-                active === key ? "text-emerald-bright" : "text-ink-dim"
+              className={`flex flex-col items-center gap-1 py-2.5 text-[9.5px] transition-colors ${
+                active === key ? "text-emerald-brand" : "text-ink-dim"
               }`}
             >
-              <Icon size={17} />
+              <Icon size={17} strokeWidth={active === key ? 2.2 : 1.8} />
               {label}
             </button>
           ))}
